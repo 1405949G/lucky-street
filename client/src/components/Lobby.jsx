@@ -402,11 +402,11 @@ export default function Lobby({ spectate = false }) {
         <button onClick={()=>setShowRules(true)} aria-label="Rules" className="w-9 h-9 rounded-full bg-gradient-to-br from-white/[0.08] to-white/[0.04] hover:from-white/[0.13] hover:to-white/[0.06] border border-white/10 flex items-center justify-center text-amber-200 font-black text-sm shadow-md backdrop-blur">?</button>
       </div>
 
-      {/* Mobile toggle — lantern pills */}
+      {/* Mobile toggle */}
       {!hasGameState && (
         <div className="mt-4 flex justify-center lg:hidden">
           <div className="inline-flex rounded-full bg-white/[0.06] border border-white/10 p-1 backdrop-blur">
-            <button onClick={() => setMobileTab("board")} className={`px-5 py-1.5 rounded-full text-xs font-black tracking-wide ${mobileTab === "board" ? "bg-gradient-to-br from-[#fffbeb] to-[#fde68a] text-[#0e2533] shadow-lantern-soft" : "text-white/60 hover:text-white/85"}`}>Street</button>
+            <button onClick={() => setMobileTab("board")} className={`px-5 py-1.5 rounded-full text-xs font-black tracking-wide ${mobileTab === "board" ? "bg-gradient-to-br from-[#fffbeb] to-[#fde68a] text-[#0e2533] shadow-lantern-soft" : "text-white/60 hover:text-white/85"}`}>Board</button>
             <button onClick={() => setMobileTab("controls")} className={`px-5 py-1.5 rounded-full text-xs font-black tracking-wide ${mobileTab === "controls" ? "bg-gradient-to-br from-[#fffbeb] to-[#fde68a] text-[#0e2533] shadow-lantern-soft" : "text-white/60 hover:text-white/85"}`}>Controls</button>
           </div>
         </div>
@@ -469,23 +469,23 @@ export default function Lobby({ spectate = false }) {
               <div className="relative p-6 sm:p-7">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/14 border border-amber-400/20 backdrop-blur">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                  <span className="text-[10px] font-black tracking-[0.18em] text-amber-200">STREET CODE • SHARE WITH FRIENDS</span>
+                  <span className="text-[10px] font-black tracking-[0.18em] text-amber-200">JOIN CODE</span>
                 </div>
                 <div className="mt-2 font-display font-[900] text-[38px] sm:text-[42px] tracking-[0.18em] text-[#fffbeb] drop-shadow-[0_2px_18px_rgba(251,191,36,0.32)]" style={{ textShadow: "0 2px 0 rgba(0,0,0,0.35), 0 0 22px rgba(251,191,36,0.28)" }}>{room.id}</div>
                 <div className="mt-1 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.08] border border-white/10 backdrop-blur">
                   <span className="text-xs text-white/60">Share</span>
                   <span className="font-mono font-bold text-white text-xs whitespace-nowrap">{window.location.origin}/room/{room.id}</span>
                 </div>
-                <p className="text-[11px] tracking-[0.14em] font-bold text-amber-200/60 mt-2">LANTERN LIT — EVERYONE LOOK HERE</p>
+                <p className="text-xs text-white/40 mt-2">Everyone look here!</p>
                 <div className="mt-4 flex justify-center gap-2.5 flex-wrap">
-                  <button onClick={() => { navigator.clipboard?.writeText(`${window.location.origin}/room/${room.id}`); showToast("Link copied — share the street! 🏮"); }} className="px-5 py-2.5 rounded-full bg-gradient-to-br from-[#fffbeb] via-[#fde68a] to-[#fbbf24] hover:from-white hover:to-[#fde68a] text-[#0e2533] text-xs font-[900] shadow-lantern border border-amber-400/20">Copy link →</button>
+                  <button onClick={() => { navigator.clipboard?.writeText(`${window.location.origin}/room/${room.id}`); showToast("Link copied!"); }} className="px-5 py-2.5 rounded-full bg-gradient-to-br from-[#fffbeb] via-[#fde68a] to-[#fbbf24] hover:from-white hover:to-[#fde68a] text-[#0e2533] text-xs font-[900] shadow-lantern border border-amber-400/20">Copy link</button>
                   <span className="px-3.5 py-2.5 rounded-full bg-white/[0.08] border border-white/10 text-xs font-black tracking-wide text-white/80 backdrop-blur">{room.slotsText}</span>
                 </div>
               </div>
               <div className="h-[1px] bg-gradient-to-r from-transparent via-amber-400/18 to-transparent" />
               <div className="bg-white/[0.03] px-4 py-2.5 flex items-center justify-center gap-2 text-[11px] text-white/45">
                 <span className="w-5 h-5 rounded-full bg-amber-400/15 border border-amber-400/20 flex items-center justify-center text-[10px]">🏮</span>
-                Open on TV — friends join on phones • No password
+                Share this code with friends
               </div>
             </div>
           )}
@@ -495,8 +495,8 @@ export default function Lobby({ spectate = false }) {
       <div className="mt-6 rounded-[20px] glass-lantern p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 className="font-[900] text-white text-sm flex items-center gap-2"><span className="w-7 h-7 rounded-xl bg-amber-400/15 border border-amber-400/20 flex items-center justify-center text-xs">🏮</span> Who’s on the street</h3>
-            <p className="text-xs text-white/45 mt-1">Lanterns glow for players • Bots hum softly • Edit you in the lobby</p>
+            <h3 className="font-[900] text-white text-sm flex items-center gap-2"><span className="w-7 h-7 rounded-xl bg-amber-400/15 border border-amber-400/20 flex items-center justify-center text-xs">👥</span> Who’s here</h3>
+            <p className="text-xs text-white/45 mt-1">Change your name and picture from the main screen.</p>
           </div>
           <span className="hidden sm:inline-flex px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-[11px] font-black tracking-widest text-white/55">{room.players.length + room.bots.length} / {room.maxPlayers}</span>
         </div>
@@ -574,13 +574,13 @@ export default function Lobby({ spectate = false }) {
           <span className="inline-flex items-center gap-2 text-xs font-black tracking-wide text-white/70"><span className="w-7 h-7 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-xs">👁️</span> Watching • {room.spectatorCount || 0}</span>
           <div className="flex gap-2">
             {isPlayer && <button disabled={room.players.length === 1} onClick={handleSpectate} title={room.players.length === 1 ? "You’re the only one here" : ""} className={`px-3.5 py-1.5 rounded-full text-xs font-bold border ${room.players.length === 1 ? "bg-white/5 border-white/10 text-white/30 cursor-not-allowed" : "bg-white/[0.07] hover:bg-white/[0.11] border-white/15 text-white backdrop-blur"}`}>Watch</button>}
-            {isSpectator && <button onClick={handleJoinAsPlayer} className="px-4 py-1.5 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 hover:from-emerald-300 hover:to-emerald-500 text-white text-xs font-black shadow-md border border-emerald-400/30">Join street →</button>}
+            {isSpectator && <button onClick={handleJoinAsPlayer} className="px-4 py-1.5 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 hover:from-emerald-300 hover:to-emerald-500 text-white text-xs font-black shadow-md border border-emerald-400/30">Join to play</button>}
             {!isPlayer && !isSpectator && <><button onClick={handleSpectate} className="px-3.5 py-1.5 rounded-full bg-white/[0.07] hover:bg-white/[0.11] border border-white/15 text-white text-xs font-bold backdrop-blur">Watch</button><button onClick={handleJoinAsPlayer} className="px-4 py-1.5 rounded-full bg-gradient-to-br from-[#fffbeb] to-[#fde68a] hover:to-white text-[#0e2533] text-xs font-black shadow border border-amber-400/20">Join</button></>}
           </div>
         </div>
-        {isSpectator && <p className="text-xs font-bold text-amber-200 mt-2">You’re watching — tap <span className="text-emerald-300">Join street</span> to play</p>}
+        {isSpectator && <p className="text-xs text-amber-300 mt-2">You’re watching - tap Join to play</p>}
         {room.spectators?.length > 0 && <div className="mt-2.5 flex flex-wrap gap-2">{room.spectators.map(s=> <span key={s.id} className="px-2.5 py-1 rounded-full bg-white/[0.07] border border-white/10 text-white text-xs font-bold backdrop-blur">{s.name}</span>)}</div>}
-        {!isPlayer && !isSpectator && <p className="text-xs text-white/40 mt-1.5">Stay warm — watch or join the street</p>}
+        {!isPlayer && !isSpectator && <p className="text-xs text-white/40 mt-1.5">Watch or join the game</p>}
       </div>
         </>
       )}
@@ -594,7 +594,6 @@ export default function Lobby({ spectate = false }) {
               <div className="rounded-2xl glass-lantern p-3.5 flex flex-col items-center gap-2">
                 <span className="inline-flex items-center gap-2 text-xs font-black tracking-widest text-white/60"><span className="w-7 h-7 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">👁️</span> Watching • {room.spectatorCount || 0}</span>
                 {room.spectators?.length>0 && <div className="flex flex-wrap gap-2 justify-center">{room.spectators.map(s=> <span key={s.id} className="px-2.5 py-1 rounded-full bg-white/[0.07] border border-white/10 text-white text-xs font-bold backdrop-blur">{s.name}</span>)}</div>}
-                {!room.spectators?.length && <p className="text-xs text-white/35">Fog is thick — spectators see the street only</p>}
               </div>
             </>
           ) : (
@@ -607,24 +606,24 @@ export default function Lobby({ spectate = false }) {
                       <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400/20 to-orange-500/10 border border-amber-400/20 flex items-center justify-center text-lg">🕵️</div>
                       <div>
                         <h4 className="font-[900] text-white text-[15px] leading-none">Veil Street</h4>
-                        <p className="text-xs text-amber-200/60 font-bold tracking-wide mt-0.5">Hidden roles • {totalPlayers} / {room.maxPlayers} lanterns</p>
+                        <p className="text-xs text-white/40 mt-0.5">{totalPlayers} / {room.maxPlayers} — need {room.minPlayers} to start</p>
                       </div>
                     </div>
-                    <span className={`px-2.5 py-1 rounded-full border text-[10px] font-black tracking-widest ${canStart ? 'bg-emerald-500/15 border-emerald-500/25 text-emerald-300' : 'bg-amber-500/12 border-amber-500/20 text-amber-200'}`}>{canStart ? 'READY' : 'NEED MORE'}</span>
+                    <span className={`px-2.5 py-1 rounded-full border text-[10px] font-black tracking-widest ${canStart ? 'bg-emerald-500/15 border-emerald-500/25 text-emerald-300' : 'bg-amber-500/12 border-amber-500/20 text-amber-200'}`}>{canStart ? 'Ready' : 'Need more'}</span>
                   </div>
                   <div className="mt-3 h-1.5 rounded-full bg-white/10 overflow-hidden p-0.5">
                     <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all" style={{ width: `${Math.min(100, (totalPlayers / room.minPlayers)*100)}%` }} />
                   </div>
-                  <p className="text-xs text-white/45 mt-1.5">{totalPlayers} / {room.minPlayers} needed • {room.minPlayers - totalPlayers > 0 ? `${room.minPlayers - totalPlayers} more to light the street` : 'Street is warm — start when ready'}</p>
+                  <p className="text-xs text-white/45 mt-1.5">{totalPlayers} / {room.maxPlayers} players • {canStart ? 'Ready to start!' : `Need ${room.minPlayers - totalPlayers} more`}</p>
                   {isHost ? (
                     <>
                       <button onClick={handleStartQuest} disabled={!canStart} className={`mt-4 w-full py-3.5 rounded-full font-[900] tracking-wide flex items-center justify-center gap-2 border transition-all ${canStart ? "bg-gradient-to-br from-[#fffbeb] via-[#fde68a] to-[#fbbf24] hover:from-white hover:to-[#fde68a] text-[#0e2533] shadow-lantern border-amber-400/20" : "bg-white/10 text-white/30 cursor-not-allowed border-white/10"}`}>
-                        {canStart ? <><span className="w-6 h-6 rounded-full bg-[#0e2533] text-amber-300 flex items-center justify-center text-xs">▶</span> Light the Veil — Start</> : `Need ${room.minPlayers} players (have ${totalPlayers})`}
+                        {canStart ? <><span className="w-6 h-6 rounded-full bg-[#0e2533] text-amber-300 flex items-center justify-center text-xs">▶</span> Start Quest</> : `Need ${room.minPlayers} players (have ${totalPlayers})`}
                       </button>
-                      {!canStart && supportsBots && <p className="text-xs text-white/35 mt-2 text-center">Add lantern bots or wait for friends • Bots bluff like humans</p>}
+                      {!canStart && supportsBots && <p className="text-xs text-white/35 mt-2 text-center">Add bots or wait for players to reach {room.minPlayers}.</p>}
                     </>
                   ) : (
-                    <p className={`mt-4 text-center py-3 rounded-full border text-sm font-bold ${canStart ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' : 'bg-white/5 border-white/10 text-white/45'}`}>{canStart ? "✨ Street is ready — host can start" : `Waiting for ${room.minPlayers - totalPlayers} more…`}</p>
+                    <p className={`mt-4 text-center py-3 rounded-full border text-sm font-bold ${canStart ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' : 'bg-white/5 border-white/10 text-white/45'}`}>{canStart ? "Ready to start!" : `Need ${room.minPlayers - totalPlayers} more to start`}</p>
                   )}
                 </div>
               )}
@@ -632,18 +631,18 @@ export default function Lobby({ spectate = false }) {
               {isHost ? (
                 <div className={`rounded-[20px] border p-4 sm:p-5 relative overflow-hidden ${supportsBots ? "glass-lantern" : "bg-white/5 border-white/10 opacity-60"}`}>
                   <div className="absolute -top-6 -right-6 w-24 h-24 bg-amber-400/8 blur-xl rounded-full pointer-events-none" />
-                  <h4 className="font-[900] text-white text-sm flex items-center gap-2"><span className="w-7 h-7 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-xs">🤖</span> Lantern Bots</h4>
+                  <h4 className="font-[900] text-white text-sm flex items-center gap-2"><span className="w-7 h-7 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-xs">🤖</span> Add Bots</h4>
                   {!supportsBots ? (
-                    <p className="text-xs text-amber-200/80 mt-2 leading-relaxed">Bots rest for {game.label}. Switch to <span className="font-black text-amber-200">Veil Street</span> to use them, or gather more friends.</p>
+                    <p className="text-xs text-amber-300 mt-2">Bots not supported for {game.label}. Switch to Veil Street to use bots, or play with humans only.</p>
                   ) : totalPlayers >= room.maxPlayers ? (
-                    <p className="text-xs text-amber-200/80 mt-2">Street is full ({totalPlayers}/{room.maxPlayers}) — remove a lantern to add another.</p>
+                    <p className="text-xs text-amber-300 mt-2">Room full ({totalPlayers}/{room.maxPlayers}) — remove a player/bot to add more.</p>
                   ) : (
                     <>
                       <div className="mt-3 flex gap-2 items-center">
-                        <input value={botName} onChange={e => setBotName(e.target.value)} placeholder="Name — or leave blank for a wanderer" maxLength={20} className="flex-1 px-3.5 py-3 rounded-2xl bg-white/[0.06] border border-white/15 text-white placeholder:text-white/30 text-sm outline-none focus:border-amber-400/30 focus:bg-white/[0.09]" />
+                        <input value={botName} onChange={e => setBotName(e.target.value)} placeholder="Leave empty for random name" maxLength={20} className="flex-1 px-3.5 py-3 rounded-2xl bg-white/[0.06] border border-white/15 text-white placeholder:text-white/30 text-sm outline-none focus:border-amber-400/30 focus:bg-white/[0.09]" />
                         <button onClick={handleAddBot} className="px-5 py-3 rounded-2xl bg-gradient-to-br from-[#fffbeb] to-[#fde68a] hover:to-white text-[#0e2533] text-sm font-[900] shadow border border-amber-400/20">Add</button>
                       </div>
-                      <p className="text-xs text-white/30 mt-2">{totalPlayers} / {room.maxPlayers} on the street — bots flicker like humans</p>
+                      <p className="text-xs text-white/30 mt-2">{totalPlayers} / {room.maxPlayers} players — bots take a spot</p>
                     </>
                   )}
                 </div>
@@ -651,7 +650,7 @@ export default function Lobby({ spectate = false }) {
 
               <div className={`rounded-[20px] border p-4 sm:p-5 ${isGameLocked ? "bg-white/5 border-white/10 opacity-60" : "glass-lantern"}`}>
                 <div className="flex items-center justify-between gap-3">
-                  <span className="font-[900] text-white text-sm flex items-center gap-2"><span className="w-7 h-7 rounded-xl bg-amber-400/12 border border-amber-400/20 flex items-center justify-center text-xs">🎛️</span> Street Setup</span>
+                  <span className="font-[900] text-white text-sm flex items-center gap-2"><span className="w-7 h-7 rounded-xl bg-amber-400/12 border border-amber-400/20 flex items-center justify-center text-xs">🎛️</span> Game</span>
                   {isHost ? (
                     <select value={room.game} onChange={handleChangeGame} disabled={isGameLocked} className={`px-3 py-1.5 rounded-full border text-xs font-black tracking-wide ${isGameLocked ? "bg-white/5 border-white/10 text-white/30 cursor-not-allowed" : "bg-white/[0.07] border-white/15 text-white hover:bg-white/[0.10]"}`}>
                       {games.map(g => <option key={g.id} value={g.id} className="bg-[#0f2231]">{g.label}{g.supportsBots===false ? " • no bots" : " • bots"}</option>)}
@@ -660,11 +659,11 @@ export default function Lobby({ spectate = false }) {
                     <span className="px-3 py-1.5 rounded-full bg-white/[0.07] border border-white/15 text-white text-xs font-black">{game.label}</span>
                   )}
                 </div>
-                <p className="text-xs text-white/45 mt-1.5 leading-relaxed">{games.find(g=>g.id===room.game)?.description || ""} {isGameLocked && <span className="inline-flex ml-1 px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/20 text-amber-200 text-[10px] font-black">LANTERN LOCKED</span>}</p>
+                <p className="text-xs text-white/45 mt-1.5 leading-relaxed">{games.find(g=>g.id===room.game)?.description || ""} {isGameLocked && <span className="inline-flex ml-1 px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/20 text-amber-200 text-[10px] font-black">Lobby locked during game</span>}</p>
                 {isQuestGame && (
                   <div className="mt-3 flex items-center justify-between px-3 py-2 rounded-xl bg-white/[0.04] border border-white/10">
-                    <span className="text-[11px] font-black tracking-wide text-white/60">{['morgana','mordred','oberon'].filter(k=> !!room.gameOptions[k]).length}/{totalPlayers<=6?1:totalPlayers<=8?2:3} veil extras for {totalPlayers}</span>
-                    <span className="text-[11px] font-bold text-amber-200/70">Merlin + Assassin always lit</span>
+                    <span className="text-[11px] font-black tracking-wide text-white/60">{['morgana','mordred','oberon'].filter(k=> !!room.gameOptions[k]).length}/{totalPlayers<=6?1:totalPlayers<=8?2:3} evil extras for {totalPlayers}p</span>
+                    <span className="text-[11px] font-bold text-amber-200/70">Merlin + Assassin always</span>
                   </div>
                 )}
                 <div className="mt-4 grid gap-4">
@@ -679,11 +678,11 @@ export default function Lobby({ spectate = false }) {
                       <label className="text-xs font-[800] text-white/70 w-[92px] flex items-center gap-1.5">{opt.label} {wouldExceed && <span className="px-1.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/20 text-amber-300 text-[9px] font-black">MAX</span>}</label>
                       {opt.type === "toggle" ? (
                         isHost ? (
-                          <button disabled={disabled} onClick={() => handleOptionChange(opt.key, !room.gameOptions[opt.key])} title={wouldExceed ? `Max ${maxEvil} extras for ${totalPlayers} — veil is thick enough` : ''} className={`relative w-[52px] h-7 rounded-full border transition-all p-0.5 ${disabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer"} ${room.gameOptions[opt.key] ? "bg-gradient-to-br from-amber-400 to-orange-500 border-amber-400/30 shadow-[0_0_12px_rgba(251,191,36,0.32)]" : "bg-white/12 border-white/15"}`}>
+                          <button disabled={disabled} onClick={() => handleOptionChange(opt.key, !room.gameOptions[opt.key])} title={wouldExceed ? `Max ${maxEvil} evil extras for ${totalPlayers} players` : ''} className={`relative w-[52px] h-7 rounded-full border transition-all p-0.5 ${disabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer"} ${room.gameOptions[opt.key] ? "bg-gradient-to-br from-amber-400 to-orange-500 border-amber-400/30 shadow-[0_0_12px_rgba(251,191,36,0.32)]" : "bg-white/12 border-white/15"}`}>
                             <span className={`block w-6 h-6 rounded-full bg-white shadow-md transition-transform ${room.gameOptions[opt.key] ? "translate-x-[24px]" : "translate-x-0"}`} />
                           </button>
                         ) : (
-                          <span className={`px-2.5 py-1 rounded-full text-xs font-black border ${room.gameOptions[opt.key] ? "bg-amber-500/15 border-amber-500/20 text-amber-200" : "bg-white/5 border-white/10 text-white/40"}`}>{room.gameOptions[opt.key] ? "Lit" : "Dark"}</span>
+                          <span className={`px-2.5 py-1 rounded-full text-xs font-black border ${room.gameOptions[opt.key] ? "bg-amber-500/15 border-amber-500/20 text-amber-200" : "bg-white/5 border-white/10 text-white/40"}`}>{room.gameOptions[opt.key] ? "On" : "Off"}</span>
                         )
                       ) : opt.type === "slider" ? (
                         isHost ? (
@@ -707,7 +706,7 @@ export default function Lobby({ spectate = false }) {
                     );
                   })}
                 </div>
-                {isGameLocked ? <p className="text-xs text-white/30 mt-4 flex items-center gap-1.5"><span className="w-5 h-5 rounded-full bg-amber-400/15 flex items-center justify-center text-[10px]">🔒</span> Lanterns locked — reset the street to change.</p> : !isHost ? <p className="text-xs text-white/30 mt-4">Only the keeper (host) can adjust the street.</p> : null}
+                {isGameLocked ? <p className="text-xs text-white/30 mt-4 flex items-center gap-1.5"><span className="w-5 h-5 rounded-full bg-amber-400/15 flex items-center justify-center text-[10px]">🔒</span> Reset game to change settings.</p> : !isHost ? <p className="text-xs text-white/30 mt-4">Only the host can change these settings.</p> : null}
               </div>
             </>
           )}
@@ -718,11 +717,11 @@ export default function Lobby({ spectate = false }) {
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#070b14]/70 backdrop-blur-md" onClick={() => setHostActionTarget(null)}>
           <div onClick={e => e.stopPropagation()} className="w-full max-w-[340px] rounded-[22px] glass-lantern p-6 text-center shadow-2xl">
             <div className="w-12 h-12 rounded-2xl bg-amber-400/14 border border-amber-400/20 flex items-center justify-center mx-auto text-xl">🏮</div>
-            <p className="text-sm text-white/55 mt-3">Lantern keeper action</p>
+            <p className="text-sm text-white/55 mt-3">What to do with</p>
             <p className="font-[900] text-white text-lg leading-none mt-1">{hostActionTarget.name}</p>
             <div className="mt-5 grid gap-2.5">
-              <button onClick={() => handleTransferHost(hostActionTarget.id, hostActionTarget.name)} className="w-full py-3 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-[#0e2533] font-[900] flex items-center justify-center gap-2 shadow-lantern-soft border border-amber-400/20">👑 Pass the lantern</button>
-              <button onClick={() => { handleKick(hostActionTarget.id, hostActionTarget.name); setHostActionTarget(null); }} className="w-full py-3 rounded-full bg-white/5 hover:bg-rose-500/15 border border-white/10 hover:border-rose-500/20 text-white font-bold">Remove from street</button>
+              <button onClick={() => handleTransferHost(hostActionTarget.id, hostActionTarget.name)} className="w-full py-3 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-[#0e2533] font-[900] flex items-center justify-center gap-2 shadow-lantern-soft border border-amber-400/20">👑 Make host</button>
+              <button onClick={() => { handleKick(hostActionTarget.id, hostActionTarget.name); setHostActionTarget(null); }} className="w-full py-3 rounded-full bg-white/5 hover:bg-rose-500/15 border border-white/10 hover:border-rose-500/20 text-white font-bold">Remove</button>
               <button onClick={() => setHostActionTarget(null)} className="w-full py-2.5 rounded-full bg-transparent hover:bg-white/5 text-white/60 font-bold">Close</button>
             </div>
           </div>
@@ -733,11 +732,11 @@ export default function Lobby({ spectate = false }) {
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#070b14]/70 backdrop-blur-md" onClick={() => setBotConfirm(null)}>
           <div onClick={e => e.stopPropagation()} className="w-full max-w-[340px] rounded-[22px] glass-lantern p-6 text-center shadow-2xl">
             <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto text-xl">🤖</div>
-            <p className="text-sm text-white/55 mt-3">Dim this lantern?</p>
+            <p className="text-sm text-white/55 mt-3">Remove</p>
             <p className="font-[900] text-white text-lg leading-none mt-1">{botConfirm.name}</p>
             <div className="mt-5 grid gap-2.5">
-              <button onClick={() => handleRemoveBot(botConfirm.id, botConfirm.name)} className="w-full py-3 rounded-full bg-gradient-to-br from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 text-white font-[900] shadow border border-rose-400/20">Remove bot</button>
-              <button onClick={() => setBotConfirm(null)} className="w-full py-2.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold">Keep lit</button>
+              <button onClick={() => handleRemoveBot(botConfirm.id, botConfirm.name)} className="w-full py-3 rounded-full bg-gradient-to-br from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 text-white font-[900] shadow border border-rose-400/20">Remove</button>
+              <button onClick={() => setBotConfirm(null)} className="w-full py-2.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold">Close</button>
             </div>
           </div>
         </div>
