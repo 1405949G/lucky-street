@@ -555,6 +555,43 @@ export class LuckyStreetDO {
               }
             }
           }
+          // Ghost takeover: if room has same-name player whose socket is dead, take over that slot (covers bugged-out ghost)
+          {
+            const existingRoom = this.roomManager.get(id);
+            if (existingRoom) {
+              const ghost = existingRoom.players.find(p => p.name.toLowerCase() === user.username.toLowerCase() && p.id !== socketId);
+              if (ghost) {
+                const ghostWs = this.socketIdToWs.get(ghost.id);
+                let isGhostActive = false;
+                try { const active = this.state.getWebSockets(); isGhostActive = !!(ghostWs && active.includes(ghostWs)); } catch { isGhostActive = !!(ghostWs && this.sessions.has(ghostWs)); }
+                const isGhostPending = this.pendingLeaves.has(ghost.id);
+                if (!isGhostActive || isGhostPending) {
+                  const oldId = ghost.id;
+                  const wasHost = ghost.isHost || existingRoom.hostId === oldId;
+                  console.log(`[DO] ghost takeover ${ghost.name} ${oldId} -> ${socketId} in ${id} (active=${isGhostActive} pending=${isGhostPending})`);
+                  if (isGhostPending) { const pend = this.pendingLeaves.get(oldId); if (pend) { clearTimeout(pend.timeout); this.pendingLeaves.delete(oldId); } }
+                  ghost.id = socketId;
+                  ghost.name = user.username;
+                  ghost.avatar = user.avatar;
+                  if (wasHost) {
+                    existingRoom.hostId = socketId;
+                    existingRoom.hostName = user.username;
+                    existingRoom.players.forEach(p => p.isHost = p.id === socketId);
+                    ghost.isHost = true;
+                  }
+                  existingRoom.updatedAt = Date.now();
+                  sess.currentRoom = id;
+                  this._syncAttachment(ws, sess);
+                  this.broadcast({ event: "lobby:update", data: this.roomManager.getFull(id) });
+                  this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic() });
+                  await this.persist();
+                  okAck({ ok: true, room: this.roomManager.getFull(id) });
+                  this.send(ws, { event: "room:joined", data: this.roomManager.getFull(id) });
+                  break;
+                }
+              }
+            }
+          }
           const full = this.roomManager.join({ roomId: id, socketId, username: user.username, avatar: user.avatar });
           sess.currentRoom = id;
           this._syncAttachment(ws, sess);

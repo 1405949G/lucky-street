@@ -14,7 +14,7 @@ export default function Lobby() {
   const { roomId } = useParams();
   const navigate = useNavigate();
   const { hasProfile } = useContext(ProfileContext);
-  const { socket, games } = useContext(SocketContext);
+  const { socket, games, connected, profileStatus } = useContext(SocketContext);
 
   const [room, setRoom] = useState(null);
   const [error, setError] = useState(null);
@@ -37,6 +37,9 @@ export default function Lobby() {
   useEffect(() => {
     if (!socket) return;
     if (!hasProfile) return;
+    if (!connected) return;
+    // Wait for profile to be registered on server before sync/join (prevents "Register a profile first")
+    if (profileStatus !== "ok") return;
 
     function onLobbyUpdate(full) {
       if (full.id === id) setRoom(full);
@@ -50,7 +53,7 @@ export default function Lobby() {
         return;
       }
       // Transient errors during refresh/hibernation — don't show fatal card, will retry
-      if (data?.error && (/already taken/i.test(data.error) || /timeout/i.test(data.error) || /Register a profile first/i.test(data.error))) {
+      if (data?.error && (/already taken/i.test(data.error) || /timeout/i.test(data.error) || /Register a profile first/i.test(data.error) || /missing identity/i.test(data.error))) {
         return;
       }
       setError(data.error);
@@ -98,7 +101,7 @@ export default function Lobby() {
       socket.off("connect", onReconnect);
       socket.off("connected", onReconnect);
     };
-  }, [socket, id, hasProfile]);
+  }, [socket, id, hasProfile, connected, profileStatus]);
 
   // If user hits browser back / component unmounts while still in room, try to leave
   // (prevents 30s grace keeping ghost player). Intentional Leave also calls handleLeave.
@@ -144,11 +147,17 @@ export default function Lobby() {
   }
 
   if (error) {
+    const isTransient = /already taken|timeout|Register a profile/i.test(error);
     return (
       <div className="max-w-[520px] mx-auto px-4 py-10">
         <div className="rounded-2xl bg-rose-500/10 border border-rose-500/20 p-6 text-center">
           <p className="font-bold text-rose-300">{error}</p>
-          <button onClick={() => navigate("/")} className="mt-4 px-5 py-2 rounded-full bg-white text-[#0e2533] font-bold">Back to Lobbies</button>
+          <p className="text-xs text-white/50 mt-2">{isTransient ? "Retrying automatically — or tap Retry." : "Check the code and try again."}</p>
+          <div className="mt-4 flex gap-2 justify-center">
+            {isTransient && <button onClick={() => { setError(null); socket?._luckyAttemptJoin?.(); if (!room) socket?.emit("room:sync", { roomId: id }, (r)=>{ if(r?.ok) setRoom(r.room); }); }} className="px-5 py-2 rounded-full bg-amber-400 text-[#0e2533] font-bold">Retry</button>}
+            <button onClick={() => navigate("/")} className="px-5 py-2 rounded-full bg-white text-[#0e2533] font-bold">Back to Lobbies</button>
+          </div>
+          <a href="/admin" className="text-xs text-white/30 underline mt-3 inline-block">Admin: clear ghost rooms</a>
         </div>
       </div>
     );

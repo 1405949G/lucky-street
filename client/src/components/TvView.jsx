@@ -47,11 +47,13 @@ export default function TvView({ roomId: propId, embedded = false }) {
   }, [socket, id]);
 
   if (error) {
+    const isTransient = /timeout|not found/i.test(error);
     return (
       <div className={`${embedded ? "p-6" : "max-w-[760px] mx-auto px-4 py-10"} text-center`}>
         <div className="rounded-2xl bg-rose-500/10 border border-rose-500/20 p-6">
           <p className="font-bold text-rose-300">{error}</p>
-          <p className="text-sm text-white/50 mt-1">Check the code and try again.</p>
+          <p className="text-sm text-white/50 mt-1">{isTransient ? "Retrying automatically — refresh if needed." : "Check the code and try again."}</p>
+          {isTransient && <button onClick={() => { setError(null); window.location.reload(); }} className="mt-3 px-4 py-1.5 rounded-full bg-white/10 border border-white/10 text-white text-xs">Retry</button>}
         </div>
       </div>
     );
