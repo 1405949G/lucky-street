@@ -269,11 +269,6 @@ export default function Lobby() {
         <div className="w-[76px]" aria-hidden />
       </div>
 
-      {/* TV button — open spectator view on big screen */}
-      <div className="mt-3 flex justify-center">
-        <button onClick={() => window.open(`/tv/${id}`, "_blank")} className="px-4 py-1.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-xs font-bold text-white/70">📺 Open TV View</button>
-      </div>
-
       {/* Mobile toggle for Kahoot-style split: Board vs Controls */}
       <div className="mt-4 flex justify-center lg:hidden">
         <div className="inline-flex rounded-full bg-white/5 border border-white/10 p-1">
