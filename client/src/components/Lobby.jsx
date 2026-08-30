@@ -84,6 +84,7 @@ export default function Lobby() {
   const [kickedPopup, setKickedPopup] = useState(false);
   const [hostActionTarget, setHostActionTarget] = useState(null);
   const [botConfirm, setBotConfirm] = useState(null);
+  const [mobileTab, setMobileTab] = useState("board"); // board | controls — for phone split-view like Kahoot
 
   const id = String(roomId || "").toUpperCase();
 
@@ -293,18 +294,36 @@ export default function Lobby() {
         <button onClick={handleLeave} className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-xs font-bold text-white/70">Leave</button>
       </div>
 
-      <div className="mt-4 rounded-[24px] bg-[#29546c] border border-white/10 shadow-xl p-6 text-center relative overflow-hidden">
-        <div className="absolute inset-0 opacity-20" style={{ background: "radial-gradient(ellipse at top, rgba(255,255,255,0.15), transparent 60%)" }}></div>
-        <div className="relative">
-          <div className="font-display font-black text-[36px] tracking-[0.18em] text-[#f3ecd8]" style={{ textShadow: "0 2px 0 rgba(0,0,0,0.25)" }}>{room.id}</div>
-          <p className="text-xs text-white/70 mt-1">Share: <span className="font-mono bg-white/10 px-1.5 py-0.5 rounded">{window.location.origin}/room/{room.id}</span></p>
-          <p className="text-xs text-white/40 mt-1">Send this link to friends to invite them.</p>
-          <div className="mt-3 flex justify-center gap-2">
-            <button onClick={() => { navigator.clipboard?.writeText(`${window.location.origin}/room/${room.id}`); showToast("Invite link copied"); }} className="px-4 py-2 rounded-full bg-[#f3ecd8] hover:bg-white text-[#0e2533] text-xs font-extrabold">Copy Invite Link</button>
-            <span className="px-3 py-2 rounded-full bg-white/10 border border-white/10 text-xs font-bold text-white/70">{room.slotsText}</span>
-          </div>
+      {/* TV button — open spectator view on big screen */}
+      <div className="mt-3 flex justify-center">
+        <button onClick={() => window.open(`/tv/${id}`, "_blank")} className="px-4 py-1.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-xs font-bold text-white/70">📺 Open TV View</button>
+      </div>
+
+      {/* Mobile toggle for Kahoot-style split: Board vs Controls */}
+      <div className="mt-4 flex justify-center lg:hidden">
+        <div className="inline-flex rounded-full bg-white/5 border border-white/10 p-1">
+          <button onClick={() => setMobileTab("board")} className={`px-4 py-1.5 rounded-full text-xs font-bold ${mobileTab === "board" ? "bg-[#f3ecd8] text-[#0e2533]" : "text-white/60"}`}>Board</button>
+          <button onClick={() => setMobileTab("controls")} className={`px-4 py-1.5 rounded-full text-xs font-bold ${mobileTab === "controls" ? "bg-[#f3ecd8] text-[#0e2533]" : "text-white/60"}`}>My Controls</button>
         </div>
       </div>
+
+      {/* Split view: board (public) on top/left, controls (private) at bottom/right — PC sees both, phone toggles */}
+      <div className="mt-4 grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-5">
+        {/* Board — public, visible on TV */}
+        <div className={`${mobileTab === "controls" ? "hidden lg:block" : "block"} space-y-4`}>
+          <div className="rounded-[24px] bg-[#29546c] border border-white/10 shadow-xl p-6 text-center relative overflow-hidden">
+            <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ background: "radial-gradient(ellipse at top, rgba(255,255,255,0.15), transparent 60%)" }}></div>
+            <div className="relative">
+              <p className="text-xs tracking-widest font-bold text-white/50">JOIN CODE</p>
+              <div className="font-display font-black text-[36px] tracking-[0.18em] text-[#f3ecd8]" style={{ textShadow: "0 2px 0 rgba(0,0,0,0.25)" }}>{room.id}</div>
+              <p className="text-xs text-white/70 mt-1">Share: <span className="font-mono bg-white/10 px-1.5 py-0.5 rounded break-all">{window.location.origin}/room/{room.id}</span></p>
+              <p className="text-xs text-white/40 mt-1">Players look here — answers on their phones.</p>
+              <div className="mt-3 flex justify-center gap-2 flex-wrap">
+                <button onClick={() => { navigator.clipboard?.writeText(`${window.location.origin}/room/${room.id}`); showToast("Invite link copied"); }} className="px-4 py-2 rounded-full bg-[#f3ecd8] hover:bg-white text-[#0e2533] text-xs font-extrabold">Copy Invite Link</button>
+                <span className="px-3 py-2 rounded-full bg-white/10 border border-white/10 text-xs font-bold text-white/70">{room.slotsText}</span>
+              </div>
+            </div>
+          </div>
 
       <div className="mt-6">
         <h3 className="font-extrabold text-white text-sm">Players & Bots</h3>
@@ -373,9 +392,12 @@ export default function Lobby() {
           ))}
         </div>
       </div>
+        </div>
+        {/* Controls — private, host-only on desktop right, phone toggles */}
+        <div className={`${mobileTab === "board" ? "hidden lg:block" : "block"} space-y-5`}>
 
       {isHost ? (
-        <div className="mt-5 rounded-2xl bg-[#0f2231]/80 border border-white/10 p-4">
+        <div className="rounded-2xl bg-[#0f2231]/80 border border-white/10 p-4">
           <h4 className="font-bold text-white text-sm">Add Bots</h4>
           <div className="mt-2 flex gap-2 items-center">
             <input value={botName} onChange={e => setBotName(e.target.value)} placeholder="Leave empty for random name" maxLength={20} className="flex-1 px-3 py-2.5 rounded-xl bg-white/10 border border-white/15 text-white placeholder:text-white/30 text-sm outline-none" />
@@ -440,6 +462,8 @@ export default function Lobby() {
           ))}
         </div>
         <p className="text-xs text-white/30 mt-3">{isHost ? "Changes show up for everyone right away." : "Only the host can change these settings."}</p>
+        </div>
+        </div>
       </div>
 
       {hostActionTarget && (

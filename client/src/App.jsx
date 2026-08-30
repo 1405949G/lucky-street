@@ -7,6 +7,7 @@ import RoomBrowser from "./components/RoomBrowser.jsx";
 import CreateRoomModal from "./components/CreateRoomModal.jsx";
 import PasswordModal from "./components/PasswordModal.jsx";
 import Lobby from "./components/Lobby.jsx";
+import TvView from "./components/TvView.jsx";
 
 function MainPage() {
   const { profile, hasProfile, showOnboarding, setShowOnboarding } = useContext(ProfileContext);
@@ -122,6 +123,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<MainPage />} />
       <Route path="/room/:roomId" element={<Lobby />} />
+      <Route path="/tv/:roomId" element={<TvView />} />
     </Routes>
   );
 }
