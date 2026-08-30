@@ -1,5 +1,5 @@
-/**
- * server/src/games.js — Game catalog (authoritative)
+﻿/**
+ * server/src/games.js - Game catalog (authoritative)
  * SINGLE SOURCE: imports manifests from lucky-street/games/<id>/manifest.js
  * To add a game: create lucky-street/games/<newId>/manifest.js (see games/README.md)
  * then import and add entry below. Do NOT inline large objects here.

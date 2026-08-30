@@ -1,7 +1,7 @@
-export default {
+﻿export default {
   id: "checkpoint-chaos",
   label: "Checkpoint Chaos",
-  description: "Co-op chaos — hit every checkpoint before time runs out",
+  description: "Co-op chaos - hit every checkpoint before time runs out",
   minPlayers: 2,
   maxPlayers: 4,
   defaultMaxPlayers: 4,

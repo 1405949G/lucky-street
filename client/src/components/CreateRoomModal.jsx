@@ -1,8 +1,8 @@
-/**
- * CreateRoomModal — Spec 4
+﻿/**
+ * CreateRoomModal - Spec 4
  * - Host selects game from dropdown
  * - Selecting game autofills Max Players based on that game's standard setting (host can overwrite)
- * - No password — all rooms are open (share link)
+ * - No password - all rooms are open (share link)
  * - On creation, server generates 4-char ID
  */
 
@@ -29,7 +29,7 @@ export default function CreateRoomModal({ onClose, onCreated }) {
     const selected = games.find(x => x.id === gameId);
     const mp = selected ? selected.defaultMaxPlayers : 6; // fixed to manifest default
     if (!socket?.connected && !socket?.id) {
-      return setError("Not connected — please wait a moment and try again");
+      return setError("Not connected - please wait a moment and try again");
     }
     setSubmitting(true);
     let done = false;
@@ -37,7 +37,7 @@ export default function CreateRoomModal({ onClose, onCreated }) {
       if (!done) {
         done = true;
         setSubmitting(false);
-        setError("Connection slow — please try again");
+        setError("Connection slow - please try again");
       }
     }, 6000);
     socket.emit("room:create", { gameId, maxPlayers: mp }, (res) => {
@@ -81,7 +81,7 @@ export default function CreateRoomModal({ onClose, onCreated }) {
                   <span className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0 ${active ? 'bg-amber-400 text-[#0e2533]' : 'bg-white/10 text-white/70'}`}>{icons[g.id] || '🎮'}</span>
                   <div className="min-w-0 flex-1">
                     <p className={`text-sm font-bold leading-none ${active ? 'text-white' : 'text-white/90'}`}>{g.label}</p>
-                    <p className="text-xs text-white/50 mt-1 leading-snug line-clamp-2">{g.minPlayers}–{g.maxPlayers} • {g.description}</p>
+                    <p className="text-xs text-white/50 mt-1 leading-snug line-clamp-2">{g.minPlayers}-{g.maxPlayers} • {g.description}</p>
                   </div>
                   <span className={`ml-2 w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 text-xs font-bold transition-colors ${active ? 'bg-amber-400 border-amber-400 text-[#0e2533]' : 'border-white/15 text-transparent'}`}>✓</span>
                 </button>

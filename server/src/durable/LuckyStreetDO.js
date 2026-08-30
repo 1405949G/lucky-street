@@ -1,5 +1,5 @@
-/**
- * server/src/durable/LuckyStreetDO.js — Option B: Cloudflare Durable Object (patched)
+﻿/**
+ * server/src/durable/LuckyStreetDO.js - Option B: Cloudflare Durable Object (patched)
  * - Rooms + users persisted to DO storage (survives hibernation/idle, fixes "lobby closes after awhile / on refresh")
  * - Grace period: player stays in room 30s after disconnect (refresh), reconnect with same name re-attaches
  * - Speaks native WS JSON: {event, data, ackId} <-> {event,data} + {type:"ack",ackId,data}
@@ -81,7 +81,7 @@ export class LuckyStreetDO {
           }
           console.log(`[DO] restored ${this.userRegistry.byName.size} users from storage`);
         }
-        // Pending leaves are ephemeral (in-memory only) — if DO was evicted, just keep players in rooms
+        // Pending leaves are ephemeral (in-memory only) - if DO was evicted, just keep players in rooms
       } catch (e) {
         console.warn("[DO] restore failed", e);
       }
@@ -90,7 +90,7 @@ export class LuckyStreetDO {
 
   async persist() {
     try {
-      // rooms: array of [id, room] — rooms are plain JSON
+      // rooms: array of [id, room] - rooms are plain JSON
       await this.state.storage.put("rooms", Array.from(this.roomManager.rooms.entries()));
       // users: plain without timer handle
       const usersPlain = Array.from(this.userRegistry.byName.entries()).map(([k, v]) => [
@@ -232,10 +232,10 @@ export class LuckyStreetDO {
       if (!room) return new Response(JSON.stringify({ error: "Room not found" }), { status: 404, headers: { ...cors, "Content-Type": "application/json" } });
       return new Response(JSON.stringify(room), { headers: { ...cors, "Content-Type": "application/json" } });
     }
-    // ——— Admin: browse/clear like KV (replaces Worker KV dashboard) ———
+    // --- Admin: browse/clear like KV (replaces Worker KV dashboard) ---
     // List all rooms detailed (GET) / delete single (DELETE) / clear all (POST)
     if (url.pathname.startsWith("/api/admin/")) {
-      // No auth on free tier — hide behind obscurity + check Origin matches CLIENT_ORIGIN if set
+      // No auth on free tier - hide behind obscurity + check Origin matches CLIENT_ORIGIN if set
       if (url.pathname === "/api/admin/rooms" && request.method === "GET") {
         const all = [...this.roomManager.rooms.values()].map(r => this.roomManager.getFull(r.id));
         return new Response(JSON.stringify({ count: all.length, rooms: all, pendingLeaves: [...this.pendingLeaves.keys()], storageKeys: ["rooms","users"] }), { headers: { ...cors, "Content-Type": "application/json" } });
@@ -321,7 +321,7 @@ export class LuckyStreetDO {
     const socketId = sess.socketId;
     console.log(`[DO disc] ${socketId} (${sess.username || "unknown"}) code=${code} grace=${ROOM_GRACE_MS}ms`);
 
-    // Username GC (5 min) — keep as before
+    // Username GC (5 min) - keep as before
     this.userRegistry.handleDisconnect(socketId);
     try { await this.state.storage.setAlarm(Date.now() + this.gcMs); } catch {}
     // Try to persist username state
@@ -339,7 +339,7 @@ export class LuckyStreetDO {
         await this.persist();
       }
     }
-    // Room grace — don't remove immediately, keep slot 10s for refresh
+    // Room grace - don't remove immediately, keep slot 10s for refresh
     if (roomId) {
       const room = this.roomManager.get(roomId);
       if (room) {
@@ -351,7 +351,7 @@ export class LuckyStreetDO {
             if (!curRoom) { this.pendingLeaves.delete(socketId); return; }
             const idx = curRoom.players.findIndex(p => p.id === socketId);
             if (idx === -1) { this.pendingLeaves.delete(socketId); return; }
-            // Still not reconnected — now actually remove
+            // Still not reconnected - now actually remove
             const wasHost = curRoom.players[idx].isHost;
             curRoom.players.splice(idx, 1);
             if (curRoom.players.length === 0) {
@@ -376,11 +376,11 @@ export class LuckyStreetDO {
           }, ROOM_GRACE_MS);
           this.pendingLeaves.set(socketId, { roomId, timeout, expiresAt: Date.now() + ROOM_GRACE_MS });
           try { await this.state.storage.setAlarm(Date.now() + ROOM_GRACE_MS + 1000); } catch {}
-          // Do NOT delete from room yet — keep visible for grace
+          // Do NOT delete from room yet - keep visible for grace
         }
       }
     } else {
-      // Not in a room — nothing to grace, just broadcast rooms
+      // Not in a room - nothing to grace, just broadcast rooms
       this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic() });
     }
 
@@ -523,7 +523,7 @@ export class LuckyStreetDO {
               isOldActive = !!(oldWs && this.sessions.has(oldWs));
             }
             if (!isOldActive) {
-              // Old socket gone (refresh) — free the name and re-attach room player if any
+              // Old socket gone (refresh) - free the name and re-attach room player if any
               if (existing.timer) clearTimeout(existing.timer);
               // Re-attach room player if oldId still in a room with same name
               for (const room of this.roomManager.rooms.values()) {
@@ -556,7 +556,7 @@ export class LuckyStreetDO {
               await this.persist();
             }
           }
-          // If this socket had a pending room grace (refresh of same socketId? not needed) — also handle reattach via pendingLeaves for same name
+          // If this socket had a pending room grace (refresh of same socketId? not needed) - also handle reattach via pendingLeaves for same name
           let reattached = false;
           for (const [oldId, pend] of Array.from(this.pendingLeaves.entries())) {
             const room = this.roomManager.get(pend.roomId);
@@ -577,9 +577,9 @@ export class LuckyStreetDO {
               }
             }
           }
-          // Disallow name change inside a room — must leave first (prevents main-page / lobby desync)
+          // Disallow name change inside a room - must leave first (prevents main-page / lobby desync)
           if (sess.currentRoom && sess.username && lower !== sess.username.toLowerCase()) {
-            throw new Error("Name/avatar locked in room — leave and change at main menu");
+            throw new Error("Name/avatar locked in room - leave and change at main menu");
           }
           const entry = this.userRegistry.register(socketId, clean, data.avatar ?? null);
           sess.username = entry.username;
@@ -594,9 +594,9 @@ export class LuckyStreetDO {
           break;
         }
         case "profile:update": {
-          if (sess.currentRoom) throw new Error("Change name/avatar at the main menu — not inside a room");
+          if (sess.currentRoom) throw new Error("Change name/avatar at the main menu - not inside a room");
           const current = this.userRegistry.getBySocket(socketId);
-          if (!current) throw new Error("Not registered — call profile:register first");
+          if (!current) throw new Error("Not registered - call profile:register first");
           const newName = data.username ? sanitizeName(data.username) : current.username;
           const updated = this.userRegistry.update(socketId, newName, data.avatar);
           sess.username = updated.username;
@@ -668,9 +668,9 @@ export class LuckyStreetDO {
         }
         case "room:join": {
           const user = this.userRegistry.getBySocket(socketId);
-          if (!user) throw new Error("Register a profile first — missing identity");
+          if (!user) throw new Error("Register a profile first - missing identity");
           const id = String(data.roomId || "").toUpperCase().trim();
-          if (!isValidRoomId(id)) throw new Error("Invalid Room ID — must be 4 alphanumeric characters");
+          if (!isValidRoomId(id)) throw new Error("Invalid Room ID - must be 4 alphanumeric characters");
           // If this socket had a pending leave for same room with oldId, cancel it first (already handled in profile:register reattach, but also handle direct join)
           for (const [oldId, pend] of Array.from(this.pendingLeaves.entries())) {
             if (pend.roomId === id) {
@@ -697,7 +697,7 @@ export class LuckyStreetDO {
                 const isGhostPending = this.pendingLeaves.has(ghost.id);
                 if (!isGhostActive || isGhostPending) {
                   const oldId = ghost.id;
-                  // Only preserve host if ghost was sole host or room would be empty — prevents kicked ex-host from stealing host on rejoin
+                  // Only preserve host if ghost was sole host or room would be empty - prevents kicked ex-host from stealing host on rejoin
                   const wasHost = (ghost.isHost || existingRoom.hostId === oldId) && existingRoom.players.length === 1;
                   console.log(`[DO] ghost takeover ${ghost.name} ${oldId} -> ${socketId} in ${id} (active=${isGhostActive} pending=${isGhostPending} wasHost=${wasHost})`);
                   if (isGhostPending) { const pend = this.pendingLeaves.get(oldId); if (pend) { clearTimeout(pend.timeout); this.pendingLeaves.delete(oldId); } }
@@ -743,7 +743,7 @@ export class LuckyStreetDO {
           break;
         }
         case "room:spectate": {
-          // Join as spectator — no username required, count only
+          // Join as spectator - no username required, count only
           const id = String(data.roomId || "").toUpperCase().trim();
           if (!isValidRoomId(id)) throw new Error("Invalid Room ID");
           const room = this.roomManager.get(id);
@@ -765,7 +765,7 @@ export class LuckyStreetDO {
         }
         case "spectator:join": {
           const user = this.userRegistry.getBySocket(socketId);
-          if (!user) throw new Error("Register a profile first — missing identity");
+          if (!user) throw new Error("Register a profile first - missing identity");
           const id = String(data.roomId || sess.currentRoom || "").toUpperCase();
           const full = this.roomManager.promoteSpectator({ roomId: id, socketId, username: user.username, avatar: user.avatar });
           // keep spectator -> player, update sess
@@ -894,7 +894,7 @@ export class LuckyStreetDO {
           break;
         }
         case "lobby:renameSelf": {
-          throw new Error("Name change is locked inside the room — leave and change at the main menu");
+          throw new Error("Name change is locked inside the room - leave and change at the main menu");
           const id = String(data.roomId || sess.currentRoom || "").toUpperCase();
           const clean = sanitizeName(data.newName);
           const user = this.userRegistry.getBySocket(socketId);
@@ -912,7 +912,7 @@ export class LuckyStreetDO {
           break;
         }
         case "lobby:rename": {
-          if (data.targetId === socketId) throw new Error("Name change is locked inside the room — leave and change at the main menu");
+          if (data.targetId === socketId) throw new Error("Name change is locked inside the room - leave and change at the main menu");
           const id = String(data.roomId || sess.currentRoom || "").toUpperCase();
           const clean = sanitizeName(data.newName);
           if (data.targetId === socketId) {

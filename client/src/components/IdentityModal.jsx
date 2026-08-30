@@ -1,5 +1,5 @@
-/**
- * IdentityModal — onboarding
+﻿/**
+ * IdentityModal - onboarding
  * Shows once, remembers you next time. Blocking variant for direct room links.
  */
 
@@ -54,7 +54,7 @@ export default function IdentityModal({ blocking = false, onDone, title = "Welco
           if (!res?.ok) {
             // Revert on name taken, show toast via localError if modal still mounted, else via alert
             setProfile(prev);
-            const msg = res?.error || "That name is taken — try another";
+            const msg = res?.error || "That name is taken - try another";
             // Try to show in modal if still open, otherwise toast
             setLocalError(msg);
             // Also show as alert if modal closed
@@ -71,7 +71,7 @@ export default function IdentityModal({ blocking = false, onDone, title = "Welco
 
     if (socket && !socket.connected && !socket.id) {
       setSubmitting(false);
-      setLocalError("Not connected — please wait a moment and try again");
+      setLocalError("Not connected - please wait a moment and try again");
       return;
     }
 
@@ -79,7 +79,7 @@ export default function IdentityModal({ blocking = false, onDone, title = "Welco
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
       setSubmitting(false);
-      setLocalError("Connection is slow — please try again");
+      setLocalError("Connection is slow - please try again");
     }, 6000);
 
     if (socket) {
@@ -91,7 +91,7 @@ export default function IdentityModal({ blocking = false, onDone, title = "Welco
           setLocalError(null);
           onDone?.(next);
         } else {
-          setLocalError(res?.error || profileError || "That name is taken — try another");
+          setLocalError(res?.error || profileError || "That name is taken - try another");
         }
       });
     } else {

@@ -1,5 +1,5 @@
-/**
- * server/src/index.js — Express + Socket.io bootstrap
+﻿/**
+ * server/src/index.js - Express + Socket.io bootstrap
  * Implements:
  *  - ephemeral user registry with 5-min GC
  *  - room manager with host/player permission matrix
@@ -57,7 +57,7 @@ const io = new Server(server, {
   pingTimeout: 20000,
 });
 
-// ——— Registry & Rooms ———
+// --- Registry & Rooms ---
 const userRegistry = new UserRegistry({
   onExpire: (lower, username) => {
     // broadcast updated user count? optional
@@ -111,7 +111,7 @@ function questDispatchInternal(roomId, action) {
   return res;
 }
 
-// ——— Socket handlers ———
+// --- Socket handlers ---
 io.on("connection", (socket) => {
   console.log(`[conn] ${socket.id} connected`);
 
@@ -119,12 +119,12 @@ io.on("connection", (socket) => {
   socket.emit("rooms:update", roomManager.listPublic());
   socket.emit("games:list", listGames());
 
-  // ——— Profile: register (first time or reconnect) ———
+  // --- Profile: register (first time or reconnect) ---
   socket.on("profile:register", ({ username, avatar } = {}, ack) => {
     try {
       const clean = sanitizeName(username);
       if (socket.data.currentRoom && socket.data.username && clean.toLowerCase() !== socket.data.username.toLowerCase()) {
-        throw new Error("Name/avatar locked in room — leave and change at main menu");
+        throw new Error("Name/avatar locked in room - leave and change at main menu");
       }
       const entry = userRegistry.register(socket.id, clean, avatar ?? null);
       socket.data.username = entry.username;
@@ -143,10 +143,10 @@ io.on("connection", (socket) => {
 
   socket.on("profile:update", ({ username, avatar } = {}, ack) => {
     try {
-      if (socket.data.currentRoom) throw new Error("Change name/avatar at the main menu — not inside a room");
+      if (socket.data.currentRoom) throw new Error("Change name/avatar at the main menu - not inside a room");
       // Allow partial: if username provided, rename globally + in rooms
       const current = userRegistry.getBySocket(socket.id);
-      if (!current) throw new Error("Not registered — call profile:register first");
+      if (!current) throw new Error("Not registered - call profile:register first");
       const newName = username ? sanitizeName(username) : current.username;
       const updated = userRegistry.update(socket.id, newName, avatar);
       socket.data.username = updated.username;
@@ -186,7 +186,7 @@ io.on("connection", (socket) => {
         if (typeof ack === "function") ack({ ok: true, reclaimed: true, profile: { username: reclaimed.username, avatar: reclaimed.avatar } });
         socket.emit("profile:ok", { username: reclaimed.username, avatar: reclaimed.avatar });
       } else {
-        // Not in grace — try fresh register
+        // Not in grace - try fresh register
         const entry = userRegistry.register(socket.id, clean, null);
         socket.data.username = entry.username;
         if (typeof ack === "function") ack({ ok: true, reclaimed: false, profile: { username: entry.username } });
@@ -197,14 +197,14 @@ io.on("connection", (socket) => {
     }
   });
 
-  // ——— Rooms: list (explicit) ———
+  // --- Rooms: list (explicit) ---
   socket.on("rooms:list", (ack) => {
     const list = roomManager.listPublic();
     if (typeof ack === "function") ack(list);
     else socket.emit("rooms:update", list);
   });
 
-  // ——— Room: create ———
+  // --- Room: create ---
   socket.on("room:create", ({ gameId, maxPlayers, gameOptions } = {}, ack) => {
     try {
       const user = userRegistry.getBySocket(socket.id);
@@ -233,13 +233,13 @@ io.on("connection", (socket) => {
     }
   });
 
-  // ——— Room: join ———
+  // --- Room: join ---
   socket.on("room:join", ({ roomId } = {}, ack) => {
     try {
       const user = userRegistry.getBySocket(socket.id);
-      if (!user) throw new Error("Register a profile first — missing identity");
+      if (!user) throw new Error("Register a profile first - missing identity");
       const id = String(roomId || "").toUpperCase().trim();
-      if (!isValidRoomId(id)) throw new Error("Invalid Room ID — must be 4 alphanumeric characters");
+      if (!isValidRoomId(id)) throw new Error("Invalid Room ID - must be 4 alphanumeric characters");
       const full = roomManager.join({ roomId: id, socketId: socket.id, username: user.username, avatar: user.avatar });
       socket.join(id);
       socket.data.currentRoom = id;
@@ -256,7 +256,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  // ——— Room: leave ———
+  // --- Room: leave ---
   socket.on("room:leave", ({ roomId } = {}, ack) => {
     try {
       const id = String(roomId || socket.data.currentRoom || "").toUpperCase();
@@ -280,7 +280,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  // ——— Lobby: host-only actions ———
+  // --- Lobby: host-only actions ---
   socket.on("lobby:updateGame", ({ roomId, gameId } = {}, ack) => {
     try {
       const id = String(roomId || socket.data.currentRoom || "").toUpperCase();
@@ -392,16 +392,16 @@ io.on("connection", (socket) => {
     }
   });
 
-  // ——— Rename self / bot unified ——— (locked: use main menu)
+  // --- Rename self / bot unified --- (locked: use main menu)
   socket.on("lobby:renameSelf", ({ roomId, newName } = {}, ack) => {
     try {
-      throw new Error("Name change is locked inside the room — leave and change at the main menu");
+      throw new Error("Name change is locked inside the room - leave and change at the main menu");
       const id = String(roomId || socket.data.currentRoom || "").toUpperCase();
       const clean = sanitizeName(newName);
       // First check global uniqueness via registry
       const user = userRegistry.getBySocket(socket.id);
       if (!user) throw new Error("Not registered");
-      // Try global rename first — will throw if taken
+      // Try global rename first - will throw if taken
       // But we must allow same socket to keep name case change
       const existing = userRegistry.getByName(clean);
       if (existing && existing.socketId !== socket.id) throw new Error(`Username "${clean}" is already taken globally`);
@@ -421,10 +421,10 @@ io.on("connection", (socket) => {
     }
   });
 
-  // Generic rename (host renaming bot OR self) — self rename locked in room
+  // Generic rename (host renaming bot OR self) - self rename locked in room
   socket.on("lobby:rename", ({ roomId, targetId, newName } = {}, ack) => {
     try {
-      if (targetId === socket.id) throw new Error("Name change is locked inside the room — leave and change at the main menu");
+      if (targetId === socket.id) throw new Error("Name change is locked inside the room - leave and change at the main menu");
       const id = String(roomId || socket.data.currentRoom || "").toUpperCase();
       const clean = sanitizeName(newName);
       // If target is self, need global check
@@ -468,7 +468,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  // ——— Veil Street — game lifecycle ———
+  // --- Veil Street - game lifecycle ---
   socket.on("game:start", ({ roomId } = {}, ack) => {
     try {
       const id = String(roomId || socket.data.currentRoom || "").toUpperCase();
@@ -529,7 +529,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  // ——— Disconnect: GC timer ———
+  // --- Disconnect: GC timer ---
   socket.on("disconnect", (reason) => {
     console.log(`[disc] ${socket.id} (${socket.data.username || "unknown"}) reason=${reason}`);
     // Start GC timer for username

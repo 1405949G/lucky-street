@@ -1,7 +1,7 @@
-/**
- * server/src/questScheduler.js — Shared AI + effect scheduler for Veil Street
+﻿/**
+ * server/src/questScheduler.js - Shared AI + effect scheduler for Veil Street
  * Used by both Node (server/src/index.js) and DO (durable/LuckyStreetDO.js)
- * All scheduling uses setTimeout (Node) — for DO, alarm fallback also works via idle sweep but we keep setTimeout for immediacy.
+ * All scheduling uses setTimeout (Node) - for DO, alarm fallback also works via idle sweep but we keep setTimeout for immediacy.
  * Caller must provide: roomManager, roomId, broadcast function, and dispatchInternal.
  */
 

@@ -1,4 +1,4 @@
-import { io } from "socket.io-client";
+﻿import { io } from "socket.io-client";
 
 const URL = "http://localhost:3001";
 
@@ -58,7 +58,7 @@ async function test() {
   console.log("Add bot:", addBot.ok ? addBot.room.bots.map(x=>x.name) : addBot.error);
   console.log("Updated slotsText", addBot.ok ? addBot.room.slotsText : "");
 
-  // Host change game — should autofill max
+  // Host change game - should autofill max
   let changeGame = await emitAck(a, "lobby:updateGame", { roomId, gameId: "lucky-roulette" });
   console.log("Change game to lucky-roulette:", changeGame.ok ? `game ${changeGame.room.game} max ${changeGame.room.maxPlayers}` : changeGame.error);
 
@@ -74,7 +74,7 @@ async function test() {
   let bobAddBot = await emitAck(b, "lobby:addBot", { roomId, botName: "HackerBot" });
   console.log("Bob add bot (should fail):", bobAddBot.ok ? "unexpected ok" : bobAddBot.error);
 
-  // Bob rename self — should succeed
+  // Bob rename self - should succeed
   let renameSelf = await emitAck(b, "lobby:renameSelf", { roomId, newName: "Bobby" });
   console.log("Bob rename self to Bobby:", renameSelf.ok ? renameSelf.room.players.map(p=>p.name) : renameSelf.error);
 

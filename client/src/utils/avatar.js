@@ -1,5 +1,5 @@
-/**
- * Avatar helpers — color vs image
+﻿/**
+ * Avatar helpers - color vs image
  * All images are compressed/resized client-side so avatar is small, fast, and never gets stuck
  */
 
@@ -9,7 +9,7 @@ export const PALETTE = [
   "#0ea5e9", "#a855f7"
 ];
 
-// Compress to ~10KB target — tiny, instant over WebSocket / DO, no "Checking..." stall
+// Compress to ~10KB target - tiny, instant over WebSocket / DO, no "Checking..." stall
 // We shrink to 96-128px and JPEG 0.5-0.6, iterating until base64 < 15KB (~10KB binary)
 function compressImage(file, maxSize = 128, quality = 0.55) {
   return new Promise((resolve, reject) => {
@@ -69,7 +69,7 @@ export function fileToBase64(file) {
   return new Promise(async (resolve, reject) => {
     if (!file) return reject(new Error("No file"));
     if (!file.type.startsWith("image/")) return reject(new Error("Please upload an image"));
-    if (file.size > 5 * 1024 * 1024) return reject(new Error("Image too large — please pick a smaller photo"));
+    if (file.size > 5 * 1024 * 1024) return reject(new Error("Image too large - please pick a smaller photo"));
 
     try {
       const compressed = await toTargetSize(file);

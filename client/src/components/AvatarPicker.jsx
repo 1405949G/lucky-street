@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import { PALETTE } from "../utils/avatar.js";
 
 export default function AvatarPicker({ value, onChange }) {
   const [error, setError] = useState(null);
 
-  // Solid colours only — image upload removed for reliability (was causing "Checking…" / "Connecting" stalls with large base64 via Workers)
+  // Solid colours only - image upload removed for reliability (was causing "Checking…" / "Connecting" stalls with large base64 via Workers)
   // Existing users with image avatars will still display, but new picks are colours only
   const isColor = typeof value === "string" && value.startsWith("#");
   const displayColor = isColor ? value : PALETTE[0];

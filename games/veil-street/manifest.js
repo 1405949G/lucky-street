@@ -1,11 +1,11 @@
-/**
- * games/veil-street/manifest.js — Veil Street (social deduction, 5-10p)
+﻿/**
+ * games/veil-street/manifest.js - Veil Street (social deduction, 5-10p)
  * See ../README.md for full guide and AGENTS.md for AI rule.
  */
 export default {
   id: "veil-street",
   label: "Veil Street",
-  description: "Social deduction — Good vs Evil, hidden roles",
+  description: "Social deduction - Good vs Evil, hidden roles",
   minPlayers: 5,
   maxPlayers: 10,
   defaultMaxPlayers: 10,

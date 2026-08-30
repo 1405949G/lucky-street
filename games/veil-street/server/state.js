@@ -1,5 +1,5 @@
 ﻿/**
- * Veil Street — state machine (5-10p social deduction)
+ * Veil Street - state machine (5-10p social deduction)
  * Pure reducer, no DOM/side effects.
  */
 
@@ -10,7 +10,7 @@ import {
 } from './config.js';
 import { shuffle, uid } from './utils.js';
 
-// ΓÇöΓÇöΓÇö Initial state factory ΓÇöΓÇöΓÇö
+// --- Initial state factory ---
 export function createInitialState() {
   return Object.freeze({
     version: STORAGE_VERSION,
@@ -20,24 +20,24 @@ export function createInitialState() {
     leaderIndex: 0,
     quests: [], // built on SETUP_GAME
     proposal: Object.freeze({ teamIds: [], votes: Object.freeze({}), result: null, revealed: false }),
-    questVotes: Object.freeze({}), // {playerId: 'SUCCESS'|'FAIL'} ΓÇö only during QUEST_VOTE
+    questVotes: Object.freeze({}), // {playerId: 'SUCCESS'|'FAIL'} - only during QUEST_VOTE
     proposalTracker: 0, // 0..5 rejections
     revealIndex: 0,
     revealed: Object.freeze([]), // bool per player
-    voteGeneration: 0, // increments each new proposal ΓÇö guards AI callbacks (D2)
-    phaseLock: false, // true during reveal animations ΓÇö timer ignored (D4)
+    voteGeneration: 0, // increments each new proposal - guards AI callbacks (D2)
+    phaseLock: false, // true during reveal animations - timer ignored (D4)
     log: Object.freeze([]), // {id, t, type, text}
     winner: null, // 'GOOD'|'EVIL'|null
     winReason: null, // 'QUESTS'|'TRACKER'|'ASSASSINATION'
     assassination: Object.freeze({ targetId: null, success: null }),
     extraRoles: Object.freeze({ percival: false, morgana: false, mordred: false, oberon: false }), // for UI + replays
-    roomCode: null, // e.g., 'EQKH' ΓÇö persisted for distributed play
+    roomCode: null, // e.g., 'EQKH' - persisted for distributed play
     teamVoteRevealAcks: Object.freeze({}), // {playerId: true} for Continue in TEAM_VOTE_REVEAL
     questRevealAcks: Object.freeze({}), // {playerId: true} for Continue in QUEST_REVEAL
   });
 }
 
-// ΓÇöΓÇöΓÇö Helpers (pure) ΓÇöΓÇöΓÇö
+// --- Helpers (pure) ---
 
 function cloneQuests(playerCount) {
   const sizes = QUEST_SIZES[playerCount];
@@ -109,10 +109,10 @@ export function getVision(state, playerId) {
   return Object.freeze({ sees: [], seesRoles: {}, reason: 'NONE' });
 }
 
-// ΓÇöΓÇöΓÇö Public / Private / AI views (anti-leakage L1, L4) ΓÇöΓÇöΓÇö
+// --- Public / Private / AI views (anti-leakage L1, L4) ---
 
 export function getPublicState(state) {
-  // Strip roles and secret votes ΓÇö safe for general UI
+  // Strip roles and secret votes - safe for general UI
   // At GAME_OVER, reveal roles for scoring
   const reveal = state.phase === PHASES.GAME_OVER;
   const publicPlayers = state.players.map(p => ({
@@ -123,7 +123,7 @@ export function getPublicState(state) {
     isLeader: state.players[state.leaderIndex]?.id === p.id,
     ...(reveal ? { role: p.role, allegiance: p.allegiance } : {}),
   }));
-  // Quest views: hide fail attribution (L3) ΓÇö only status & failCount public
+  // Quest views: hide fail attribution (L3) - only status & failCount public
   const publicQuests = state.quests.map(q => ({
     index: q.index,
     size: q.size,
@@ -201,13 +201,13 @@ export function getAIView(state, botId) {
   });
 }
 
-// ΓÇöΓÇöΓÇö Log helper ΓÇöΓÇöΓÇö
+// --- Log helper ---
 function appendLog(log, type, text) {
   const entry = Object.freeze({ id: uid('log'), t: Date.now(), type, text });
   return Object.freeze([...log, entry]);
 }
 
-// ΓÇöΓÇöΓÇö Guard helpers ΓÇöΓÇöΓÇö
+// --- Guard helpers ---
 function assertPhase(state, allowedPhases) {
   if (!allowedPhases.includes(state.phase)) {
     throw new Error(`Action not allowed in phase ${state.phase}. Allowed: ${allowedPhases.join(',')}`);
@@ -218,7 +218,7 @@ function assertPlayerExists(state, playerId) {
   if (!state.players.some(p => p.id === playerId)) throw new Error(`Player not found: ${playerId}`);
 }
 
-// ΓÇöΓÇöΓÇö Reducer ΓÇöΓÇöΓÇö
+// --- Reducer ---
 /**
  * Pure reducer: (state, action) => { state: newState, effects: [] }
  * Effects are declarative side-effect requests for app.js to execute:
@@ -237,18 +237,18 @@ export function reducer(state, action) {
   if (!isGlobalReset && !allowedForPhase.includes(action.type)) {
     // Also allow FORCE actions as escape hatches (still guarded by phase)
     // If not allowed, we treat as no-op but return error effect for toast
-    // To be strict, throw ΓÇö app.js will catch and toast
+    // To be strict, throw - app.js will catch and toast
     throw new Error(`Action ${action.type} not allowed in phase ${state.phase}`);
   }
 
   // Freeze check: phaseLock prevents certain actions during animations (D4)
   const lockBlocking = ['SUBMIT_TEAM_VOTE', 'SUBMIT_QUEST_VOTE', 'PROPOSE_TEAM', 'ASSASSINATE'];
   if (state.phaseLock && lockBlocking.includes(action.type)) {
-    throw new Error(`Phase locked ΓÇö action ${action.type} blocked until reveal completes`);
+    throw new Error(`Phase locked - action ${action.type} blocked until reveal completes`);
   }
 
   switch (action.type) {
-    // ΓÇöΓÇöΓÇö LOBBY: setup game ΓÇöΓÇöΓÇö
+    // --- LOBBY: setup game ---
     case 'SETUP_GAME': {
       assertPhase(state, [PHASES.LOBBY, PHASES.GAME_OVER]);
       const { players, opts, roomCode } = action.payload || {};
@@ -297,13 +297,13 @@ export function reducer(state, action) {
       return { state: Object.freeze(newState), effects: Object.freeze([{ type: 'ENTER_ROLE_REVEAL' }]) };
     }
 
-    // ΓÇöΓÇöΓÇö ROLE_REVEAL: sequential pass-and-play ΓÇöΓÇöΓÇö
+    // --- ROLE_REVEAL: sequential pass-and-play ---
     case 'MARK_REVEALED': {
       assertPhase(state, [PHASES.ROLE_REVEAL]);
       const idx = state.revealIndex;
       if (idx < 0 || idx >= state.players.length) throw new Error('Reveal index out of bounds');
       if (state.revealed[idx]) {
-        // Already marked ΓÇö no-op to avoid double count
+        // Already marked - no-op to avoid double count
         return { state, effects: Object.freeze([]) };
       }
       const nextRevealed = state.revealed.slice();
@@ -323,7 +323,7 @@ export function reducer(state, action) {
         throw new Error('Must view role before passing device');
       }
       if (state.revealIndex >= state.players.length - 1) {
-        throw new Error('Already at last player ΓÇö use COMPLETE_REVEAL');
+        throw new Error('Already at last player - use COMPLETE_REVEAL');
       }
       const newState = {
         ...state,
@@ -340,13 +340,13 @@ export function reducer(state, action) {
       const newState = {
         ...state,
         phase: PHASES.TEAM_PROPOSAL,
-        log: appendLog(state.log, 'PHASE', 'All roles viewed. Quest 1 ΓÇö Leader proposes a team.'),
+        log: appendLog(state.log, 'PHASE', 'All roles viewed. Quest 1 - Leader proposes a team.'),
       };
       return { state: Object.freeze(newState), effects: Object.freeze([{ type: 'ENTER_TEAM_PROPOSAL' }]) };
     }
 
     case 'REVEAL_ROLE': {
-      // Per-device private reveal ΓÇö no passing needed. Any player can mark themselves as having seen role.
+      // Per-device private reveal - no passing needed. Any player can mark themselves as having seen role.
       assertPhase(state, [PHASES.ROLE_REVEAL]);
       const { playerId } = action.payload || {};
       assertPlayerExists(state, playerId);
@@ -364,14 +364,14 @@ export function reducer(state, action) {
         const autoState = {
           ...newState,
           phase: PHASES.TEAM_PROPOSAL,
-          log: appendLog(newState.log, 'PHASE', 'All roles viewed (distributed). Quest 1 ΓÇö Leader proposes.'),
+          log: appendLog(newState.log, 'PHASE', 'All roles viewed (distributed). Quest 1 - Leader proposes.'),
         };
         return { state: Object.freeze(autoState), effects: Object.freeze([{ type: 'ENTER_TEAM_PROPOSAL' }]) };
       }
       return { state: Object.freeze(newState), effects: Object.freeze([]) };
     }
 
-    // ΓÇöΓÇöΓÇö TEAM_PROPOSAL: leader picks team ΓÇöΓÇöΓÇö
+    // --- TEAM_PROPOSAL: leader picks team ---
     case 'PROPOSE_TEAM': {
       assertPhase(state, [PHASES.TEAM_PROPOSAL]);
       const { teamIds } = action.payload || {};
@@ -400,7 +400,7 @@ export function reducer(state, action) {
       return { state: Object.freeze(newState), effects: Object.freeze([{ type: 'ENTER_TEAM_VOTE', generation: newState.voteGeneration }]) };
     }
 
-    // ΓÇöΓÇöΓÇö TEAM_VOTE: simultaneous approve/reject ΓÇöΓÇöΓÇö
+    // --- TEAM_VOTE: simultaneous approve/reject ---
     case 'SUBMIT_TEAM_VOTE': {
       assertPhase(state, [PHASES.TEAM_VOTE]);
       const { playerId, vote } = action.payload || {};
@@ -432,7 +432,7 @@ export function reducer(state, action) {
     }
 
     case 'FORCE_TEAM_VOTE_REVEAL': {
-      // Fallback if timer or AI stall (D9, risk mitigation) ΓÇö only if some votes missing
+      // Fallback if timer or AI stall (D9, risk mitigation) - only if some votes missing
       assertPhase(state, [PHASES.TEAM_VOTE]);
       // Fill missing votes randomly (should be rare)
       const missing = state.players.filter(p => !state.proposal.votes[p.id]);
@@ -491,7 +491,7 @@ export function reducer(state, action) {
             winReason: 'TRACKER',
             teamVoteRevealAcks: Object.freeze({}),
             phaseLock: false,
-            log: appendLog(state.log, 'VOTE', `Team rejected ${voteStr} (Approve: ${approveNames || 'none'}; Reject: ${rejectNames || 'none'}). 5th rejection ΓÇö Evil wins!`),
+            log: appendLog(state.log, 'VOTE', `Team rejected ${voteStr} (Approve: ${approveNames || 'none'}; Reject: ${rejectNames || 'none'}). 5th rejection - Evil wins!`),
           };
           return { state: Object.freeze(newState), effects: Object.freeze([{ type: 'ENTER_GAME_OVER' }]) };
         }
@@ -510,13 +510,13 @@ export function reducer(state, action) {
           phaseLock: false,
           log: appendLog(state.log, 'VOTE', `Team rejected ${voteStr} (${nextTracker}/5) (Approve: ${approveNames || 'none'}; Reject: ${rejectNames || 'none'}). Leader ΓåÆ ${leaderName}.`),
         };
-        // Log reveal then new proposal ΓÇö need to keep history
+        // Log reveal then new proposal - need to keep history
         // We also store voteHistory implicitly via log; could add explicit array but log suffices
         return { state: Object.freeze(newState), effects: Object.freeze([{ type: 'ENTER_TEAM_PROPOSAL' }]) };
       }
     }
 
-    // ΓÇöΓÇöΓÇö QUEST_VOTE: team secretly votes Success/Fail ΓÇöΓÇöΓÇö
+    // --- QUEST_VOTE: team secretly votes Success/Fail ---
     case 'SUBMIT_QUEST_VOTE': {
       assertPhase(state, [PHASES.QUEST_VOTE]);
       const { playerId, vote } = action.payload || {};
@@ -623,7 +623,7 @@ export function reducer(state, action) {
       let nextPhase = null;
 
       if (good >= WIN_THRESHOLD) {
-        // Good reached 3 ΓÇö go to assassination, not immediate win (D7)
+        // Good reached 3 - go to assassination, not immediate win (D7)
         winner = null;
         nextPhase = PHASES.ASSASSINATION;
       } else if (evil >= WIN_THRESHOLD) {
@@ -675,7 +675,7 @@ export function reducer(state, action) {
           phase: PHASES.TEAM_PROPOSAL,
           currentQuest: questIdx + 1,
           leaderIndex: nextLeader,
-          log: appendLog(newState.log, 'PHASE', `Next: Quest ${questIdx + 2} ΓÇö Leader ${leaderName} proposes.`),
+          log: appendLog(newState.log, 'PHASE', `Next: Quest ${questIdx + 2} - Leader ${leaderName} proposes.`),
         };
         return { state: Object.freeze(newState), effects: Object.freeze([{ type: 'ENTER_TEAM_PROPOSAL' }]) };
       }
@@ -715,7 +715,7 @@ export function reducer(state, action) {
       return { state: Object.freeze(newState), effects: Object.freeze([]) };
     }
 
-    // ΓÇöΓÇöΓÇö ASSASSINATION ΓÇöΓÇöΓÇö
+    // --- ASSASSINATION ---
     case 'ASSASSINATE': {
       assertPhase(state, [PHASES.ASSASSINATION]);
       const { targetId } = action.payload || {};
@@ -733,13 +733,13 @@ export function reducer(state, action) {
         assassination: Object.freeze({ targetId, success }),
         phaseLock: false,
         log: appendLog(state.log, 'ASSASSINATION', success
-          ? `Assassin killed Merlin (${target.name}) ΓÇö Evil wins!`
-          : `Assassin shot ${target.name} ΓÇö not Merlin. Good wins!`),
+          ? `Assassin killed Merlin (${target.name}) - Evil wins!`
+          : `Assassin shot ${target.name} - not Merlin. Good wins!`),
       };
       return { state: Object.freeze(newState), effects: Object.freeze([{ type: 'ENTER_GAME_OVER' }]) };
     }
 
-    // ΓÇöΓÇöΓÇö TIMER_EXPIRED (view-only, not authoritative) ΓÇöΓÇöΓÇö
+    // --- TIMER_EXPIRED (view-only, not authoritative) ---
     case 'TIMER_EXPIRED': {
       if (state.phaseLock) {
         // Ignore during reveal animations (D4)
@@ -765,7 +765,7 @@ export function reducer(state, action) {
   }
 }
 
-// ΓÇöΓÇöΓÇö Selectors for UI ΓÇöΓÇöΓÇö
+// --- Selectors for UI ---
 export function isGameOver(state) { return state.phase === PHASES.GAME_OVER; }
 export function getLeader(state) { return state.players[state.leaderIndex] || null; }
 export function getQuest(state) { return state.quests[state.currentQuest] || null; }

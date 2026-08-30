@@ -109,7 +109,7 @@ export function aiTeamVote(aiView, proposedTeam) {
   if (Math.random() < 0.1) return Math.random() < 0.5 ? 'APPROVE' : 'REJECT';
   if (!isEvil) {
     if (self.role === ROLES.MERLIN) {
-      // Merlin bluffs 15% to hide ΓÇö sometimes approves dirty team, sometimes rejects clean to blend
+      // Merlin bluffs 15% to hide - sometimes approves dirty team, sometimes rejects clean to blend
       if (evilCountInTeam === 0) return Math.random() < 0.88 ? 'APPROVE' : 'REJECT';
       return Math.random() < 0.24 ? 'APPROVE' : 'REJECT';
     }

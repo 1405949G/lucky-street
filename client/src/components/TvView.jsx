@@ -1,9 +1,9 @@
-import React, { useContext, useEffect, useState } from "react";
+﻿import React, { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { SocketContext } from "../context/SocketContext.jsx";
 
 /**
- * TvView — spectator / Kahoot-style big screen for any game
+ * TvView - spectator / Kahoot-style big screen for any game
  * Same /room/:id data but no player join, no private controls
  * Shows: code, QR/link, player avatars with YOU/crown, public board
  * Used at /tv/:id and also embedded in PC split-view top
@@ -52,7 +52,7 @@ export default function TvView({ roomId: propId, embedded = false }) {
       <div className={`${embedded ? "p-6" : "max-w-[760px] mx-auto px-4 py-10"} text-center`}>
         <div className="rounded-2xl bg-rose-500/10 border border-rose-500/20 p-6">
           <p className="font-bold text-rose-300">{error}</p>
-          <p className="text-sm text-white/50 mt-1">{isTransient ? "Retrying automatically — refresh if needed." : "Check the code and try again."}</p>
+          <p className="text-sm text-white/50 mt-1">{isTransient ? "Retrying automatically - refresh if needed." : "Check the code and try again."}</p>
           {isTransient && <button onClick={() => { setError(null); window.location.reload(); }} className="mt-3 px-4 py-1.5 rounded-full bg-white/10 border border-white/10 text-white text-xs">Retry</button>}
         </div>
       </div>
@@ -71,13 +71,13 @@ export default function TvView({ roomId: propId, embedded = false }) {
 
   return (
     <div className={`${embedded ? "" : "max-w-[760px] mx-auto px-4 pb-6"} ${embedded ? "" : "pt-2"}`}>
-      {/* Big code + QR-like link — visible from couch */}
+      {/* Big code + QR-like link - visible from couch */}
       <div className="rounded-[24px] bg-[#29546c] border border-white/10 shadow-xl p-6 sm:p-8 text-center relative overflow-hidden">
         <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ background: "radial-gradient(ellipse at top, rgba(255,255,255,0.15), transparent 60%)" }}></div>
         <div className="relative">
           <p className="text-xs tracking-widest font-bold text-white/50">JOIN CODE</p>
           <div className="font-display font-black text-[48px] sm:text-[56px] tracking-[0.18em] text-[#f3ecd8]" style={{ textShadow: "0 2px 0 rgba(0,0,0,0.25)" }}>{room.id}</div>
-          <p className="text-sm text-white/70 mt-1">Go to <span className="font-bold text-white">{window.location.host}</span> → Enter code</p>
+          <p className="text-sm text-white/70 mt-1">Go to <span className="font-bold text-white">{window.location.host}</span> -> Enter code</p>
           <p className="font-mono text-xs bg-white/10 px-2 py-1 rounded inline-block mt-2 break-all">{window.location.origin}/room/{room.id}</p>
           <div className="mt-3 flex justify-center gap-2">
             <span className="px-3 py-1.5 rounded-full bg-white/10 border border-white/10 text-xs font-bold text-white/70">{room.slotsText}</span>
@@ -86,7 +86,7 @@ export default function TvView({ roomId: propId, embedded = false }) {
         </div>
       </div>
 
-      {/* Public player grid — same avatars as lobby but no private YOU/edit, just crown + names */}
+      {/* Public player grid - same avatars as lobby but no private YOU/edit, just crown + names */}
       <div className="mt-6">
         <h3 className="font-extrabold text-white text-sm">Players</h3>
         <div className="mt-3 flex flex-wrap gap-4 justify-center sm:justify-start">
@@ -113,7 +113,7 @@ export default function TvView({ roomId: propId, embedded = false }) {
         </div>
       </div>
 
-      {/* Public game info — for Trivia show question, for Veil Street show quest track */}
+      {/* Public game info - for Trivia show question, for Veil Street show quest track */}
       <div className="mt-6 rounded-2xl bg-[#0f2231]/60 border border-white/10 p-4 text-center">
         <p className="text-xs tracking-widest font-bold text-white/40">GAME</p>
         <p className="font-extrabold text-white">{game.label}</p>
@@ -121,7 +121,7 @@ export default function TvView({ roomId: propId, embedded = false }) {
         <p className="text-xs text-white/30 mt-3">Players answer on their phones. Look here for the board.</p>
       </div>
 
-      {!embedded && <p className="text-xs text-white/30 text-center mt-6">Spectator view — open on a TV. Players join at <span className="font-mono">{window.location.origin}/room/{id}</span></p>}
+      {!embedded && <p className="text-xs text-white/30 text-center mt-6">Spectator view - open on a TV. Players join at <span className="font-mono">{window.location.origin}/room/{id}</span></p>}
     </div>
   );
 }

@@ -1,5 +1,5 @@
-/**
- * server/src/rooms.js — Room CRUD + Lobby Permission Matrix
+﻿/**
+ * server/src/rooms.js - Room CRUD + Lobby Permission Matrix
  * In-memory ephemeral rooms Map.
  *
  * Room shape:
@@ -37,8 +37,8 @@ function pickBotName(room) {
   if (available.length > 0) {
     return available[Math.floor(Math.random() * available.length)];
   }
-  // fallback: pick any unused variant without numbers — shuffle and append invisible char? Just pick random and ensure uniqueness by retrying with suffixless random
-  // All names taken (rare) — pick random BOT_NAMES + try to find not-taken with minimal suffix
+  // fallback: pick any unused variant without numbers - shuffle and append invisible char? Just pick random and ensure uniqueness by retrying with suffixless random
+  // All names taken (rare) - pick random BOT_NAMES + try to find not-taken with minimal suffix
   for (let i = 0; i < 20; i++) {
     const cand = BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)];
     if (!taken.has(cand.toLowerCase())) return cand;
@@ -160,7 +160,7 @@ export class RoomManager {
     // Still enforce sane 2-12
     resolvedMax = clamp(resolvedMax, 2, 12);
 
-    // Also respect game's min/max as soft bounds — warn but allow
+    // Also respect game's min/max as soft bounds - warn but allow
     const id = generateRoomId(new Set(this.rooms.keys()));
 
     const room = {
@@ -188,7 +188,7 @@ export class RoomManager {
     const room = this.get(roomId);
     if (!room) throw new Error("Room not found");
     if (room.gameState && room.gameState.phase !== QuestPhases.LOBBY && room.gameState.phase !== QuestPhases.GAME_OVER) {
-      throw new Error("Game in progress — join as spectator");
+      throw new Error("Game in progress - join as spectator");
     }
     if (room.players.some(p => p.id === socketId)) throw new Error("Already in room");
     if (room.players.some(p => p.name.toLowerCase() === username.toLowerCase())) {
@@ -209,7 +209,7 @@ export class RoomManager {
   leave({ roomId, socketId }) {
     const room = this.get(roomId);
     if (!room) return null;
-    // also remove from spectators if present — spectators never abort the quest
+    // also remove from spectators if present - spectators never abort the quest
     const specIdx = (room.spectators || []).findIndex(s => s.id === socketId);
     if (specIdx !== -1) {
       room.spectators.splice(specIdx, 1);
@@ -231,7 +231,7 @@ export class RoomManager {
     trimQuestOptionsIfNeeded(room);
 
     if (room.players.length === 0) {
-      // last player left — delete room (even if spectators remain, they get cleared)
+      // last player left - delete room (even if spectators remain, they get cleared)
       this.rooms.delete(room.id);
       this._notify();
       return null;
@@ -251,21 +251,21 @@ export class RoomManager {
     return this.getFull(room.id);
   }
 
-  // ——— Spectator operations ———
+  // --- Spectator operations ---
   addSpectator({ roomId, socketId, username, avatar }) {
     const room = this.get(roomId);
     if (!room) throw new Error("Room not found");
     if (room.gameState && room.gameState.phase !== QuestPhases.LOBBY && room.gameState.phase !== QuestPhases.GAME_OVER) {
       // Allow new spectators to watch, but block players from abandoning the quest
       if (room.players.some(p => p.id === socketId)) {
-        throw new Error("Cannot spectate while quest is in progress — finish the quest first");
+        throw new Error("Cannot spectate while quest is in progress - finish the quest first");
       }
     }
     if (!room.spectators) room.spectators = [];
     if (room.spectators.some(s => s.id === socketId)) return this.getFull(room.id);
     if (room.players.some(p => p.id === socketId)) {
-      // prevent spectate if only player — room would auto-close (players 0)
-      if (room.players.length === 1) throw new Error("Cannot spectate as the only player — room would close. Add a bot or wait for another player.");
+      // prevent spectate if only player - room would auto-close (players 0)
+      if (room.players.length === 1) throw new Error("Cannot spectate as the only player - room would close. Add a bot or wait for another player.");
       // move player to spectator: remove from players, keep host handling
       const pIdx = room.players.findIndex(p => p.id === socketId);
       const wasHost = room.players[pIdx].isHost;
@@ -280,7 +280,7 @@ export class RoomManager {
         // should not happen due to check above, but safety
         this.rooms.delete(room.id);
         this._notify();
-        throw new Error("Room closed — was last player");
+        throw new Error("Room closed - was last player");
       }
     }
     // allow anonymous spectating: if no username, use Spectator + count
@@ -308,7 +308,7 @@ export class RoomManager {
     const room = this.get(roomId);
     if (!room) throw new Error("Room not found");
     if (room.gameState && room.gameState.phase !== QuestPhases.LOBBY && room.gameState.phase !== QuestPhases.GAME_OVER) {
-      throw new Error("Game in progress — cannot join as player now");
+      throw new Error("Game in progress - cannot join as player now");
     }
     if (!room.spectators) room.spectators = [];
     const sIdx = room.spectators.findIndex(s => s.id === socketId);
@@ -332,7 +332,7 @@ export class RoomManager {
     const affected = [];
     for (const room of this.rooms.values()) {
       let changed = false;
-      // spectators — never abort quest
+      // spectators - never abort quest
       if (room.spectators) {
         const sIdx = room.spectators.findIndex(s => s.id === socketId);
         if (sIdx !== -1) {
@@ -380,7 +380,7 @@ export class RoomManager {
     return affected;
   }
 
-  // ——— Host-only operations ———
+  // --- Host-only operations ---
   _assertHost(roomId, requesterId) {
     const room = this.get(roomId);
     if (!room) throw new Error("Room not found");
@@ -390,7 +390,7 @@ export class RoomManager {
 
   _assertNoActiveGame(room) {
     if (room.gameState && room.gameState.phase !== QuestPhases.LOBBY && room.gameState.phase !== QuestPhases.GAME_OVER) {
-      throw new Error("Cannot modify lobby while game is in progress — reset the game first");
+      throw new Error("Cannot modify lobby while game is in progress - reset the game first");
     }
   }
 
@@ -476,7 +476,7 @@ export class RoomManager {
     const game = getGame(room.game);
     if (game && game.supportsBots === false) throw new Error("This game does not support bots");
     const total = room.players.length + room.bots.length;
-    if (total >= room.maxPlayers) throw new Error("Room is full — increase maxPlayers or remove a player/bot");
+    if (total >= room.maxPlayers) throw new Error("Room is full - increase maxPlayers or remove a player/bot");
     let name = String(botName || "").trim().slice(0, 20);
     if (!name) name = pickBotName(room);
     if (room.players.some(p => p.name.toLowerCase() === name.toLowerCase()) || room.bots.some(b => b.name.toLowerCase() === name.toLowerCase())) {
@@ -489,7 +489,7 @@ export class RoomManager {
     const bot = {
       id: `bot_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
       name,
-      // all bots look the same — uniform bot avatar, no colour choice
+      // all bots look the same - uniform bot avatar, no colour choice
       avatar: null,
       avatarColor: "#334155",
       isBot: true
@@ -555,7 +555,7 @@ export class RoomManager {
     return this.getFull(room.id);
   }
 
-  // ——— Player permissions: rename self; host can also rename any; also need global uniqueness check outside —
+  // --- Player permissions: rename self; host can also rename any; also need global uniqueness check outside -
   renamePlayer({ roomId, requesterId, targetId, newName, globalRegistry = null }) {
     const room = this.get(roomId);
     if (!room) throw new Error("Room not found");
@@ -577,7 +577,7 @@ export class RoomManager {
       // So host can change own username plus bots. Interpretation: host cannot rename other humans except bots.
       // But spec says: Host Permissions: Can change their own username, as well as any bot's username.
       // Player Permissions: Regular players can only modify their own username.
-      // So host cannot rename other humans — enforce
+      // So host cannot rename other humans - enforce
       if (!isSelf && isHost) throw new Error("Host can only rename self and bots");
       const name = String(newName).trim().slice(0, 20);
       if (!name) throw new Error("Name required");
@@ -613,7 +613,7 @@ export class RoomManager {
     return { exists: true, isPrivate: false, hostName: room.hostName, game: room.game };
   }
 
-  // ——— Veil Street — game lifecycle ———
+  // --- Veil Street - game lifecycle ---
   canStartQuest(roomId, requesterId) {
     const room = this.get(roomId);
     if (!room) throw new Error("Room not found");
@@ -623,7 +623,7 @@ export class RoomManager {
     const game = getGame(room.game);
     const min = game?.minPlayers || 5;
     const max = game?.maxPlayers || 10;
-    if (total < min) throw new Error(`Need ${min} players (have ${total}) — add bots or wait`);
+    if (total < min) throw new Error(`Need ${min} players (have ${total}) - add bots or wait`);
     if (total > max) throw new Error(`Too many players (${total} > ${max})`);
     if (room.gameState && room.gameState.phase !== QuestPhases.LOBBY && room.gameState.phase !== QuestPhases.GAME_OVER) {
       throw new Error("Game already in progress");
@@ -669,7 +669,7 @@ export class RoomManager {
     if (room.game !== "veil-street") throw new Error("Not a Quest game");
     if (!room.gameState) throw new Error("Game not started");
     const gs = room.gameState;
-    // Build action for reducer — map generic payload to expected shape
+    // Build action for reducer - map generic payload to expected shape
     let action;
     switch (actionType) {
       case 'REVEAL_ROLE': {

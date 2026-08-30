@@ -1,4 +1,4 @@
-import React, { useContext, useMemo, useState } from "react";
+﻿import React, { useContext, useMemo, useState } from "react";
 import { SocketContext } from "../context/SocketContext.jsx";
 import RoomCard from "./RoomCard.jsx";
 import JoinByIdBox from "./JoinByIdBox.jsx";
@@ -45,7 +45,7 @@ export default function RoomBrowser({ onJoinRoom, onSpectate, onCreateClick }) {
           {filtered.length === 0 ? (
             <div className="rounded-2xl bg-[#0f2231]/60 border border-white/10 border-dashed p-8 text-center">
               <p className="text-white font-bold">No games right now</p>
-              <p className="text-sm text-white/50 mt-1">Start a new one — it’ll show up instantly.</p>
+              <p className="text-sm text-white/50 mt-1">Start a new one - it’ll show up instantly.</p>
             </div>
           ) : (
             <div className="grid gap-3">
@@ -62,7 +62,7 @@ export default function RoomBrowser({ onJoinRoom, onSpectate, onCreateClick }) {
             <h3 className="font-extrabold text-[#f3ecd8]">Quick tips</h3>
             <ul className="text-sm text-white/70 mt-2 space-y-1.5 list-disc list-inside">
               <li>Your name stays saved for next time.</li>
-              <li>Pick a unique name — try another if taken.</li>
+              <li>Pick a unique name - try another if taken.</li>
               <li>Share your invite link to play together.</li>
             </ul>
             <a href="/admin" className="hidden">Admin</a>

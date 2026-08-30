@@ -1,4 +1,4 @@
-import { io } from "socket.io-client";
+﻿import { io } from "socket.io-client";
 const URL="http://localhost:3001";
 function connect(){ return io(URL,{reconnection:false});}
 function ack(socket,ev,data){return new Promise(r=>socket.emit(ev,data,ans=>r(ans)));}
@@ -9,11 +9,11 @@ async function run(){
   console.log("register TempUser",r.ok);
   console.log("disconnect A");
   a.disconnect();
-  // after 1s, try steal — should succeed as reclaim (grace)
+  // after 1s, try steal - should succeed as reclaim (grace)
   await new Promise(r=>setTimeout(r,1000));
   const b=connect(); await new Promise(r=>b.on("connect",r));
   let r2=await ack(b,"profile:register",{username:"TempUser"});
-  console.log("B tries during grace (1s) — expect reclaim success? ",r2);
+  console.log("B tries during grace (1s) - expect reclaim success? ",r2);
   b.disconnect();
   // wait for GC expire (4s from A's disconnect, but B's reclaim reset timer? Let's do fresh Alice2)
   console.log("Test expiration: create Alice2, disconnect, wait 5s > GC 4s, then reclaim should be fresh");
@@ -24,7 +24,7 @@ async function run(){
   await new Promise(r=>setTimeout(r,5500));
   const d=connect(); await new Promise(r=>d.on("connect",r));
   let r4=await ack(d,"profile:register",{username:"ExpireTest"});
-  console.log("D after 5.5s (past GC 4s) tries ExpireTest — should succeed as freed: ",r4);
+  console.log("D after 5.5s (past GC 4s) tries ExpireTest - should succeed as freed: ",r4);
   d.disconnect();
   process.exit(0);
 }

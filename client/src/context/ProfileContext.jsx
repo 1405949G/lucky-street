@@ -1,5 +1,5 @@
-/**
- * src/context/ProfileContext.jsx — wraps localStorage identity
+﻿/**
+ * src/context/ProfileContext.jsx - wraps localStorage identity
  * Provides { profile, setProfile, clear, showOnboarding, setShowOnboarding }
  * Syncs with localStorage and exposes helper to validate.
  */
@@ -12,7 +12,7 @@ export const ProfileContext = createContext(null);
 export function ProfileProvider({ children }) {
   const [profile, setProfileState] = useState(() => {
     const p = storage.loadProfile();
-    // Migrate old image avatars (base64) to solid colour — was causing "Checking..." stalls via large WS payloads
+    // Migrate old image avatars (base64) to solid colour - was causing "Checking..." stalls via large WS payloads
     if (p && typeof p.avatar === "string" && p.avatar.startsWith("data:image")) {
       const fallback = "#f59e0b";
       const migrated = { ...p, avatar: fallback, avatarType: "color" };

@@ -1,5 +1,5 @@
-/**
- * src/utils/storage.js — Client-Side Identity & Profile Caching
+﻿/**
+ * src/utils/storage.js - Client-Side Identity & Profile Caching
  * Spec 1: localStorage persistence, bypass onboarding on return/refresh
  */
 

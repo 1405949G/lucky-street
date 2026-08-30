@@ -1,7 +1,7 @@
-/**
- * Lobby — Host can change game/options, add bots (generic names), transfer host, kick via popup
+﻿/**
+ * Lobby - Host can change game/options, add bots (generic names), transfer host, kick via popup
  * Name/avatar locked inside room (change only at main menu / direct-link IdentityModal).
- * Single Leave button (removed duplicate back arrow) — guarantees room:leave before navigate
+ * Single Leave button (removed duplicate back arrow) - guarantees room:leave before navigate
  */
 
 import React, { useContext, useEffect, useState, useRef } from "react";
@@ -25,7 +25,7 @@ export default function Lobby({ spectate = false }) {
   const [kickedPopup, setKickedPopup] = useState(false);
   const [hostActionTarget, setHostActionTarget] = useState(null);
   const [botConfirm, setBotConfirm] = useState(null);
-  const [mobileTab, setMobileTab] = useState("board"); // board | controls — for phone split-view like Kahoot
+  const [mobileTab, setMobileTab] = useState("board"); // board | controls - for phone split-view like Kahoot
   const [showRules, setShowRules] = useState(false);
   const leavingRef = useRef(false);
   const roomRef = useRef(null);
@@ -65,7 +65,7 @@ export default function Lobby({ spectate = false }) {
         setKickedPopup(true);
         return;
       }
-      // Transient errors during refresh/hibernation — don't show fatal card, will retry
+      // Transient errors during refresh/hibernation - don't show fatal card, will retry
       // Handle "Username already in this room" by falling back to spectate (same user second tab)
       if (data?.error && /Username already in this room/i.test(data.error)) {
         // Try spectate as fallback for same-name second tab
@@ -173,7 +173,7 @@ export default function Lobby({ spectate = false }) {
         }
       });
     }
-    // Always sync, even if profile not yet ok — syncAttempt handles waiting
+    // Always sync, even if profile not yet ok - syncAttempt handles waiting
     syncAttempt();
     socket._luckyAttemptJoin = attemptJoin;
     // Re-sync after reconnect (covers hibernation / refresh)
@@ -241,7 +241,7 @@ export default function Lobby({ spectate = false }) {
       <div className="max-w-[520px] mx-auto px-4 py-10">
         <div className="rounded-2xl bg-rose-500/10 border border-rose-500/20 p-6 text-center">
           <p className="font-bold text-rose-300">{error}</p>
-          <p className="text-xs text-white/50 mt-2">{isTransient ? "Trying again — tap Retry if needed." : "Double-check the code and try again."}</p>
+          <p className="text-xs text-white/50 mt-2">{isTransient ? "Trying again - tap Retry if needed." : "Double-check the code and try again."}</p>
           <div className="mt-4 flex gap-2 justify-center">
             {isTransient && <button onClick={() => { setError(null); socket?._luckyAttemptJoin?.(); if (!room) socket?.emit("room:sync", { roomId: id }, (r)=>{ if(r?.ok) setRoom(r.room); }); }} className="px-5 py-2 rounded-full bg-amber-400 text-[#0e2533] font-bold">Try again</button>}
             <button onClick={() => navigate("/")} className="px-5 py-2 rounded-full bg-white text-[#0e2533] font-bold">Back to games</button>
@@ -279,24 +279,24 @@ export default function Lobby({ spectate = false }) {
   function handleStartQuest() {
     if (!isHost) return;
     if (!canStart) {
-      showToast(`Need ${room.minPlayers} players — have ${totalPlayers}. Add bots.`);
+      showToast(`Need ${room.minPlayers} players - have ${totalPlayers}. Add bots.`);
       return;
     }
     socket.emit("game:start", { roomId: id }, (res) => {
       if (!res?.ok) showToast(res?.error || "Start failed");
-      else showToast("Quest started — roles dealt");
+      else showToast("Quest started - roles dealt");
     });
   }
 
   function handleResetQuest() {
     socket.emit("game:reset", { roomId: id }, (res) => {
       if (!res?.ok) showToast(res?.error || "Reset failed");
-      else showToast("Game reset — back to lobby");
+      else showToast("Game reset - back to lobby");
     });
   }
 
   function handleSpectate() {
-    if (isPlayer && room.players.length === 1) { showToast("Cannot spectate as only player — room would close"); return; }
+    if (isPlayer && room.players.length === 1) { showToast("Cannot spectate as only player - room would close"); return; }
     socket.emit("room:spectate", { roomId: id }, (res) => {
       if (!res?.ok) showToast(res.error || "Spectate failed");
       else {
@@ -323,7 +323,7 @@ export default function Lobby({ spectate = false }) {
       else {
         showToast(`Game set to ${res.room.gameLabel}`);
         if (targetGame && targetGame.supportsBots===false && room.bots.length>0) {
-          showToast("Bots removed — this game doesn't support bots");
+          showToast("Bots removed - this game doesn't support bots");
         }
       }
     });
@@ -407,7 +407,7 @@ export default function Lobby({ spectate = false }) {
         <div className="mt-4 rounded-[24px] bg-[#0f2231] border border-white/10 shadow-xl p-6 text-center">
           <div className="flex items-center justify-between">
             <span className="text-xs tracking-widest font-bold text-[#7ec8e6]">QUEST {Math.min(room.gameState.currentQuest+1,5)} / 5</span>
-            <span className="text-xs font-bold text-white/60">Good {room.gameState.quests.filter(q=>q.status==='SUCCESS').length} — Evil {room.gameState.quests.filter(q=>q.status==='FAIL').length}</span>
+            <span className="text-xs font-bold text-white/60">Good {room.gameState.quests.filter(q=>q.status==='SUCCESS').length} - Evil {room.gameState.quests.filter(q=>q.status==='FAIL').length}</span>
           </div>
           <div className="mt-4 flex justify-between gap-2">
             {room.gameState.quests.map((q,i)=>{
@@ -431,14 +431,14 @@ export default function Lobby({ spectate = false }) {
               ))}
               <span className="ml-3 text-base font-bold text-white/60 self-center">{room.gameState.proposalTracker} / 5</span>
             </div>
-            <p className="text-[11px] text-white/30 mt-2">5 rejects = Evil wins • Good 3 → Assassin guesses Merlin {room.gameState.quests[3]?.failsRequired>1 ? '• Q4 needs 2 fails (7+ players)' : ''}</p>
+              <p className="text-[11px] text-white/30 mt-2">5 rejects = Evil wins • Good 3 → Assassin guesses Merlin {room.gameState.quests[3]?.failsRequired>1 ? '• Q4 needs 2 fails (7+ players)' : ''}</p>
           </div>
         </div>
       )}
 
       {/* Split view */}
       <div className={`mt-4 ${hasGameState ? 'flex justify-center' : 'grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-5'}`}>
-        {/* Board — public, visible on TV (hidden during game) */}
+        {/* Board - public, visible on TV (hidden during game) */}
         <div className={`${hasGameState ? 'hidden' : mobileTab === "controls" ? "hidden lg:block" : "block"} space-y-4`}>
           {!hasGameState && (
             <div className="rounded-[24px] bg-[#29546c] border border-white/10 shadow-xl p-6 text-center relative overflow-hidden">
@@ -467,7 +467,7 @@ export default function Lobby({ spectate = false }) {
             const isHostPlayer = p.isHost || p.id === room.hostId;
             const avatarIsImage = p.avatar && typeof p.avatar === "string" && p.avatar.startsWith("data:");
             const avatarBg = avatarIsImage ? null : (p.avatar || "#475569");
-            // Name/avatar editing disabled in room — only host actions on others
+            // Name/avatar editing disabled in room - only host actions on others
             const canHostAct = isHost && !isMe;
             return (
               <div key={p.id} className="flex flex-col items-center gap-1.5 relative">
@@ -534,7 +534,7 @@ export default function Lobby({ spectate = false }) {
             {!isPlayer && !isSpectator && <><button onClick={handleSpectate} className="px-3 py-1 rounded-full bg-white/10 hover:bg-white/15 text-white text-xs">Watch</button><button onClick={handleJoinAsPlayer} className="px-3 py-1 rounded-full bg-[#f3ecd8] hover:bg-white text-[#0e2533] text-xs font-bold">Join</button></>}
           </div>
         </div>
-        {isSpectator && <p className="text-xs text-amber-300 mt-1">You’re watching — tap Join to play</p>}
+        {isSpectator && <p className="text-xs text-amber-300 mt-1">You’re watching - tap Join to play</p>}
         {room.spectators?.length > 0 && <div className="mt-2 flex flex-wrap gap-2">{room.spectators.map(s=> <span key={s.id} className="px-2 py-1 rounded-full bg-white/10 border border-white/10 text-white text-xs">{s.name}</span>)}</div>}
         {!isPlayer && !isSpectator && <p className="text-xs text-white/40 mt-1">Watch or join the game</p>}
       </div>
@@ -559,7 +559,7 @@ export default function Lobby({ spectate = false }) {
               {isQuestGame && (
                 <div className="rounded-2xl bg-[#0f2231]/80 border border-white/10 p-4">
                   <h4 className="font-bold text-white text-sm">Veil Street</h4>
-                  <p className="text-xs text-white/40 mt-1">{totalPlayers} / {room.maxPlayers} — need {room.minPlayers} to start</p>
+                  <p className="text-xs text-white/40 mt-1">{totalPlayers} / {room.maxPlayers} - need {room.minPlayers} to start</p>
                   {isHost ? (
                     <>
                       <button onClick={handleStartQuest} disabled={!canStart} className={`mt-3 w-full py-3 rounded-full font-extrabold ${canStart ? "bg-[#f3ecd8] hover:bg-white text-[#0e2533]" : "bg-white/10 text-white/30 cursor-not-allowed"}`}>
@@ -579,14 +579,14 @@ export default function Lobby({ spectate = false }) {
                   {!supportsBots ? (
                     <p className="text-xs text-amber-300 mt-2">Bots not supported for {game.label}. Switch to Veil Street to use bots, or play with humans only.</p>
                   ) : totalPlayers >= room.maxPlayers ? (
-                    <p className="text-xs text-amber-300 mt-2">Room full ({totalPlayers}/{room.maxPlayers}) — remove a player/bot to add more.</p>
+                    <p className="text-xs text-amber-300 mt-2">Room full ({totalPlayers}/{room.maxPlayers}) - remove a player/bot to add more.</p>
                   ) : (
                     <>
                       <div className="mt-2 flex gap-2 items-center">
                         <input value={botName} onChange={e => setBotName(e.target.value)} placeholder="Leave empty for random name" maxLength={20} className="flex-1 px-3 py-2.5 rounded-xl bg-white/10 border border-white/15 text-white placeholder:text-white/30 text-sm outline-none" />
                         <button onClick={handleAddBot} className="px-4 py-2.5 rounded-xl bg-[#f3ecd8] hover:bg-white text-[#0e2533] text-sm font-bold">Add</button>
                       </div>
-                      <p className="text-xs text-white/30 mt-1">{totalPlayers} / {room.maxPlayers} players — bots take a spot and look the same.</p>
+                      <p className="text-xs text-white/30 mt-1">{totalPlayers} / {room.maxPlayers} players - bots take a spot and look the same.</p>
                     </>
                   )}
                 </div>
@@ -691,7 +691,7 @@ export default function Lobby({ spectate = false }) {
         <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={()=>setShowRules(false)}>
           <div onClick={e=>e.stopPropagation()} className="w-full max-w-[480px] rounded-2xl bg-[#0f2231] border border-white/10 p-6 max-h-[80vh] overflow-auto shadow-2xl">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-white">How to Play — {game.label}</h3>
+              <h3 className="font-bold text-white">How to Play - {game.label}</h3>
               <button onClick={()=>setShowRules(false)} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/15 flex items-center justify-center text-white">✕</button>
             </div>
             {isQuestGame ? (
@@ -700,28 +700,28 @@ export default function Lobby({ spectate = false }) {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3">
                     <p className="text-xs font-bold tracking-widest text-emerald-300">GOOD TEAM</p>
-                    <p className="text-xs mt-1.5 text-white/70 leading-snug">• Loyal — no power<br/>• Merlin — knows Evil (except Mordred hides)<br/>• Percival — knows Merlin (but Morgana pretends)</p>
+                    <p className="text-xs mt-1.5 text-white/70 leading-snug">• Loyal - no power<br/>• Merlin - knows Evil (except Mordred hides)<br/>• Percival - knows Merlin (but Morgana pretends)</p>
                   </div>
                   <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 p-3">
                     <p className="text-xs font-bold tracking-widest text-rose-300">EVIL TEAM</p>
-                    <p className="text-xs mt-1.5 text-white/70 leading-snug">• Minion — with Evil<br/>• Assassin — hunts Merlin<br/>• Morgana — pretends to be Merlin<br/>• Mordred — hidden from Merlin<br/>• Oberon — works alone</p>
+                    <p className="text-xs mt-1.5 text-white/70 leading-snug">• Minion - with Evil<br/>• Assassin - hunts Merlin<br/>• Morgana - pretends to be Merlin<br/>• Mordred - hidden from Merlin<br/>• Oberon - works alone</p>
                   </div>
                 </div>
                 <div className="rounded-xl bg-white/5 border border-white/10 p-3">
                   <p className="text-xs font-bold text-white">How a round works</p>
-                  <p className="text-xs text-white/60 mt-1.5 leading-snug">1. Leader picks a team &nbsp;→&nbsp; 2. Everyone votes &nbsp;→&nbsp; 3. If most say yes, that team secretly picks Success or Fail. Good must pick Success. One Fail usually fails the quest — the 4th quest needs 2 fails when you have 7+ players.</p>
+                  <p className="text-xs text-white/60 mt-1.5 leading-snug">1. Leader picks a team → 2. Everyone votes → 3. If most say yes, that team secretly picks Success or Fail. Good must pick Success. One Fail usually fails the quest - the 4th quest needs 2 fails when you have 7+ players.</p>
                 </div>
                 <p className="text-xs text-white/40">Now: {totalPlayers} players • {['morgana','mordred','oberon'].filter(k=> !!room.gameOptions[k]).length}/{totalPlayers<=6?1:totalPlayers<=8?2:3} extra Evil • Merlin + Assassin always in</p>
               </div>
             ) : (
               <div className="mt-4 space-y-3 text-sm text-white/60">
                 <p>{game.description}</p>
-                <p>Players: {game.minPlayers}–{game.maxPlayers} {supportsBots ? "(bots supported)" : "(no bots)"} • Default max {game.defaultMaxPlayers}</p>
+                <p>Players: {game.minPlayers}-{game.maxPlayers} {supportsBots ? "(bots supported)" : "(no bots)"} • Default max {game.defaultMaxPlayers}</p>
                 {game.optionSchema?.length>0 && (
                   <div className="rounded-xl bg-white/5 border border-white/10 p-3">
                     <p className="text-xs font-bold text-white/50">Options</p>
                     <ul className="mt-1 space-y-1 text-xs">
-                      {game.optionSchema.map(o=> <li key={o.key}>• <span className="text-white font-bold">{o.label}</span> — {o.type}</li>)}
+                      {game.optionSchema.map(o=> <li key={o.key}>• <span className="text-white font-bold">{o.label}</span> - {o.type}</li>)}
                     </ul>
                   </div>
                 )}

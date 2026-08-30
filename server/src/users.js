@@ -1,5 +1,5 @@
-/**
- * server/src/users.js — Ephemeral Identity Database (Name Lifecycle Management)
+﻿/**
+ * server/src/users.js - Ephemeral Identity Database (Name Lifecycle Management)
  * Spec 2:
  *  - Usernames globally unique across active sessions (case-insensitive)
  *  - In-memory Map tracking current names
@@ -52,7 +52,7 @@ class UserRegistry {
       }
       // Different socket but name is in GC grace -> allow reclaim (owner reconnect)
       // Spec says 5-min grace before freeing for others; we treat any reclaim within grace as owner returning.
-      // Tradeoff: without auth token, stealing during grace would also succeed — acceptable for party lobby where friends cooperate.
+      // Tradeoff: without auth token, stealing during grace would also succeed - acceptable for party lobby where friends cooperate.
       // To be stricter, require explicit profile:reconnect with token; for now we allow register to reclaim gracefully.
       if (existing.timer) {
         console.log(`[users] grace reclaim "${trimmed}" old=${existing.socketId} new=${socketId}`);
@@ -71,7 +71,7 @@ class UserRegistry {
         this.bySocket.set(socketId, lower);
         return existing;
       }
-      // Active duplicate — reject
+      // Active duplicate - reject
       throw new Error(`Username "${trimmed}" is already taken. Choose another.`);
     }
 
@@ -105,7 +105,7 @@ class UserRegistry {
    */
   update(socketId, newUsername, newAvatar) {
     const currentLower = this.bySocket.get(socketId);
-    if (!currentLower) throw new Error("No active session — register first");
+    if (!currentLower) throw new Error("No active session - register first");
     const current = this.byName.get(currentLower);
     if (!current) throw new Error("Session not found");
 
@@ -115,7 +115,7 @@ class UserRegistry {
       if (this.byName.has(newLower)) {
         const other = this.byName.get(newLower);
         if (!other.timer) throw new Error(`Username "${newTrimmed}" is already taken`);
-        // grace period — still reserved
+        // grace period - still reserved
         throw new Error(`Username "${newTrimmed}" is reserved (grace period)`);
       }
       // Move entry
@@ -127,7 +127,7 @@ class UserRegistry {
       this.byName.set(newLower, current);
       this.bySocket.set(socketId, newLower);
     } else if (newUsername) {
-      // Same name different case — update display
+      // Same name different case - update display
       current.username = String(newUsername).trim();
     }
 
@@ -136,7 +136,7 @@ class UserRegistry {
   }
 
   /**
-   * Called on socket disconnect — start GC timer
+   * Called on socket disconnect - start GC timer
    */
   handleDisconnect(socketId) {
     const lower = this.bySocket.get(socketId);
@@ -162,13 +162,13 @@ class UserRegistry {
         console.log(`[users] GC expired "${cur.username}" (${lower}) after ${this.gcMs}ms`);
       }
     }, this.gcMs);
-    // Do NOT delete bySocket yet — keep so reconnect can cancel
+    // Do NOT delete bySocket yet - keep so reconnect can cancel
     // But we need to allow socketId reuse? For new socket with same username, we check timer existence.
     return entry;
   }
 
   /**
-   * Called on reconnect (or new socket claiming same name within grace) — cancel timer
+   * Called on reconnect (or new socket claiming same name within grace) - cancel timer
    */
   handleReconnect(socketId, username) {
     // If client reconnects with same username but new socketId, we treat as reclaim attempt

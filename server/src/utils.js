@@ -1,5 +1,5 @@
-/**
- * server/src/utils.js — pure helpers
+﻿/**
+ * server/src/utils.js - pure helpers
  */
 
 // 4-char alphanumeric (A-Z, 0-9), avoid ambiguous I/O
@@ -37,7 +37,7 @@ export function sanitizeName(raw) {
   return name;
 }
 
-// Simple password hashing placeholder — not cryptographically secure, but avoids plaintext in memory logs.
+// Simple password hashing placeholder - not cryptographically secure, but avoids plaintext in memory logs.
 // In production, use bcrypt/argon2.
 export function hashPassword(pwd) {
   if (!pwd) return null;

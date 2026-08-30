@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+﻿import React, { useContext, useState } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { ProfileContext } from "./context/ProfileContext.jsx";
 import { SocketContext } from "./context/SocketContext.jsx";
@@ -26,7 +26,7 @@ function MainPage() {
     const id = String(room.id || room).toUpperCase();
     if (!socket?.connected) {
       if (retry < 3) { setTimeout(() => handleJoinRoom(room, retry + 1), 500); return; }
-      setError("Not connected — try again"); setTimeout(() => setError(null), 3000); return;
+      setError("Not connected - try again"); setTimeout(() => setError(null), 3000); return;
     }
     socket.emit("room:join", { roomId: id }, (res) => {
       if (res?.ok) {
@@ -34,7 +34,7 @@ function MainPage() {
       } else {
         const msg = res?.error || "";
         if (/Username already in this room|Already in room/i.test(msg)) {
-          // Same name already in room (e.g., same user second tab) or same socket already in room — open as spectator instead (auto-spectate)
+          // Same name already in room (e.g., same user second tab) or same socket already in room - open as spectator instead (auto-spectate)
           navigate(`/room/${id}/spectate`);
           return;
         }

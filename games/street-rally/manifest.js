@@ -1,7 +1,7 @@
-export default {
+﻿export default {
   id: "street-rally",
   label: "Street Rally",
-  description: "Dice racing down Lucky Street — first to finish wins",
+  description: "Dice racing down Lucky Street - first to finish wins",
   minPlayers: 2,
   maxPlayers: 6,
   defaultMaxPlayers: 6,

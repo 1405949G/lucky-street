@@ -1,5 +1,5 @@
-/**
- * src/context/SocketContext.jsx — Socket provider (dual-mode)
+﻿/**
+ * src/context/SocketContext.jsx - Socket provider (dual-mode)
  * Option A (Render/Node): uses socket.io-client (server/src/index.js:52)
  * Option B (pure Cloudflare): uses native WebSocket to Workers DO (server/src/worker.js + durable/LuckyStreetDO.js)
  * Auto-selects based on VITE_SERVER_URL. Same API exposed so Lobby/RoomBrowser unchanged.
@@ -21,7 +21,7 @@ const FORCE_NATIVE = import.meta.env.VITE_USE_NATIVE_WS === "true";
 const USE_NATIVE = FORCE_NATIVE || SERVER_URL.includes("workers.dev") || SERVER_URL.includes(".workerd") || SERVER_URL.endsWith("/ws");
 const isTvPath = () => typeof window !== "undefined" && window.location.pathname.startsWith("/tv/");
 
-// ——— fetch with retry for HTTP timeout / DO eviction (cold start) ———
+// --- fetch with retry for HTTP timeout / DO eviction (cold start) ---
 export async function fetchWithRetry(url, opts = {}, retries = 3) {
   for (let i = 0; i < retries; i++) {
     try {
@@ -39,7 +39,7 @@ export async function fetchWithRetry(url, opts = {}, retries = 3) {
   }
 }
 
-// ——— Native WebSocket wrapper mimicking socket.io API ———
+// --- Native WebSocket wrapper mimicking socket.io API ---
 class NativeSocket {
   constructor(url) {
     // url is https://... -> wss://.../ws
@@ -81,7 +81,7 @@ class NativeSocket {
   _connect(resetBackoff = false) {
     if (resetBackoff) { this.attempt = 0; this.backoff = 800; }
     if (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
-      // already connecting/open — don't duplicate
+      // already connecting/open - don't duplicate
       if (this.ws.readyState === WebSocket.OPEN) return;
     }
     try {
@@ -121,7 +121,7 @@ class NativeSocket {
 
     this.ws.addEventListener("error", (ev) => {
       this._emitInternal("connect_error", ev);
-      // error often followed by close — schedule only if not already
+      // error often followed by close - schedule only if not already
       if (!this.connected) this._scheduleReconnect();
     });
 
@@ -172,7 +172,7 @@ class NativeSocket {
           this.ackCallbacks.delete(ackId);
           this.ackTimers.delete(ackId);
           // surface as error so caller can retry/show toast
-          try { ack({ ok: false, error: "timeout — retrying" }); } catch {}
+          try { ack({ ok: false, error: "timeout - retrying" }); } catch {}
         }
       }, 8000);
       this.ackTimers.set(ackId, t);
@@ -232,10 +232,10 @@ export function SocketProvider({ profile, children }) {
   useEffect(() => {
     let s;
     if (useNativeRef.current) {
-      console.log("[socket] using native WebSocket (Workers DO) →", SERVER_URL);
+      console.log("[socket] using native WebSocket (Workers DO) ->", SERVER_URL);
       s = new NativeSocket(SERVER_URL);
     } else {
-      console.log("[socket] using socket.io →", SERVER_URL);
+      console.log("[socket] using socket.io ->", SERVER_URL);
       s = io(SERVER_URL, {
         autoConnect: true,
         reconnection: true,
@@ -332,8 +332,8 @@ export function SocketProvider({ profile, children }) {
         setProfileError(null);
       } else {
         const msg = res?.error || "Registration failed";
-        // Refresh race: same name as before but server says taken because old socket still in grace — retry shortly
-        // or timeout from DO eviction — retry with backoff
+        // Refresh race: same name as before but server says taken because old socket still in grace - retry shortly
+        // or timeout from DO eviction - retry with backoff
         if ((/already taken/i.test(msg) || /timeout/i.test(msg)) && retry < 3) {
           const delay = 600 * Math.pow(1.5, retry);
           setTimeout(() => registerProfile(p, retry + 1), delay);

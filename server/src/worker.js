@@ -1,5 +1,5 @@
-/**
- * server/src/worker.js — Cloudflare Workers entry (Option B: pure Cloudflare, no Render)
+﻿/**
+ * server/src/worker.js - Cloudflare Workers entry (Option B: pure Cloudflare, no Render)
  * Single global Durable Object `lucky-street/lobby` holds all users + rooms.
  * Keeps same JSON protocol as Express server but over native WebSocket.
  * See wrangler.toml, durable/LuckyStreetDO.js, AGENTS.md
