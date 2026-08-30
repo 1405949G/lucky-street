@@ -567,8 +567,9 @@ export class LuckyStreetDO {
                 const isGhostPending = this.pendingLeaves.has(ghost.id);
                 if (!isGhostActive || isGhostPending) {
                   const oldId = ghost.id;
-                  const wasHost = ghost.isHost || existingRoom.hostId === oldId;
-                  console.log(`[DO] ghost takeover ${ghost.name} ${oldId} -> ${socketId} in ${id} (active=${isGhostActive} pending=${isGhostPending})`);
+                  // Only preserve host if ghost was sole host or room would be empty — prevents kicked ex-host from stealing host on rejoin
+                  const wasHost = (ghost.isHost || existingRoom.hostId === oldId) && existingRoom.players.length === 1;
+                  console.log(`[DO] ghost takeover ${ghost.name} ${oldId} -> ${socketId} in ${id} (active=${isGhostActive} pending=${isGhostPending} wasHost=${wasHost})`);
                   if (isGhostPending) { const pend = this.pendingLeaves.get(oldId); if (pend) { clearTimeout(pend.timeout); this.pendingLeaves.delete(oldId); } }
                   ghost.id = socketId;
                   ghost.name = user.username;
@@ -578,6 +579,9 @@ export class LuckyStreetDO {
                     existingRoom.hostName = user.username;
                     existingRoom.players.forEach(p => p.isHost = p.id === socketId);
                     ghost.isHost = true;
+                  } else {
+                    // Ensure rejoining kicked player never becomes host
+                    ghost.isHost = false;
                   }
                   existingRoom.updatedAt = Date.now();
                   sess.currentRoom = id;

@@ -19,6 +19,7 @@ const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:3001";
 const FORCE_NATIVE = import.meta.env.VITE_USE_NATIVE_WS === "true";
 // Auto-detect Workers: workers.dev or explicit /ws path
 const USE_NATIVE = FORCE_NATIVE || SERVER_URL.includes("workers.dev") || SERVER_URL.includes(".workerd") || SERVER_URL.endsWith("/ws");
+const isTvPath = () => typeof window !== "undefined" && window.location.pathname.startsWith("/tv/");
 
 // ——— fetch with retry for HTTP timeout / DO eviction (cold start) ———
 export async function fetchWithRetry(url, opts = {}, retries = 3) {
@@ -252,14 +253,15 @@ export function SocketProvider({ profile, children }) {
       setConnected(true);
       setSocketError(null);
       console.log("[socket] connected", s.id || "native");
-      // re-register profile and re-sync room after hibernation / drop
-      const p = socketRef.current?._lastProfile;
-      if (p?.username) {
-        // use stored last profile if React profile stale
-        setTimeout(() => {
-          const cur = p || profile;
-          if (cur?.username) registerProfile(cur);
-        }, 100);
+      // re-register profile and re-sync room after hibernation / drop (skip for TV spectator)
+      if (!isTvPath()) {
+        const p = socketRef.current?._lastProfile;
+        if (p?.username) {
+          setTimeout(() => {
+            const cur = p || profile;
+            if (cur?.username) registerProfile(cur);
+          }, 100);
+        }
       }
       // room re-sync is handled in Lobby via socket "connect" listener, but also try here if we know room
       if (currentRoomRef.current) {
@@ -319,6 +321,7 @@ export function SocketProvider({ profile, children }) {
   }, []);
 
   const registerProfile = useCallback((p = profile, retry = 0) => {
+    if (isTvPath()) return; // TV spectator: don't claim host identity (would steal host)
     const s = socketRef.current;
     if (!s || !p?.username) return;
     // remember last profile for reconnect
@@ -343,6 +346,7 @@ export function SocketProvider({ profile, children }) {
   }, [profile]);
 
   useEffect(() => {
+    if (isTvPath()) return;
     if (!socket || !profile?.username) return;
     if (!connected) return;
     socketRef.current._lastProfile = profile;
@@ -351,6 +355,7 @@ export function SocketProvider({ profile, children }) {
 
   useEffect(() => {
     if (!socket) return;
+    if (isTvPath()) return;
     function onConn() {
       // keep ref for re-sync
       const p = socketRef.current?._lastProfile || profile;
