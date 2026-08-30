@@ -658,11 +658,6 @@ export function reducer(state, action) {
         nextPhase = PHASES.TEAM_PROPOSAL;
       }
 
-      const questLabel = `Quest ${questIdx + 1}`;
-      const resultText = success
-        ? `${questLabel} succeeded with ${failCount} fail(s).`
-        : `${questLabel} failed with ${failCount} fail(s) (needed ${failsRequired} to fail).`;
-
       let newState = {
         ...state,
         proposalTracker: 0,
