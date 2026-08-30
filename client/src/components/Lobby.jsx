@@ -540,20 +540,10 @@ export default function Lobby({ spectate = false }) {
           {isQuestGame && hasGameState ? (
             <>
               <QuestGame roomId={id} isHost={isHost} isSpectator={isSpectator} hideTopAllegiance />
-              {/* Bottom centre Spectators - same width as quest top */}
+              {/* Bottom centre Spectators - no button during game */}
               <div className="rounded-2xl bg-white/[0.04] border border-white/10 p-3">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-center">
                   <span className="text-xs font-bold text-white/60">Spectators • {room.spectatorCount || 0}</span>
-                  <div className="flex gap-2">
-                    {isSpectator ? (
-                      <span className="text-xs text-amber-300">You are spectating</span>
-                    ) : (
-                      <button onClick={()=>{
-                        if (isPlayer && room.players.length===1) { showToast("Cannot spectate as only player"); return; }
-                        socket.emit("room:spectate",{roomId:id},(res)=>{ if(!res?.ok) showToast(res.error||"Spectate failed"); });
-                      }} className="px-3 py-1 rounded-full bg-white/10 hover:bg-white/15 text-white text-xs">Spectate</button>
-                    )}
-                  </div>
                 </div>
                 {room.spectators?.length>0 && <div className="mt-2 flex flex-wrap gap-2 justify-center">{room.spectators.map(s=> <span key={s.id} className="px-2 py-1 rounded-full bg-white/10 border border-white/10 text-white text-xs">{s.name}</span>)}</div>}
               </div>

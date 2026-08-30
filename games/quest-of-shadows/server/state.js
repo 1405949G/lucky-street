@@ -551,7 +551,30 @@ export function reducer(state, action) {
       };
       const effects = [];
       if (allVoted) {
-        newState = { ...newState, phase: PHASES.QUEST_REVEAL, questRevealAcks: Object.freeze({}), phaseLock: false };
+        // Compute quest result immediately so reveal shows correct success/fail
+        const questIdx = state.currentQuest;
+        const quest = state.quests[questIdx];
+        const votesArr = Object.values(newQuestVotes);
+        const failCount = votesArr.filter(v=>v==='FAIL').length;
+        const failsRequired = quest.failsRequired;
+        const success = failCount < failsRequired;
+        const status = success ? 'SUCCESS' : 'FAIL';
+        const shuffled = shuffle(votesArr);
+        const newQuests = state.quests.slice();
+        newQuests[questIdx] = Object.freeze({
+          ...quest,
+          status,
+          teamIds: Object.freeze(state.proposal.teamIds.slice()),
+          failCount,
+          votesShuffled: Object.freeze(shuffled),
+        });
+        newState = {
+          ...newState,
+          quests: Object.freeze(newQuests),
+          questRevealAcks: Object.freeze({}),
+          phase: PHASES.QUEST_REVEAL,
+          phaseLock: false,
+        };
         effects.push({ type: 'ENTER_QUEST_REVEAL' });
       }
       return { state: Object.freeze(newState), effects: Object.freeze(effects) };
@@ -565,9 +588,26 @@ export function reducer(state, action) {
         const p = state.players.find(x => x.id === id);
         filled[id] = p.allegiance === ALLEGIANCE.GOOD ? 'SUCCESS' : (Math.random() > 0.5 ? 'FAIL' : 'SUCCESS');
       }
+      const questIdx = state.currentQuest;
+      const quest = state.quests[questIdx];
+      const votesArr = Object.values(filled);
+      const failCount = votesArr.filter(v=>v==='FAIL').length;
+      const failsRequired = quest.failsRequired;
+      const success = failCount < failsRequired;
+      const status = success ? 'SUCCESS' : 'FAIL';
+      const shuffled = shuffle(votesArr);
+      const newQuests = state.quests.slice();
+      newQuests[questIdx] = Object.freeze({
+        ...quest,
+        status,
+        teamIds: Object.freeze(state.proposal.teamIds.slice()),
+        failCount,
+        votesShuffled: Object.freeze(shuffled),
+      });
       const newState = {
         ...state,
         questVotes: Object.freeze(filled),
+        quests: Object.freeze(newQuests),
         phase: PHASES.QUEST_REVEAL,
         questRevealAcks: Object.freeze({}),
         phaseLock: false,

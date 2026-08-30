@@ -372,7 +372,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
                   {votes.map((v,i)=><span key={i} className={`px-4 py-1.5 rounded-full text-xs font-black ${v==='FAIL'?'bg-rose-500 text-white':'bg-emerald-400 text-black'}`}>{v}</span>)}
                 </div>
                 <h3 className={`font-black text-lg mt-3 ${isSuccess?'text-emerald-300':'text-rose-300'}`}>{isSuccess?'The quest holds':'The quest fails'}</h3>
-                <p className="text-xs text-white/50">{q?.teamIds?.length||0} on quest • {q?.failCount ?? '?'} fail • {isSuccess?'Good holds':'Evil strikes'}</p>
+                <p className="text-xs text-white/50">{(q?.votesShuffled?.filter(v=>v==='SUCCESS').length ?? votes.filter(v=>v==='SUCCESS').length) || 0} Success • {(q?.failCount ?? votes.filter(v=>v==='FAIL').length) || 0} Fail • {q?.teamIds?.length||pub.proposal.teamIds.length||0} on quest</p>
                 {isSpectator ? (
                   <div className="mt-4 py-3 rounded-full bg-white/5 text-white/40 font-bold">Spectating… {ackCount}/{total}</div>
                 ) : hasAcked ? (
