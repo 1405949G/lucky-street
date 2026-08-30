@@ -151,6 +151,7 @@ export function getPublicState(state) {
     status: q.status,
     teamIds: q.teamIds,
     failCount: q.failCount, // only after reveal
+    votesShuffled: q.votesShuffled || null,
   }));
   // Proposal votes: only reveal after TEAM_VOTE_REVEAL fully resolved; during vote, hide
   const proposalPublic = {
