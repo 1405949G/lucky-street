@@ -40,6 +40,7 @@ export class LuckyStreetDO {
     this.sessions = new Map(); // ws -> {socketId, username, currentRoom}
     this.socketIdToWs = new Map();
     this.pendingLeaves = new Map(); // socketId -> {roomId, player, botSnapshot, timeout, expiresAt}
+    this.lastSeen = new Map(); // socketId -> timestamp (heartbeat for idle sweep)
 
     this.state.blockConcurrencyWhile(async () => {
       try {
@@ -147,6 +148,7 @@ export class LuckyStreetDO {
       const sess = { socketId, username: null, avatar: null, currentRoom: null };
       this.sessions.set(server, sess);
       this.socketIdToWs.set(socketId, server);
+      this.lastSeen.set(socketId, Date.now());
       try { server.serializeAttachment({ socketId, username: null, currentRoom: null }); } catch {}
       queueMicrotask(() => {
         this.send(server, { event: "connected", data: { id: socketId } });
@@ -245,7 +247,10 @@ export class LuckyStreetDO {
         }
       } catch {}
     }
-    if (!sess && event === "ping") { this.sendAck(ws, ackId, { ok: true }); this.send(ws, { event: "pong" }); return; }
+    // heartbeat tracking for idle sweep
+    if (sess) this.lastSeen.set(sess.socketId, Date.now());
+    else if (event === "ping") { this.sendAck(ws, ackId, { ok: true }); this.send(ws, { event: "pong" }); return; }
+    if (event === "ping") { this.sendAck(ws, ackId, { ok: true }); this.send(ws, { event: "pong" }); return; }
     await this.handleEvent(ws, event, data || {}, ackId);
   }
 
@@ -323,6 +328,7 @@ export class LuckyStreetDO {
 
     this.sessions.delete(ws);
     this.socketIdToWs.delete(socketId);
+    this.lastSeen.delete(socketId);
   }
 
   async webSocketError(ws, error) {
@@ -332,6 +338,51 @@ export class LuckyStreetDO {
 
   async alarm() {
     const now = Date.now();
+    // Idle sweep: remove players whose WS hasn't pinged in 60s and isn't pendingLeaves (covers tab closed to different site without clean close)
+    const IDLE_MS = 60000;
+    for (const [roomId, room] of [...this.roomManager.rooms.entries()]) {
+      for (const p of [...room.players]) {
+        const last = this.lastSeen.get(p.id);
+        const isPending = this.pendingLeaves.has(p.id);
+        const ws = this.socketIdToWs.get(p.id);
+        let isActive = false;
+        try { const active = this.state.getWebSockets(); isActive = !!(ws && active.includes(ws)); } catch { isActive = !!(ws && this.sessions.has(ws)); }
+        if (!isActive && !isPending && last && now - last > IDLE_MS) {
+          console.log(`[DO idle] removing ${p.name} ${p.id} from ${roomId} after ${IDLE_MS}ms`);
+          const wasHost = p.isHost;
+          room.players = room.players.filter(x => x.id !== p.id);
+          if (room.players.length === 0) {
+            this.roomManager.rooms.delete(roomId);
+            this.broadcast({ event: "room:deleted", data: { roomId } });
+          } else if (wasHost) {
+            const newHost = room.players[Math.floor(Math.random() * room.players.length)];
+            room.players.forEach(x => x.isHost = false);
+            newHost.isHost = true;
+            room.hostId = newHost.id;
+            room.hostName = newHost.name;
+            this.broadcast({ event: "lobby:update", data: this.roomManager.getFull(roomId) });
+          } else {
+            this.broadcast({ event: "lobby:update", data: this.roomManager.getFull(roomId) });
+          }
+          this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic() });
+          this.lastSeen.delete(p.id);
+        }
+      }
+      // also sweep idle spectators (30s)
+      if (room.spectators) {
+        for (const s of [...room.spectators]) {
+          const last = this.lastSeen.get(s.id);
+          const ws = this.socketIdToWs.get(s.id);
+          let isActive = false;
+          try { const active = this.state.getWebSockets(); isActive = !!(ws && active.includes(ws)); } catch { isActive = !!(ws && this.sessions.has(ws)); }
+          if (!isActive && last && now - last > 30000) {
+            room.spectators = room.spectators.filter(x => x.id !== s.id);
+            this.broadcast({ event: "lobby:update", data: this.roomManager.getFull(roomId) });
+            this.lastSeen.delete(s.id);
+          }
+        }
+      }
+    }
     // Sweep expired users
     for (const [lower, entry] of this.userRegistry.byName) {
       if (entry.expiresAt && now >= entry.expiresAt && !entry.connected) {
@@ -384,6 +435,9 @@ export class LuckyStreetDO {
     }
     if (soonest) {
       try { await this.state.storage.setAlarm(soonest); } catch {}
+    } else if (this.roomManager.rooms.size > 0) {
+      // keep periodic idle sweep every 30s even without pendingLeaves
+      try { await this.state.storage.setAlarm(Date.now() + 30000); } catch {}
     }
   }
 
@@ -639,10 +693,6 @@ export class LuckyStreetDO {
           const user = this.userRegistry.getBySocket(socketId);
           const name = user?.username || data.username || `Spectator ${Math.floor(Math.random()*900+100)}`;
           const avatar = user?.avatar || data.avatar || null;
-          // If already player, first leave as player (become spectator)
-          if (room.players.some(p => p.id === socketId)) {
-            this.roomManager.leave({ roomId: id, socketId });
-          }
           const full = this.roomManager.addSpectator({ roomId: id, socketId, username: name, avatar });
           sess.currentRoom = id;
           this._syncAttachment(ws, sess);

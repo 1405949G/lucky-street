@@ -147,30 +147,18 @@ export default function Lobby({ spectate = false }) {
     };
   }, [socket, id, hasProfile, connected, profileStatus, spectate]);
 
-  // Auto-switch to spectator if navigated to /room/:id/spectate while already a player
-  useEffect(() => {
-    if (!spectate || !socket || !room) return;
-    const myId = socket.id;
-    if (!myId) return;
-    const isPlayer = room.players.some(p => p.id === myId);
-    if (isPlayer) {
-      // move from player to spectator
-      socket.emit("room:spectate", { roomId: id }, (res) => {
-        if (res?.ok) showToast("Switched to spectator");
-      });
-    }
-  }, [spectate, socket, room, id]);
-
   // If user hits browser back / component unmounts while still in room, try to leave
   // (prevents 30s grace keeping ghost player). Intentional Leave also calls handleLeave.
   useEffect(() => {
+    const onBeforeUnload = () => {
+      try { socket?.emit("room:leave", { roomId: id }); } catch {}
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
     return () => {
+      window.removeEventListener("beforeunload", onBeforeUnload);
       if (leavingRef.current) return;
       if (!socket || !id) return;
-      // Don't leave if we were kicked / already showing error
       try {
-        // best-effort fire-and-forget; server will clear immediately if ack arrives,
-        // otherwise webSocketClose grace will hold 30s — but explicit leave avoids grace
         socket.emit("room:leave", { roomId: id });
       } catch {}
     };
@@ -239,15 +227,22 @@ export default function Lobby({ spectate = false }) {
   function showToast(msg) { setToast(msg); setTimeout(() => setToast(null), 2500); }
 
   function handleSpectate() {
+    if (isPlayer && room.players.length === 1) { showToast("Cannot spectate as only player — room would close"); return; }
     socket.emit("room:spectate", { roomId: id }, (res) => {
       if (!res?.ok) showToast(res.error || "Spectate failed");
-      else showToast(isPlayer ? "Switched to spectator" : "Spectating");
+      else {
+        showToast(isPlayer ? "Switched to spectator" : "Spectating");
+        if (spectate) navigate(`/room/${id}`, { replace: true });
+      }
     });
   }
   function handleJoinAsPlayer() {
     socket.emit("spectator:join", { roomId: id }, (res) => {
       if (!res?.ok) showToast(res.error || "Join failed");
-      else showToast("Joined as player");
+      else {
+        showToast("Joined as player");
+        if (spectate) navigate(`/room/${id}`, { replace: true });
+      }
     });
   }
 
@@ -419,7 +414,7 @@ export default function Lobby({ spectate = false }) {
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold text-white/60">Spectators • {room.spectatorCount || 0}</span>
           <div className="flex gap-2">
-            {isPlayer && <button onClick={handleSpectate} className="px-3 py-1 rounded-full bg-white/10 hover:bg-white/15 text-white text-xs">Spectate</button>}
+            {isPlayer && <button disabled={room.players.length === 1} onClick={handleSpectate} title={room.players.length === 1 ? "Need another player before spectating" : ""} className={`px-3 py-1 rounded-full text-xs ${room.players.length === 1 ? "bg-white/5 text-white/30 cursor-not-allowed" : "bg-white/10 hover:bg-white/15 text-white"}`}>Spectate</button>}
             {isSpectator && <button onClick={handleJoinAsPlayer} className="px-3 py-1 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold">Join as player</button>}
             {!isPlayer && !isSpectator && <><button onClick={handleSpectate} className="px-3 py-1 rounded-full bg-white/10 hover:bg-white/15 text-white text-xs">Spectate</button><button onClick={handleJoinAsPlayer} className="px-3 py-1 rounded-full bg-[#f3ecd8] hover:bg-white text-[#0e2533] text-xs font-bold">Join</button></>}
           </div>

@@ -208,7 +208,26 @@ export class RoomManager {
     if (!room) throw new Error("Room not found");
     if (!room.spectators) room.spectators = [];
     if (room.spectators.some(s => s.id === socketId)) return this.getFull(room.id);
-    if (room.players.some(p => p.id === socketId)) throw new Error("Already in room as player");
+    if (room.players.some(p => p.id === socketId)) {
+      // prevent spectate if only player — room would auto-close (players 0)
+      if (room.players.length === 1) throw new Error("Cannot spectate as the only player — room would close. Add a bot or wait for another player.");
+      // move player to spectator: remove from players, keep host handling
+      const pIdx = room.players.findIndex(p => p.id === socketId);
+      const wasHost = room.players[pIdx].isHost;
+      const player = room.players.splice(pIdx, 1)[0];
+      if (wasHost && room.players.length > 0) {
+        const newHost = pickRandomHost(room.players);
+        room.hostId = newHost.id;
+        room.hostName = newHost.name;
+        room.players.forEach(p => p.isHost = false);
+        newHost.isHost = true;
+      } else if (room.players.length === 0) {
+        // should not happen due to check above, but safety
+        this.rooms.delete(room.id);
+        this._notify();
+        throw new Error("Room closed — was last player");
+      }
+    }
     // allow anonymous spectating: if no username, use Spectator + count
     const name = username ? String(username).trim().slice(0, 20) : `Spectator ${room.spectators.length + 1}`;
     const entry = { id: socketId, name, avatar: avatar || null, isSpectator: true };
