@@ -18,7 +18,7 @@ export default {
       const allowOrigin = env.CLIENT_ORIGIN && env.CLIENT_ORIGIN !== "*" ? env.CLIENT_ORIGIN : origin;
       return {
         "Access-Control-Allow-Origin": allowOrigin,
-        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type, Upgrade, Connection, Sec-WebSocket-Key, Sec-WebSocket-Version",
         "Access-Control-Allow-Credentials": "true",
       };

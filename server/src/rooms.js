@@ -8,7 +8,6 @@
  *   hostId: socketId, hostName: string,
  *   game: string (gameId),
  *   maxPlayers: number,
- *   passwordHash: string|null,
  *   gameOptions: object,
  *   players: [{ id: socketId, name, avatar, isHost }],
  *   bots: [{ id: "bot_xxx", name, avatarColor }],
@@ -19,7 +18,7 @@
  * Permission matrix enforced in methods (host-only vs self-only)
  */
 
-import { generateRoomId, isValidRoomId, hashPassword, verifyPassword, clamp } from "./utils.js";
+import { generateRoomId, isValidRoomId, clamp } from "./utils.js";
 import { getGame, defaultMaxFor } from "./games.js";
 
 const BOT_NAMES = [
@@ -73,7 +72,7 @@ export class RoomManager {
       botCount: r.bots.length,
       // "X / Y Players (including Z Bots)" where X = players+ bots, Y = max
       slotsText: `${r.players.length + r.bots.length} / ${r.maxPlayers} Players (including ${r.bots.length} Bots)`,
-      isPrivate: !!r.passwordHash,
+      isPrivate: false,
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
       gameOptions: r.gameOptions
@@ -96,7 +95,7 @@ export class RoomManager {
       game: r.game,
       gameLabel: getGame(r.game)?.label || r.game,
       maxPlayers: r.maxPlayers,
-      isPrivate: !!r.passwordHash,
+      isPrivate: false,
       gameOptions: r.gameOptions,
       players: r.players.map(p => ({ ...p })),
       bots: r.bots.map(b => ({ ...b })),
@@ -106,7 +105,7 @@ export class RoomManager {
     };
   }
 
-  create({ hostId, hostName, hostAvatar, gameId, maxPlayers, password, gameOptions }) {
+  create({ hostId, hostName, hostAvatar, gameId, maxPlayers, gameOptions }) {
     if (!hostId || !hostName) throw new Error("Host identity required");
     const game = getGame(gameId);
     if (!game) throw new Error(`Unknown game: ${gameId}`);
@@ -130,7 +129,6 @@ export class RoomManager {
       hostAvatar: hostAvatar || null,
       game: gameId,
       maxPlayers: resolvedMax,
-      passwordHash: hashPassword(password),
       gameOptions: { ...game.defaultOptions, ...(gameOptions || {}) },
       players: [{ id: hostId, name: hostName, avatar: hostAvatar || null, isHost: true }],
       bots: [],
@@ -142,16 +140,12 @@ export class RoomManager {
     return this.getFull(id);
   }
 
-  join({ roomId, socketId, username, avatar, password }) {
+  join({ roomId, socketId, username, avatar }) {
     const room = this.get(roomId);
     if (!room) throw new Error("Room not found");
     if (room.players.some(p => p.id === socketId)) throw new Error("Already in room");
     if (room.players.some(p => p.name.toLowerCase() === username.toLowerCase())) {
       throw new Error("Username already in this room");
-    }
-    // password check
-    if (room.passwordHash && !verifyPassword(password, room.passwordHash)) {
-      throw new Error("Incorrect password");
     }
     // capacity check: total slots = players + bots vs max
     const total = room.players.length + room.bots.length;
@@ -413,10 +407,10 @@ export class RoomManager {
     throw new Error("Target not found");
   }
 
-  // For direct room join via URL: check if room exists and password required
+  // For direct room join via URL: check if room exists
   canJoinPreview(roomId) {
     const room = this.get(roomId);
     if (!room) return { exists: false };
-    return { exists: true, isPrivate: !!room.passwordHash, hostName: room.hostName, game: room.game };
+    return { exists: true, isPrivate: false, hostName: room.hostName, game: room.game };
   }
 }

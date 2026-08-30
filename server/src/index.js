@@ -175,7 +175,7 @@ io.on("connection", (socket) => {
   });
 
   // ——— Room: create ———
-  socket.on("room:create", ({ gameId, maxPlayers, password, gameOptions } = {}, ack) => {
+  socket.on("room:create", ({ gameId, maxPlayers, gameOptions } = {}, ack) => {
     try {
       const user = userRegistry.getBySocket(socket.id);
       if (!user) throw new Error("Register a profile first");
@@ -185,12 +185,11 @@ io.on("connection", (socket) => {
         hostAvatar: user.avatar,
         gameId: gameId || "quest-of-shadows",
         maxPlayers,
-        password,
         gameOptions
       });
       socket.join(full.id);
       socket.data.currentRoom = full.id;
-      console.log(`[room] create ${full.id} by ${user.username} game=${full.game} max=${full.maxPlayers} private=${full.isPrivate}`);
+      console.log(`[room] create ${full.id} by ${user.username} game=${full.game} max=${full.maxPlayers}`);
       if (typeof ack === "function") ack({ ok: true, room: full });
       socket.emit("room:created", full);
       // Notify lobby and browser
@@ -205,13 +204,13 @@ io.on("connection", (socket) => {
   });
 
   // ——— Room: join ———
-  socket.on("room:join", ({ roomId, password } = {}, ack) => {
+  socket.on("room:join", ({ roomId } = {}, ack) => {
     try {
       const user = userRegistry.getBySocket(socket.id);
       if (!user) throw new Error("Register a profile first — missing identity");
       const id = String(roomId || "").toUpperCase().trim();
       if (!isValidRoomId(id)) throw new Error("Invalid Room ID — must be 4 alphanumeric characters");
-      const full = roomManager.join({ roomId: id, socketId: socket.id, username: user.username, avatar: user.avatar, password });
+      const full = roomManager.join({ roomId: id, socketId: socket.id, username: user.username, avatar: user.avatar });
       socket.join(id);
       socket.data.currentRoom = id;
       console.log(`[room] join ${id} ${user.username}`);

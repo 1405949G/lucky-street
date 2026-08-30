@@ -5,9 +5,9 @@ import { SocketContext } from "./context/SocketContext.jsx";
 import IdentityModal from "./components/IdentityModal.jsx";
 import RoomBrowser from "./components/RoomBrowser.jsx";
 import CreateRoomModal from "./components/CreateRoomModal.jsx";
-import PasswordModal from "./components/PasswordModal.jsx";
 import Lobby from "./components/Lobby.jsx";
 import TvView from "./components/TvView.jsx";
+import AdminView from "./components/AdminView.jsx";
 
 function MainPage() {
   const { profile, hasProfile, showOnboarding, setShowOnboarding } = useContext(ProfileContext);
@@ -15,7 +15,6 @@ function MainPage() {
   const navigate = useNavigate();
 
   const [showCreate, setShowCreate] = useState(false);
-  const [passwordTarget, setPasswordTarget] = useState(null); // { id }
   const [error, setError] = useState(null);
 
   function handleCreateClick() {
@@ -26,45 +25,19 @@ function MainPage() {
   function handleJoinRoom(room) {
     if (!hasProfile) { setShowOnboarding(true); return; }
     const id = String(room.id || room).toUpperCase();
-    // Check if private
-    const found = rooms.find(r => r.id === id);
-    const target = found || { id, isPrivate: false };
-    // Also need to check server preview for rooms not yet in list
-    if (target.isPrivate) {
-      setPasswordTarget({ id });
-    } else {
-      // Try join; if fails due to password, show modal
-      socket.emit("room:join", { roomId: id }, (res) => {
-        if (res?.ok) {
-          navigate(`/room/${id}`);
-        } else {
-          if (res?.error && /password/i.test(res.error)) {
-            setPasswordTarget({ id });
-          } else {
-            setError(res?.error || "Failed to join");
-            setTimeout(() => setError(null), 3000);
-          }
-        }
-      });
-    }
+    socket.emit("room:join", { roomId: id }, (res) => {
+      if (res?.ok) {
+        navigate(`/room/${id}`);
+      } else {
+        setError(res?.error || "Failed to join");
+        setTimeout(() => setError(null), 3000);
+      }
+    });
   }
 
   function handleCreated(room) {
     setShowCreate(false);
     navigate(`/room/${room.id}`);
-  }
-
-  function handlePasswordSubmit(pwd) {
-    const id = passwordTarget.id;
-    socket.emit("room:join", { roomId: id, password: pwd }, (res) => {
-      if (res?.ok) {
-        setPasswordTarget(null);
-        navigate(`/room/${id}`);
-      } else {
-        setError(res?.error || "Incorrect password");
-        setTimeout(() => setError(null), 3000);
-      }
-    });
   }
 
   return (
@@ -113,7 +86,6 @@ function MainPage() {
 
       {showOnboarding && <IdentityModal blocking={false} onDone={() => setShowOnboarding(false)} />}
       {showCreate && <CreateRoomModal onClose={() => setShowCreate(false)} onCreated={handleCreated} />}
-      {passwordTarget && <PasswordModal roomId={passwordTarget.id} onSubmit={handlePasswordSubmit} onClose={() => setPasswordTarget(null)} />}
     </div>
   );
 }
@@ -124,6 +96,7 @@ export default function App() {
       <Route path="/" element={<MainPage />} />
       <Route path="/room/:roomId" element={<Lobby />} />
       <Route path="/tv/:roomId" element={<TvView />} />
+      <Route path="/admin" element={<AdminView />} />
     </Routes>
   );
 }

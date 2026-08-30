@@ -14,7 +14,7 @@ function genSocketId() {
   try { return crypto.randomUUID(); } catch { return "s_" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); }
 }
 
-const ROOM_GRACE_MS = 30000; // keep room slot 30s after disconnect/refresh
+const ROOM_GRACE_MS = 10000; // keep room slot 10s after disconnect/refresh (quick close when empty)
 
 export class LuckyStreetDO {
   constructor(state, env) {
@@ -166,6 +166,48 @@ export class LuckyStreetDO {
       if (!room) return new Response(JSON.stringify({ error: "Room not found" }), { status: 404, headers: { ...cors, "Content-Type": "application/json" } });
       return new Response(JSON.stringify(room), { headers: { ...cors, "Content-Type": "application/json" } });
     }
+    // ——— Admin: browse/clear like KV (replaces Worker KV dashboard) ———
+    // List all rooms detailed (GET) / delete single (DELETE) / clear all (POST)
+    if (url.pathname.startsWith("/api/admin/")) {
+      // No auth on free tier — hide behind obscurity + check Origin matches CLIENT_ORIGIN if set
+      if (url.pathname === "/api/admin/rooms" && request.method === "GET") {
+        const all = [...this.roomManager.rooms.values()].map(r => this.roomManager.getFull(r.id));
+        return new Response(JSON.stringify({ count: all.length, rooms: all, pendingLeaves: [...this.pendingLeaves.keys()], storageKeys: ["rooms","users"] }), { headers: { ...cors, "Content-Type": "application/json" } });
+      }
+      if (url.pathname === "/api/admin/state" && request.method === "GET") {
+        return new Response(JSON.stringify({ rooms: this.roomManager.rooms.size, users: this.userRegistry.byName.size, sessions: this.sessions.size, pendingLeaves: this.pendingLeaves.size, gcMs: this.gcMs, graceMs: ROOM_GRACE_MS }), { headers: { ...cors, "Content-Type": "application/json" } });
+      }
+      if ((url.pathname.startsWith("/api/admin/rooms/") || url.pathname.startsWith("/api/rooms/")) && request.method === "DELETE") {
+        const id = url.pathname.split("/").pop().toUpperCase();
+        if (!isValidRoomId(id)) return new Response(JSON.stringify({ error: "Invalid room ID" }), { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
+        const existed = this.roomManager.rooms.delete(id);
+        // also clear any pendingLeaves for that room
+        for (const [sid, pend] of [...this.pendingLeaves.entries()]) if (pend.roomId === id) { clearTimeout(pend.timeout); this.pendingLeaves.delete(sid); }
+        await this.persist();
+        this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic() });
+        this.broadcast({ event: "room:deleted", data: { roomId: id } });
+        return new Response(JSON.stringify({ ok: true, deleted: existed, id }), { headers: { ...cors, "Content-Type": "application/json" } });
+      }
+      if (url.pathname === "/api/admin/clear" && (request.method === "POST" || request.method === "DELETE")) {
+        const count = this.roomManager.rooms.size;
+        for (const [, pend] of [...this.pendingLeaves.entries()]) clearTimeout(pend.timeout);
+        this.pendingLeaves.clear();
+        this.roomManager.rooms.clear();
+        await this.persist();
+        this.broadcast({ event: "rooms:update", data: [] });
+        return new Response(JSON.stringify({ ok: true, cleared: count }), { headers: { ...cors, "Content-Type": "application/json" } });
+      }
+    }
+    if (url.pathname.startsWith("/api/rooms/") && request.method === "DELETE") {
+      const id = url.pathname.split("/").pop().toUpperCase();
+      if (!isValidRoomId(id)) return new Response(JSON.stringify({ error: "Invalid room ID" }), { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
+      const existed = this.roomManager.rooms.delete(id);
+      for (const [sid, pend] of [...this.pendingLeaves.entries()]) if (pend.roomId === id) { clearTimeout(pend.timeout); this.pendingLeaves.delete(sid); }
+      await this.persist();
+      this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic() });
+      this.broadcast({ event: "room:deleted", data: { roomId: id } });
+      return new Response(JSON.stringify({ ok: true, deleted: existed, id }), { headers: { ...cors, "Content-Type": "application/json" } });
+    }
     return new Response("Not found", { status: 404, headers: cors });
   }
 
@@ -174,7 +216,7 @@ export class LuckyStreetDO {
     const allowOrigin = this.env.CLIENT_ORIGIN && this.env.CLIENT_ORIGIN !== "*" ? this.env.CLIENT_ORIGIN : origin;
     return {
       "Access-Control-Allow-Origin": allowOrigin,
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type, Upgrade, Connection, Sec-WebSocket-Key, Sec-WebSocket-Version",
       "Access-Control-Allow-Credentials": "true",
     };
@@ -456,7 +498,6 @@ export class LuckyStreetDO {
             hostAvatar: user.avatar,
             gameId: data.gameId || "quest-of-shadows",
             maxPlayers: data.maxPlayers,
-            password: data.password,
             gameOptions: data.gameOptions,
           });
           sess.currentRoom = full.id;
@@ -492,7 +533,7 @@ export class LuckyStreetDO {
               }
             }
           }
-          const full = this.roomManager.join({ roomId: id, socketId, username: user.username, avatar: user.avatar, password: data.password });
+          const full = this.roomManager.join({ roomId: id, socketId, username: user.username, avatar: user.avatar });
           sess.currentRoom = id;
           // clear pending for this socket if any
           if (this.pendingLeaves.has(socketId)) {

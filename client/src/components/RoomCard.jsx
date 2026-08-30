@@ -8,9 +8,8 @@ export default function RoomCard({ room, onJoin }) {
         <div>
           <div className="flex items-center gap-2">
             <span className="font-mono font-black text-lg tracking-[0.12em] text-[#f3ecd8]">{room.id}</span>
-            {room.isPrivate && <span title="Password protected" className="text-sm">🔒</span>}
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${room.isPrivate ? "bg-amber-500/15 border-amber-500/30 text-amber-300" : "bg-emerald-500/10 border-emerald-500/20 text-emerald-300"}`}>
-              {room.isPrivate ? "Private" : "Open"}
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-emerald-500/10 border-emerald-500/20 text-emerald-300">
+              Open
             </span>
           </div>
           <p className="text-xs text-white/60 mt-1">

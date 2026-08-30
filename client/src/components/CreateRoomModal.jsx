@@ -2,7 +2,7 @@
  * CreateRoomModal — Spec 4
  * - Host selects game from dropdown
  * - Selecting game autofills Max Players based on that game's standard setting (host can overwrite)
- * - Optional password field
+ * - No password — all rooms are open (share link)
  * - On creation, server generates 4-char ID
  */
 
@@ -16,7 +16,6 @@ export default function CreateRoomModal({ onClose, onCreated }) {
     const g = games.find(x => x.id === (games[0]?.id || "quest-of-shadows"));
     return g ? String(g.defaultMaxPlayers) : "6";
   });
-  const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
@@ -51,7 +50,7 @@ export default function CreateRoomModal({ onClose, onCreated }) {
         setError("Connection slow — please try again");
       }
     }, 6000);
-    socket.emit("room:create", { gameId, maxPlayers: mp, password: password ? password.trim() : null }, (res) => {
+    socket.emit("room:create", { gameId, maxPlayers: mp }, (res) => {
       if (done) return;
       done = true;
       clearTimeout(timeout);
@@ -98,18 +97,6 @@ export default function CreateRoomModal({ onClose, onCreated }) {
               className="mt-1.5 w-full px-3.5 py-3 rounded-xl bg-white/10 border border-white/15 text-white placeholder:text-white/30 text-sm font-semibold outline-none focus:border-amber-400/60"
             />
             <p className="text-[11px] text-white/30 mt-1">Set to <span className="text-white/60 font-bold">{selectedGame?.defaultMaxPlayers}</span> for {selectedGame?.label} — you can change it.</p>
-          </div>
-
-          <div>
-            <label className="text-xs font-bold tracking-widest text-white/60">PASSWORD (optional)</label>
-            <input
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="Optional"
-              type="password"
-              className="mt-1.5 w-full px-3.5 py-3 rounded-xl bg-white/10 border border-white/15 text-white placeholder:text-white/30 text-sm outline-none focus:border-amber-400/60"
-            />
-            <p className="text-[11px] text-white/30 mt-1">{password ? "🔒 Private — friends will need the password to join" : "🔓 Open — anyone with the link can join"}</p>
           </div>
 
           {selectedGame?.optionSchema?.length > 0 && (

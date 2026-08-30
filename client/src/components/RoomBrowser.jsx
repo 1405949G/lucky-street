@@ -66,6 +66,7 @@ export default function RoomBrowser({ onJoinRoom, onCreateClick }) {
               <li>If you leave, your name is reserved for a few minutes.</li>
               <li>Share your invite link with friends to play together.</li>
             </ul>
+            <a href="/admin" className="inline-block mt-3 text-xs text-white/40 hover:text-white/70 underline">Admin: view/delete rooms (DO browser)</a>
           </div>
         </div>
       </div>

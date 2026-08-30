@@ -9,7 +9,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ProfileContext } from "../context/ProfileContext.jsx";
 import { SocketContext } from "../context/SocketContext.jsx";
 import IdentityModal from "./IdentityModal.jsx";
-import PasswordModal from "./PasswordModal.jsx";
 
 export default function Lobby() {
   const { roomId } = useParams();
@@ -20,8 +19,6 @@ export default function Lobby() {
   const [room, setRoom] = useState(null);
   const [error, setError] = useState(null);
   const [showBlocking, setShowBlocking] = useState(false);
-  const [needPassword, setNeedPassword] = useState(false);
-  const [passwordError, setPasswordError] = useState(null);
   const [botName, setBotName] = useState("");
   const [toast, setToast] = useState(null);
   const [kickedPopup, setKickedPopup] = useState(false);
@@ -48,11 +45,6 @@ export default function Lobby() {
       if (data.roomId === id) setKickedPopup(true);
     }
     function onRoomErr(data) {
-      if (data?.error && /password/i.test(data.error)) {
-        setNeedPassword(true);
-        setPasswordError("Incorrect password — please try again");
-        return;
-      }
       if (data?.error && /kicked/i.test(data.error)) {
         setKickedPopup(true);
         return;
@@ -65,15 +57,12 @@ export default function Lobby() {
     socket.on("player:kicked", onKicked);
     socket.on("room:error", onRoomErr);
 
-    function attemptJoin(password = undefined, retry = 0) {
-      socket.emit("room:join", { roomId: id, password }, (jres) => {
-        if (jres?.ok) { setRoom(jres.room); setNeedPassword(false); setPasswordError(null); }
+    function attemptJoin(retry = 0) {
+      socket.emit("room:join", { roomId: id }, (jres) => {
+        if (jres?.ok) { setRoom(jres.room); }
         else {
-          if (jres?.error && /password/i.test(jres.error)) {
-            setNeedPassword(true);
-            setPasswordError("Incorrect password — please try again");
-          } else if (jres?.error && /Register a profile first/i.test(jres.error) && retry < 2) {
-            setTimeout(() => attemptJoin(password, retry + 1), 600);
+          if (jres?.error && /Register a profile first/i.test(jres.error) && retry < 2) {
+            setTimeout(() => attemptJoin(retry + 1), 600);
           } else setError(jres?.error || "Room not found");
         }
       });
@@ -115,7 +104,6 @@ export default function Lobby() {
         if (fn) fn();
         else socket?.emit("room:join", { roomId: id }, (jres) => {
           if (jres?.ok) setRoom(jres.room);
-          else if (jres?.error && /password/i.test(jres.error)) setNeedPassword(true);
           else if (jres?.error) setError(jres.error);
         });
       }, 500);
@@ -233,7 +221,7 @@ export default function Lobby() {
         </button>
         <div className="text-center flex-1">
           <h1 className="font-display font-extrabold text-[18px] tracking-wide text-[#f3ecd8]">Lucky Street</h1>
-          <p className="text-xs text-white/50 -mt-1">Room <span className="font-mono font-bold text-white">{room.id}</span> {room.isPrivate ? "🔒" : "🔓"} • Host: {room.hostName}</p>
+          <p className="text-xs text-white/50 -mt-1">Room <span className="font-mono font-bold text-white">{room.id}</span> • Host: {room.hostName}</p>
         </div>
         <div className="w-[76px]" aria-hidden />
       </div>
@@ -438,24 +426,6 @@ export default function Lobby() {
       )}
 
 
-      {needPassword && (
-        <PasswordModal
-          roomId={id}
-          error={passwordError}
-          clearError={() => setPasswordError(null)}
-          onClose={() => { setNeedPassword(false); setPasswordError(null); navigate("/"); }}
-          onSubmit={(pwd) => {
-            setPasswordError(null);
-            const fn = socket._luckyAttemptJoin;
-            if (fn) fn(pwd);
-            else socket.emit("room:join", { roomId: id, password: pwd }, (res) => {
-              if (res?.ok) { setRoom(res.room); setNeedPassword(false); setPasswordError(null); }
-              else if (res?.error && /password/i.test(res.error)) setPasswordError("Incorrect password — please try again");
-              else setError(res.error);
-            });
-          }}
-        />
-      )}
       {toast && <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-[#1f2937] text-white text-sm font-bold px-4 py-2.5 rounded-full shadow-xl border border-white/10">{toast}</div>}
     </div>
   );
