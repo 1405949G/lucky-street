@@ -19,13 +19,19 @@ export function aiProposeTeam(aiView) {
     }
   }
   if (!isEvil) {
+    // 15% chance Good does a completely random pick to hide (makes Merlin/Percival less obvious)
+    if (Math.random() < 0.15) {
+      return shuffle(allIds).slice(0, need);
+    }
     const evils = new Set(vision.sees);
     let pool = allIds.filter(id => !evils.has(id));
     if (pool.length < need) pool = allIds.slice();
     pool = shuffle(pool);
     pool.sort((a, b) => (goodMemory.get(b) || 0) - (goodMemory.get(a) || 0));
     const team = [];
-    if (pool.includes(self.id)) team.push(self.id);
+    // 10% chance Good forgets to include self (human-like)
+    const includeSelf = pool.includes(self.id) && Math.random() < 0.92;
+    if (includeSelf) team.push(self.id);
     for (const id of pool) {
       if (team.length >= need) break;
       if (!team.includes(id)) team.push(id);
@@ -35,7 +41,9 @@ export function aiProposeTeam(aiView) {
       if (!pick) break;
       team.push(pick);
     }
-    return team.slice(0, need);
+    // 10% shuffle final team to hide ordering tell
+    const res = team.slice(0, need);
+    return Math.random() < 0.1 ? shuffle(res) : res;
   } else {
     const otherEvil = vision.sees;
     const evilsSet = new Set([self.id, ...otherEvil]);
@@ -97,22 +105,28 @@ export function aiTeamVote(aiView, proposedTeam) {
       }
     }
   }
+  // 10% pure noise to hide role (human hesitation)
+  if (Math.random() < 0.1) return Math.random() < 0.5 ? 'APPROVE' : 'REJECT';
   if (!isEvil) {
     if (self.role === ROLES.MERLIN) {
-      return evilCountInTeam === 0 ? 'APPROVE' : 'REJECT';
+      // Merlin bluffs 15% to hide — sometimes approves dirty team, sometimes rejects clean to blend
+      if (evilCountInTeam === 0) return Math.random() < 0.88 ? 'APPROVE' : 'REJECT';
+      return Math.random() < 0.24 ? 'APPROVE' : 'REJECT';
     }
     if (pub.proposalTracker >= 4) return 'APPROVE';
-    if (evilCountInTeam >= 1) return Math.random() < 0.2 ? 'APPROVE' : 'REJECT';
-    if (proposedTeam.includes(self.id)) return Math.random() < 0.85 ? 'APPROVE' : 'REJECT';
-    return Math.random() < 0.6 ? 'APPROVE' : 'REJECT';
+    if (evilCountInTeam >= 1) return Math.random() < 0.28 ? 'APPROVE' : 'REJECT';
+    if (proposedTeam.includes(self.id)) return Math.random() < 0.82 ? 'APPROVE' : 'REJECT';
+    return Math.random() < 0.58 ? 'APPROVE' : 'REJECT';
   } else {
+    // Evil: 12% noise to not always approve when on team
+    if (Math.random() < 0.12) return Math.random() < 0.5 ? 'APPROVE' : 'REJECT';
     const onTeam = proposedTeam.includes(self.id);
     const evilInTeam = proposedTeam.filter(id => evils.has(id)).length;
     if (onTeam) {
-      return Math.random() < 0.8 ? 'APPROVE' : 'REJECT';
+      return Math.random() < 0.77 ? 'APPROVE' : 'REJECT';
     } else {
-      if (pub.proposalTracker >= 3) return Math.random() < 0.5 ? 'APPROVE' : 'REJECT';
-      return evilInTeam > 0 ? 'APPROVE' : (Math.random() < 0.45 ? 'APPROVE' : 'REJECT');
+      if (pub.proposalTracker >= 3) return Math.random() < 0.52 ? 'APPROVE' : 'REJECT';
+      return evilInTeam > 0 ? 'APPROVE' : (Math.random() < 0.42 ? 'APPROVE' : 'REJECT');
     }
   }
 }
@@ -120,19 +134,21 @@ export function aiTeamVote(aiView, proposedTeam) {
 export function aiQuestVote(aiView) {
   const { public: pub, self } = aiView;
   if (self.allegiance === ALLEGIANCE.GOOD) return 'SUCCESS';
+  // 10% Evil pretends to be Good even when would normally Fail (hides)
+  if (Math.random() < 0.1) return 'SUCCESS';
   const quest = pub.quests[pub.currentQuest];
   const evilWins = pub.quests.filter(q => q.status === 'FAIL').length;
-  if (evilWins === 2) return 'FAIL';
+  if (evilWins === 2) return Math.random() < 0.92 ? 'FAIL' : 'SUCCESS';
   const evilsOnTeam = pub.proposal.teamIds.filter(id => {
     const v = aiView.vision.sees;
     const evilSet = new Set([self.id, ...v]);
     return evilSet.has(id);
   }).length;
   if (quest && quest.failsRequired === 2 && evilsOnTeam === 1) {
-    return Math.random() < 0.5 ? 'FAIL' : 'SUCCESS';
+    return Math.random() < 0.52 ? 'FAIL' : 'SUCCESS';
   }
-  if (pub.currentQuest <= 1 && Math.random() < 0.3) return 'SUCCESS';
-  return Math.random() < 0.75 ? 'FAIL' : 'SUCCESS';
+  if (pub.currentQuest <= 1 && Math.random() < 0.42) return 'SUCCESS';
+  return Math.random() < 0.68 ? 'FAIL' : 'SUCCESS';
 }
 
 export function aiAssassinate(aiView, allPlayersPublic, pub) {

@@ -73,7 +73,8 @@ function scheduleBotPropose({ roomManager, roomId, broadcast, dispatchInternal }
   const leader = gs.players[gs.leaderIndex];
   if (!leader || !leader.isBot) return;
   const gen = gs.voteGeneration;
-  const botDelay = 700 + Math.random() * 600;
+  // Lobby-immediate: bots propose quickly with jitter to not be robotic
+  const botDelay = 350 + Math.random() * 650 + (Math.random()<0.2? 400:0);
   setTimeout(() => {
     const curRoom = roomManager.get(roomId);
     if (!curRoom || !curRoom.gameState) return;
@@ -101,7 +102,7 @@ function scheduleBotTeamVotes({ roomManager, roomId, broadcast, dispatchInternal
   gs.players.forEach((p, idx) => {
     if (!p.isBot) return;
     if (gs.proposal.votes[p.id]) return;
-    const d = 600 + idx * 350 + Math.random() * 400;
+    const d = 280 + idx * 180 + Math.random() * 550 + (Math.random()<0.15? 700:0);
     setTimeout(() => {
       const curRoom = roomManager.get(roomId);
       if (!curRoom || !curRoom.gameState) return;
@@ -131,7 +132,7 @@ function scheduleBotQuestVotes({ roomManager, roomId, broadcast, dispatchInterna
     const p = gs.players.find(x => x.id === pid);
     if (!p?.isBot) return;
     if (gs.questVotes[pid]) return;
-    const d = 800 + idx * 500 + Math.random() * 600;
+    const d = 380 + idx * 220 + Math.random() * 620 + (Math.random()<0.15? 600:0);
     setTimeout(() => {
       const curRoom = roomManager.get(roomId);
       if (!curRoom || !curRoom.gameState) return;
@@ -158,7 +159,7 @@ function scheduleBotAssassinate({ roomManager, roomId, broadcast, dispatchIntern
   const gs = room.gameState;
   const assassin = gs.players.find(p => p.role === 'ASSASSIN');
   if (!assassin?.isBot) return;
-  const d = 1200 + Math.random() * 800;
+  const d = 900 + Math.random() * 1100 + (Math.random()<0.2? 800:0);
   setTimeout(() => {
     const curRoom = roomManager.get(roomId);
     if (!curRoom || !curRoom.gameState) return;
@@ -181,10 +182,10 @@ function scheduleBotReveals({ roomManager, roomId, broadcast, dispatchInternal }
   const room = roomManager.get(roomId);
   if (!room || !room.gameState) return;
   const gs = room.gameState;
-  // Each bot auto-reveals after stagger
+  // Each bot auto-reveals immediately in lobby — fast stagger with jitter
   gs.players.forEach((p, idx) => {
     if (!p.isBot) return;
-    const d = 400 + idx * 200 + Math.random() * 300;
+    const d = 120 + idx * 90 + Math.random() * 260;
     setTimeout(() => {
       const curRoom = roomManager.get(roomId);
       if (!curRoom || !curRoom.gameState) return;
