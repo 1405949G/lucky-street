@@ -81,7 +81,16 @@ export default function Lobby() {
     }
     function syncAttempt(retry = 0) {
       socket.emit("room:sync", { roomId: id }, (res) => {
-        if (res?.ok) { setRoom(res.room); setError(null); }
+        if (res?.ok) {
+          // If room exists but doesn't contain me (direct link join), trigger join
+          const meInRoom = res.room.players.some(p => p.id === socket.id);
+          // Fallback: check by name if id not yet synced (refresh race)
+          const nameInRoom = (() => {
+            try { const pn = JSON.parse(localStorage.getItem("luckyStreet:profile")||"{}")?.username; return pn && res.room.players.some(p => p.name.toLowerCase() === pn.toLowerCase()); } catch { return false; }
+          })();
+          if (meInRoom || nameInRoom) { setRoom(res.room); setError(null); }
+          else { attemptJoin(); }
+        }
         else if (res?.error && /timeout/i.test(res.error) && retry < 3) {
           setTimeout(() => syncAttempt(retry + 1), 500 * Math.pow(1.5, retry));
         } else attemptJoin();

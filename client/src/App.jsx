@@ -22,13 +22,23 @@ function MainPage() {
     setShowCreate(true);
   }
 
-  function handleJoinRoom(room) {
+  function handleJoinRoom(room, retry = 0) {
     if (!hasProfile) { setShowOnboarding(true); return; }
     const id = String(room.id || room).toUpperCase();
+    if (!socket?.connected) {
+      if (retry < 3) { setTimeout(() => handleJoinRoom(room, retry + 1), 500); return; }
+      setError("Not connected — try again"); setTimeout(() => setError(null), 3000); return;
+    }
     socket.emit("room:join", { roomId: id }, (res) => {
       if (res?.ok) {
         navigate(`/room/${id}`);
       } else {
+        const msg = res?.error || "";
+        const transient = /Register a profile first|already taken|timeout|missing identity/i.test(msg);
+        if (transient && retry < 4) {
+          setTimeout(() => handleJoinRoom(room, retry + 1), 400 * Math.pow(1.5, retry));
+          return;
+        }
         setError(res?.error || "Failed to join");
         setTimeout(() => setError(null), 3000);
       }
