@@ -52,6 +52,20 @@ function pickRandomHost(players) {
   return players[Math.floor(Math.random() * players.length)];
 }
 
+function trimQuestOptionsIfNeeded(room) {
+  if (room.game !== 'quest-of-shadows') return false;
+  const total = room.players.length + room.bots.length;
+  const max = total <= 6 ? 1 : total <= 8 ? 2 : 3;
+  const enabled = ['morgana','mordred','oberon'].filter(k => !!room.gameOptions[k]);
+  if (enabled.length <= max) return false;
+  const toKeep = enabled.slice(0, max);
+  const newOpts = { ...room.gameOptions, morgana: false, mordred: false, oberon: false };
+  for (const k of toKeep) newOpts[k] = true;
+  room.gameOptions = newOpts;
+  room.updatedAt = Date.now();
+  return true;
+}
+
 export class RoomManager {
   constructor({ onRoomsChanged = null } = {}) {
     /** Map<roomId, room> */
@@ -179,6 +193,7 @@ export class RoomManager {
 
     const player = { id: socketId, name: username, avatar: avatar || null, isHost: false };
     room.players.push(player);
+    trimQuestOptionsIfNeeded(room);
     room.updatedAt = Date.now();
     this._notify();
     return this.getFull(room.id);
@@ -207,6 +222,7 @@ export class RoomManager {
 
     const wasHost = room.players[idx].isHost;
     room.players.splice(idx, 1);
+    trimQuestOptionsIfNeeded(room);
 
     if (room.players.length === 0) {
       // last player left — delete room (even if spectators remain, they get cleared)
@@ -323,6 +339,7 @@ export class RoomManager {
       if (idx !== -1) {
         const wasHost = room.players[idx].isHost;
         room.players.splice(idx, 1);
+        trimQuestOptionsIfNeeded(room);
         if (room.players.length === 0) {
           this.rooms.delete(room.id);
           // remove from affected if previously added as spectator change, replace with deleted
@@ -409,7 +426,16 @@ export class RoomManager {
     // Validate keys exist in schema, but allow flexible
     const next = { ...room.gameOptions };
     for (const [k, v] of Object.entries(options || {})) {
-      // optional type checks
+      // Enforce evil-extra limit for Quest (5-6:1, 7-8:2, 9-10:3)
+      if (room.game === 'quest-of-shadows' && ['morgana','mordred','oberon'].includes(k)) {
+        const isEnabling = !!v && !room.gameOptions[k];
+        if (isEnabling) {
+          const total = room.players.length + room.bots.length;
+          const max = total <= 6 ? 1 : total <= 8 ? 2 : 3;
+          const enabled = ['morgana','mordred','oberon'].filter(x => !!room.gameOptions[x]).length;
+          if (enabled >= max) throw new Error(`Max ${max} evil extras for ${total} players`);
+        }
+      }
       const schema = game.optionSchema.find(s => s.key === k);
       if (!schema) continue; // ignore unknown
       if (schema.type === "slider" && typeof v === "number") {
@@ -454,6 +480,7 @@ export class RoomManager {
       isBot: true
     };
     room.bots.push(bot);
+    trimQuestOptionsIfNeeded(room);
     room.updatedAt = Date.now();
     this._notify();
     return this.getFull(room.id);
@@ -465,6 +492,7 @@ export class RoomManager {
     const idx = room.bots.findIndex(b => b.id === botId);
     if (idx === -1) throw new Error("Bot not found");
     room.bots.splice(idx, 1);
+    trimQuestOptionsIfNeeded(room);
     room.updatedAt = Date.now();
     this._notify();
     return this.getFull(room.id);
@@ -491,6 +519,7 @@ export class RoomManager {
     const idx = room.players.findIndex(p => p.id === targetId);
     if (idx === -1) throw new Error("Player not found in room");
     room.players.splice(idx, 1);
+    trimQuestOptionsIfNeeded(room);
     room.updatedAt = Date.now();
     this._notify();
     return { room: this.getFull(room.id), kickedId: targetId };

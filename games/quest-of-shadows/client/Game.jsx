@@ -25,14 +25,12 @@ export default function QuestGame({ roomId, isHost, isSpectator }) {
     }
     socket.on("game:update", onUpdate);
     socket.on("game:private", onPrivate);
-    // request current
     socket.emit("game:requestState", { roomId }, (res) => {
       if (res?.ok) {
         if (res.public) setPub(res.public);
         if (res.private) setPriv(res.private);
       }
     });
-    // also listen to lobby:update which carries gameState (public) for compat
     function onLobby(full) {
       if (full.id !== roomId) return;
       if (full.gameState) setPub(full.gameState);
@@ -46,7 +44,6 @@ export default function QuestGame({ roomId, isHost, isSpectator }) {
     };
   }, [socket, roomId]);
 
-  // Reset selected when phase changes
   useEffect(() => {
     setSelected([]);
     setAssassinPick(null);
@@ -56,19 +53,16 @@ export default function QuestGame({ roomId, isHost, isSpectator }) {
     return (
       <div className="rounded-2xl bg-[#0f2231]/60 border border-white/10 p-6 text-center">
         <p className="text-sm text-white/60">No quest in progress.</p>
-        <p className="text-xs text-white/30 mt-1">Host can start when {pub ? "" : "ready."}</p>
+        <p className="text-xs text-white/30 mt-1">Host can start when ready.</p>
       </div>
     );
   }
 
   const phase = pub.phase;
-  const myPrivRole = priv?.self;
-  const isLeader = pub.leaderId === myId;
   const questIdx = pub.currentQuest;
   const quest = pub.quests?.[questIdx];
   const questNum = Math.min(questIdx + 1, 5);
   const isOnTeam = pub.proposal?.teamIds?.includes(myId);
-  const hasVotedTeam = !!priv?.myTeamVote || !!pub.proposal?.votes?.[myId];
   const hasVotedQuest = !!priv?.myQuestVote;
 
   function emitAction(type, payload, cb) {
@@ -114,42 +108,8 @@ export default function QuestGame({ roomId, isHost, isSpectator }) {
     emitAction("ASSASSINATE", { targetId: assassinPick });
   }
 
-  // Helpers for UI
-  const goodWins = pub.quests.filter(q=>q.status==='SUCCESS').length;
-  const evilWins = pub.quests.filter(q=>q.status==='FAIL').length;
-
   return (
     <div className="space-y-4">
-      {/* Header + Scoring Track */}
-      <div className="rounded-2xl bg-[#0f2231]/80 border border-white/10 p-4">
-        <div className="flex items-center justify-between">
-          <span className="text-xs tracking-widest font-bold text-[#7ec8e6]">QUEST {questNum} / 5</span>
-          <span className="text-xs font-bold text-white/50">Good {goodWins} — Evil {evilWins} • Rejects {pub.proposalTracker}/5</span>
-        </div>
-        <div className="mt-3 flex justify-between gap-2">
-          {pub.quests.map((q,i) => {
-            const isCurrent = i===questIdx && phase!=='GAME_OVER';
-            const bg = q.status==='SUCCESS' ? 'bg-emerald-500 border-emerald-400 text-black' : q.status==='FAIL' ? 'bg-rose-500 border-rose-400 text-white' : isCurrent ? 'bg-white/15 border-white/30 text-white' : 'bg-white/5 border-white/10 text-white/40';
-            const ring = isCurrent ? 'ring-2 ring-amber-300/60' : '';
-            return (
-              <div key={i} className={`flex-1 h-14 rounded-xl border flex flex-col items-center justify-center ${bg} ${ring}`}>
-                <span className="text-[11px] font-bold tracking-widest opacity-70">Q{i+1}</span>
-                <span className="text-sm font-black">{q.size}{q.failsRequired>1 ? '*' : ''}</span>
-                <span className="text-[10px] font-bold">{q.status==='PENDING' ? `${q.size} needed` : q.status}</span>
-              </div>
-            );
-          })}
-        </div>
-        <p className="text-[11px] text-white/30 mt-2 text-center">* needs 2 fails • First to 3 wins • 5 rejects = Evil wins • Good 3 → Assassin guesses Merlin</p>
-      </div>
-
-      {/* Proposal tracker dots */}
-      <div className="flex justify-center gap-1.5">
-        {Array.from({length:5}).map((_,i)=>(
-          <div key={i} className={`w-3 h-3 rounded-full border ${i < pub.proposalTracker ? 'bg-rose-500 border-rose-400' : 'bg-white/10 border-white/15'}`}></div>
-        ))}
-      </div>
-
       {/* Private Role Card */}
       {priv?.self && (
         <div className={`rounded-2xl border p-4 text-center ${priv.self.allegiance==='GOOD' ? 'bg-emerald-500/10 border-emerald-400/30' : 'bg-rose-500/10 border-rose-400/30'}`}>
@@ -216,6 +176,7 @@ export default function QuestGame({ roomId, isHost, isSpectator }) {
           {(() => {
             const leader = pub.players.find(p=>p.id===pub.leaderId);
             const need = quest?.size || 2;
+            const isLeader = pub.leaderId === myId;
             if (isLeader) {
               return (
                 <div className="text-center">
@@ -312,7 +273,7 @@ export default function QuestGame({ roomId, isHost, isSpectator }) {
             })}
           </div>
           {isSpectator ? <div className="mt-4 py-3 rounded-full bg-white/5 text-white/40 font-bold">Quest in progress…</div> :
-           !isOnTeam ? <div className="mt-4 py-3 rounded-full bg-white/5 text-white/40 font-bold">You are not on this quest — watching</div> :
+           !pub.proposal.teamIds.includes(myId) ? <div className="mt-4 py-3 rounded-full bg-white/5 text-white/40 font-bold">You are not on this quest — watching</div> :
            hasVotedQuest ? <div className="mt-4 py-3 rounded-full bg-white/10 border border-white/15 text-white/60 font-bold">Card played — waiting</div> :
            <div className="mt-4">
               <h3 className="font-black text-white">Play your card</h3>
@@ -356,9 +317,6 @@ export default function QuestGame({ roomId, isHost, isSpectator }) {
             <div className="mt-4">
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                 {pub.players.filter(p=>{
-                  // Only Good candidates visible for assassination
-                  const real = priv ? null : null;
-                  // Filter from public? Need allegiance not in public. For assassin, server will validate but we show all non-evil? We don't know evil from private vision, but assassin knows fellow evil via vision. Use priv vision to filter.
                   if (!priv) return true;
                   const isEvil = priv.vision?.sees?.includes(p.id) || p.id===myId;
                   return !isEvil;
@@ -400,7 +358,7 @@ export default function QuestGame({ roomId, isHost, isSpectator }) {
                 <div key={p.id} className={`flex items-center justify-between rounded-xl px-3 py-2 border ${isMe?'bg-white/10 border-amber-300/30':'bg-white/5 border-white/10'}`}>
                   <div className="flex items-center gap-2">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs ${isMe?'bg-[#f3ecd8] text-[#0a1e2e]':'bg-[#1e2a3a] text-white'}`}>{p.name.slice(0,2)}</div>
-                    <div className="flex flex-col">
+                    <div className="flex flex-col text-left">
                       <span className="text-sm font-bold text-white leading-none">{p.name}{isMe?' YOU':''} {p.isLeader ? '👑' : ''} {p.isBot?'🤖':''}</span>
                       {role && <span className={`text-[10px] font-bold ${alleg==='GOOD'?'text-emerald-300':'text-rose-300'}`}>{role}</span>}
                     </div>
@@ -410,7 +368,6 @@ export default function QuestGame({ roomId, isHost, isSpectator }) {
               );
             })}
           </div>
-          {/* Roles reveal for self + vision */}
           {priv?.self && (
             <div className="mt-4 rounded-xl bg-white/5 border border-white/10 p-3 text-left">
               <p className="text-xs font-bold text-white/60">Your role: <span className={priv.self.allegiance==='GOOD'?'text-emerald-300':'text-rose-300'}>{priv.self.role} ({priv.self.allegiance})</span></p>
@@ -433,8 +390,9 @@ export default function QuestGame({ roomId, isHost, isSpectator }) {
           <summary className="px-4 py-2 text-xs font-bold text-white/50 cursor-pointer">Log • {pub.log.length} events</summary>
           <div className="px-4 pb-3 space-y-1 max-h-[160px] overflow-auto">
             {pub.log.slice(-12).reverse().map(e=>(
-              <div key={e.id} className="text-xs text-white/60 border-l-2 border-white/10 pl-2 py-1">
-                <span className="font-bold text-white/40 mr-1">{e.type}</span>{e.text}
+              <div key={e.id} className="flex gap-2 text-xs border-l-2 border-white/10 pl-2 py-1">
+                <span className="font-bold text-white/40 shrink-0 min-w-[72px] text-left">{e.type}</span>
+                <span className="text-white/60 text-left flex-1">{e.text}</span>
               </div>
             ))}
           </div>

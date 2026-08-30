@@ -26,6 +26,7 @@ export default function Lobby({ spectate = false }) {
   const [hostActionTarget, setHostActionTarget] = useState(null);
   const [botConfirm, setBotConfirm] = useState(null);
   const [mobileTab, setMobileTab] = useState("board"); // board | controls — for phone split-view like Kahoot
+  const [showRules, setShowRules] = useState(false);
   const leavingRef = useRef(false);
   const roomRef = useRef(null);
   useEffect(() => { roomRef.current = room; }, [room]);
@@ -132,7 +133,15 @@ export default function Lobby({ spectate = false }) {
       }
       socket.emit("room:sync", { roomId: id }, (res) => {
         if (res?.ok) {
-          // If room exists but doesn't contain me (direct link join), trigger join/spectate
+          // Spectate mode: auto-spectate even if already a player (move to spectators)
+          if (spectate) {
+            const alreadySpectator = res.room.spectators?.some(s => s.id === socket.id);
+            if (alreadySpectator) { setRoom(res.room); setError(null); return; }
+            // If already a player, room:spectate will move you
+            attemptSpectate();
+            return;
+          }
+          // Normal mode: if already in room, just sync
           const meInRoom = res.room.players.some(p => p.id === socket.id) || res.room.spectators?.some(s => s.id === socket.id);
           // Fallback: check by name if id not yet synced (refresh race)
           const nameInRoom = (() => {
@@ -140,12 +149,9 @@ export default function Lobby({ spectate = false }) {
           })();
           if (meInRoom || nameInRoom) { setRoom(res.room); setError(null); }
           else {
-            if (spectate) attemptSpectate();
-            else {
               // Need profile for join, if not ready, retry
               if (hasProfile && profileStatus !== "ok" && retry < 4) { setTimeout(() => syncAttempt(retry + 1), 400); return; }
               attemptJoin();
-            }
           }
         }
         else if (res?.error && /timeout/i.test(res.error) && retry < 3) {
@@ -367,7 +373,7 @@ export default function Lobby({ spectate = false }) {
 
   return (
     <div className="max-w-[760px] mx-auto px-4 pb-10">
-      {/* Single header action: only Leave (removed duplicate back arrow) */}
+      {/* Header: Leave + title + ? rules */}
       <div className="flex items-center justify-between pt-2">
         <button onClick={handleLeave} aria-label="Leave room" className="px-4 py-1.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-xs font-bold text-white/70 flex items-center gap-1.5">
           <span className="text-sm leading-none">←</span> Leave
@@ -376,7 +382,7 @@ export default function Lobby({ spectate = false }) {
           <h1 className="font-display font-extrabold text-[18px] tracking-wide text-[#f3ecd8]">Lucky Street</h1>
           <p className="text-xs text-white/50 -mt-1">Room <span className="font-mono font-bold text-white">{room.id}</span> • Host: {room.hostName}</p>
         </div>
-        <div className="w-[76px]" aria-hidden />
+        <button onClick={()=>setShowRules(true)} aria-label="Rules" className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 flex items-center justify-center text-white font-bold text-sm">?</button>
       </div>
 
       {/* Mobile toggle for Kahoot-style split: Board vs Controls */}
@@ -387,23 +393,58 @@ export default function Lobby({ spectate = false }) {
         </div>
       </div>
 
+      {hasGameState && isQuestGame && room.gameState && (
+        <div className="mt-4 rounded-[24px] bg-[#0f2231] border border-white/10 shadow-xl p-6 text-center">
+          <div className="flex items-center justify-between">
+            <span className="text-xs tracking-widest font-bold text-[#7ec8e6]">QUEST {Math.min(room.gameState.currentQuest+1,5)} / 5</span>
+            <span className="text-xs font-bold text-white/60">Good {room.gameState.quests.filter(q=>q.status==='SUCCESS').length} — Evil {room.gameState.quests.filter(q=>q.status==='FAIL').length}</span>
+          </div>
+          <div className="mt-4 flex justify-between gap-2">
+            {room.gameState.quests.map((q,i)=>{
+              const isCurrent = i===room.gameState.currentQuest && room.gameState.phase!=='GAME_OVER';
+              const bg = q.status==='SUCCESS' ? 'bg-emerald-500 border-emerald-400 text-black' : q.status==='FAIL' ? 'bg-rose-500 border-rose-400 text-white' : isCurrent ? 'bg-white/15 border-white/30 text-white ring-2 ring-amber-300/60' : 'bg-white/5 border-white/10 text-white/40';
+              const needsTwo = q.failsRequired>1;
+              return (
+                <div key={i} className={`flex-1 h-[68px] rounded-xl border flex flex-col items-center justify-center ${bg}`}>
+                  <span className="text-[10px] font-bold tracking-widest opacity-60">Q{i+1}</span>
+                  <span className="text-lg font-black leading-none">{q.size}{needsTwo ? <span className="text-[10px] align-super">•2</span> : ''}</span>
+                  <span className="text-[10px] font-bold mt-0.5">{q.status==='PENDING' ? '' : q.status==='SUCCESS' ? '✓' : '✕'}</span>
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-5">
+            <p className="text-xs tracking-widest font-bold text-white/50">REJECTED</p>
+            <div className="mt-2 flex justify-center gap-2">
+              {Array.from({length:5}).map((_,i)=>(
+                <div key={i} className={`w-10 h-10 rounded-full border-2 flex items-center justify-center text-sm font-black ${i < room.gameState.proposalTracker ? 'bg-rose-500 border-rose-400 text-white' : 'bg-white/10 border-white/15 text-white/30'}`}>{i < room.gameState.proposalTracker ? '✕' : ''}</div>
+              ))}
+              <span className="ml-3 text-base font-bold text-white/60 self-center">{room.gameState.proposalTracker} / 5</span>
+            </div>
+            <p className="text-[11px] text-white/30 mt-2">5 rejects = Evil wins • Good 3 → Assassin guesses Merlin {room.gameState.quests[3]?.failsRequired>1 ? '• Q4 needs 2 fails (7+ players)' : ''}</p>
+          </div>
+        </div>
+      )}
+
       {/* Split view: board (public) on top/left, controls (private) at bottom/right — PC sees both, phone toggles */}
       <div className="mt-4 grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-5">
         {/* Board — public, visible on TV */}
         <div className={`${mobileTab === "controls" ? "hidden lg:block" : "block"} space-y-4`}>
-          <div className="rounded-[24px] bg-[#29546c] border border-white/10 shadow-xl p-6 text-center relative overflow-hidden">
-            <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ background: "radial-gradient(ellipse at top, rgba(255,255,255,0.15), transparent 60%)" }}></div>
-            <div className="relative">
-              <p className="text-xs tracking-widest font-bold text-white/50">JOIN CODE</p>
-              <div className="font-display font-black text-[36px] tracking-[0.18em] text-[#f3ecd8]" style={{ textShadow: "0 2px 0 rgba(0,0,0,0.25)" }}>{room.id}</div>
-              <p className="text-xs text-white/70 mt-1">Share: <span className="font-mono bg-white/10 px-1.5 py-0.5 rounded break-all">{window.location.origin}/room/{room.id}</span></p>
-              <p className="text-xs text-white/40 mt-1">Players look here — answers on their phones.</p>
-              <div className="mt-3 flex justify-center gap-2 flex-wrap">
-                <button onClick={() => { navigator.clipboard?.writeText(`${window.location.origin}/room/${room.id}`); showToast("Invite link copied"); }} className="px-4 py-2 rounded-full bg-[#f3ecd8] hover:bg-white text-[#0e2533] text-xs font-extrabold">Copy Invite Link</button>
-                <span className="px-3 py-2 rounded-full bg-white/10 border border-white/10 text-xs font-bold text-white/70">{room.slotsText}</span>
+          {!hasGameState && (
+            <div className="rounded-[24px] bg-[#29546c] border border-white/10 shadow-xl p-6 text-center relative overflow-hidden">
+              <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ background: "radial-gradient(ellipse at top, rgba(255,255,255,0.15), transparent 60%)" }}></div>
+              <div className="relative">
+                <p className="text-xs tracking-widest font-bold text-white/50">JOIN CODE</p>
+                <div className="font-display font-black text-[36px] tracking-[0.18em] text-[#f3ecd8]" style={{ textShadow: "0 2px 0 rgba(0,0,0,0.25)" }}>{room.id}</div>
+                <p className="text-xs text-white/70 mt-1">Share: <span className="font-mono bg-white/10 px-1.5 py-0.5 rounded break-all">{window.location.origin}/room/{room.id}</span></p>
+                <p className="text-xs text-white/40 mt-1">Players look here — answers on their phones.</p>
+                <div className="mt-3 flex justify-center gap-2 flex-wrap">
+                  <button onClick={() => { navigator.clipboard?.writeText(`${window.location.origin}/room/${room.id}`); showToast("Invite link copied"); }} className="px-4 py-2 rounded-full bg-[#f3ecd8] hover:bg-white text-[#0e2533] text-xs font-extrabold">Copy Invite Link</button>
+                  <span className="px-3 py-2 rounded-full bg-white/10 border border-white/10 text-xs font-bold text-white/70">{room.slotsText}</span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
       <div className="mt-6">
         <h3 className="font-extrabold text-white text-sm">Players & Bots</h3>
@@ -540,13 +581,25 @@ export default function Lobby({ spectate = false }) {
                   )}
                 </div>
                 <p className="text-xs text-white/40 mt-1">{games.find(g=>g.id===room.game)?.description || ""} {isGameLocked && <span className="text-amber-300">• Lobby locked during game</span>}</p>
+                {isQuestGame && (
+                  <div className="mb-1 flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-white/40">{['morgana','mordred','oberon'].filter(k=> !!room.gameOptions[k]).length}/{totalPlayers<=6?1:totalPlayers<=8?2:3} evil extras for {totalPlayers}p</span>
+                    <span className="text-[11px] text-amber-200/70">Merlin+Assassin always</span>
+                  </div>
+                )}
                 <div className="mt-3 grid gap-3">
-                  {(game.optionSchema || []).map(opt => (
+                  {(game.optionSchema || []).map(opt => {
+                    const isEvilExtra = isQuestGame && ['morgana','mordred','oberon'].includes(opt.key);
+                    const maxEvil = totalPlayers<=6?1:totalPlayers<=8?2:3;
+                    const enabledEvil = ['morgana','mordred','oberon'].filter(k=> !!room.gameOptions[k]).length;
+                    const wouldExceed = isEvilExtra && !room.gameOptions[opt.key] && enabledEvil >= maxEvil;
+                    const disabled = isGameLocked || wouldExceed;
+                    return (
                     <div key={opt.key} className="flex items-center gap-3">
-                      <label className="text-xs font-bold text-white/60 w-24">{opt.label}</label>
+                      <label className="text-xs font-bold text-white/60 w-24 flex items-center gap-1">{opt.label} {wouldExceed && <span className="text-[10px] text-amber-300">MAX</span>}</label>
                       {opt.type === "toggle" ? (
                         isHost ? (
-                          <button disabled={isGameLocked} onClick={() => handleOptionChange(opt.key, !room.gameOptions[opt.key])} className={`relative w-12 h-6 rounded-full transition-colors ${isGameLocked ? "opacity-40 cursor-not-allowed" : ""} ${room.gameOptions[opt.key] ? "bg-emerald-500" : "bg-white/15"}`}>
+                          <button disabled={disabled} onClick={() => handleOptionChange(opt.key, !room.gameOptions[opt.key])} title={wouldExceed ? `Max ${maxEvil} evil extras for ${totalPlayers} players` : ''} className={`relative w-12 h-6 rounded-full transition-colors ${disabled ? "opacity-40 cursor-not-allowed" : ""} ${room.gameOptions[opt.key] ? "bg-emerald-500" : "bg-white/15"}`}>
                             <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${room.gameOptions[opt.key] ? "translate-x-6" : ""}`} />
                           </button>
                         ) : (
@@ -571,7 +624,8 @@ export default function Lobby({ spectate = false }) {
                         )
                       ) : null}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
                 <p className="text-xs text-white/30 mt-3">{isGameLocked ? "Reset game to change settings." : isHost ? "Changes show up for everyone right away." : "Only the host can change these settings."}</p>
               </div>
@@ -609,6 +663,50 @@ export default function Lobby({ spectate = false }) {
 
 
       {toast && <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-[#1f2937] text-white text-sm font-bold px-4 py-2.5 rounded-full shadow-xl border border-white/10">{toast}</div>}
+
+      {showRules && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={()=>setShowRules(false)}>
+          <div onClick={e=>e.stopPropagation()} className="w-full max-w-[480px] rounded-2xl bg-[#0f2231] border border-white/10 p-6 max-h-[80vh] overflow-auto shadow-2xl">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-white">How to Play — {game.label}</h3>
+              <button onClick={()=>setShowRules(false)} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/15 flex items-center justify-center text-white">✕</button>
+            </div>
+            {isQuestGame ? (
+              <div className="mt-4 space-y-3 text-sm text-white/70 leading-relaxed">
+                <p><span className="text-white font-bold">Goal:</span> Good needs 3 successful quests. Evil needs 3 failed quests, or 5 consecutive rejected teams, or Assassin kills Merlin after Good wins.</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3">
+                    <p className="text-xs font-bold tracking-widest text-emerald-300">GOOD</p>
+                    <p className="text-xs mt-1">Loyal, Merlin (sees Evil except Mordred), Percival (sees Merlin+Morgana)</p>
+                  </div>
+                  <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 p-3">
+                    <p className="text-xs font-bold tracking-widest text-rose-300">EVIL</p>
+                    <p className="text-xs mt-1">Minion, Assassin, Morgana (fools Percival), Mordred (hidden), Oberon (isolated)</p>
+                  </div>
+                </div>
+                <p><b>Team sizes:</b> 5p [2,3,2,3,3] • 6p [2,3,4,3,4] • 7p [2,3,3,4,4] • 8-10p [3,4,4,5,5]. <span className="text-amber-200">Q4 needs 2 fails when 7+ players.</span></p>
+                <p><b>Flow:</b> Leader proposes team → All vote Approve/Reject → Majority approves → Team secretly plays Success (Good must) / Fail (Evil may). 1 Fail fails quest — except Q4 with 7+ needs 2.</p>
+                <p><b>Scoring:</b> First to 3 quest wins. 5 rejects in a row → Evil wins. If Good gets 3, Assassin guesses Merlin — correct → Evil steals win.</p>
+                <p className="text-xs text-white/40">Current: {totalPlayers}p • {['morgana','mordred','oberon'].filter(k=> !!room.gameOptions[k]).length}/{totalPlayers<=6?1:totalPlayers<=8?2:3} evil extras • Merlin+Assassin always</p>
+              </div>
+            ) : (
+              <div className="mt-4 space-y-3 text-sm text-white/60">
+                <p>{game.description}</p>
+                <p>Players: {game.minPlayers}–{game.maxPlayers} {supportsBots ? "(bots supported)" : "(no bots)"} • Default max {game.defaultMaxPlayers}</p>
+                {game.optionSchema?.length>0 && (
+                  <div className="rounded-xl bg-white/5 border border-white/10 p-3">
+                    <p className="text-xs font-bold text-white/50">Options</p>
+                    <ul className="mt-1 space-y-1 text-xs">
+                      {game.optionSchema.map(o=> <li key={o.key}>• <span className="text-white font-bold">{o.label}</span> — {o.type}</li>)}
+                    </ul>
+                  </div>
+                )}
+                <p className="text-xs text-white/40">Host can start when {game.minPlayers}+ players ready. Rules are specific to this game.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

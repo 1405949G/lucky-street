@@ -33,8 +33,8 @@ function MainPage() {
         navigate(`/room/${id}`);
       } else {
         const msg = res?.error || "";
-        if (/Username already in this room/i.test(msg)) {
-          // Same name already in room (e.g., same user second tab) — open as spectator instead
+        if (/Username already in this room|Already in room/i.test(msg)) {
+          // Same name already in room (e.g., same user second tab) or same socket already in room — open as spectator instead (auto-spectate)
           navigate(`/room/${id}/spectate`);
           return;
         }
