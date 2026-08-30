@@ -8,8 +8,8 @@ export default function RoomCard({ room, onJoin, onSpectate }) {
         <div>
           <div className="flex items-center gap-2">
             <span className="font-mono font-black text-lg tracking-[0.12em] text-[#f3ecd8]">{room.id}</span>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-emerald-500/10 border-emerald-500/20 text-emerald-300">
-              Open
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${room.status === 'In Progress' ? 'bg-amber-500/15 border-amber-500/30 text-amber-300' : room.status === 'Ended' ? 'bg-white/10 border-white/15 text-white/50' : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300'}`}>
+              {room.status || 'Open'}
             </span>
           </div>
           <p className="text-xs text-white/60 mt-1">

@@ -79,7 +79,11 @@ export class RoomManager {
 
   listPublic() {
     // Public card metrics for browser
-    return [...this.rooms.values()].map(r => ({
+    return [...this.rooms.values()].map(r => {
+      const hasGame = !!r.gameState;
+      const phase = r.gameState?.phase || null;
+      const status = !hasGame ? 'Open' : phase === 'GAME_OVER' ? 'Ended' : 'In Progress';
+      return {
       id: r.id,
       hostName: r.hostName,
       hostId: r.hostId,
@@ -89,13 +93,16 @@ export class RoomManager {
       currentPlayers: r.players.length,
       botCount: r.bots.length,
       spectatorCount: (r.spectators || []).length,
-      // "X / Y Players (including Z Bots)" where X = players+ bots, Y = max
       slotsText: `${r.players.length + r.bots.length} / ${r.maxPlayers} Players (including ${r.bots.length} Bots)`,
       isPrivate: false,
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
-      gameOptions: r.gameOptions
-    }));
+      gameOptions: r.gameOptions,
+      hasGame,
+      phase,
+      status
+      };
+    });
   }
 
   get(roomId) {
