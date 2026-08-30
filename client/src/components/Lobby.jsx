@@ -417,8 +417,7 @@ export default function Lobby({ spectate = false }) {
                 <div key={i} className={`flex-1 h-[68px] rounded-xl border flex flex-col items-center justify-center ${bg} relative`}>
                   <span className="text-[10px] font-bold tracking-widest opacity-60">Q{i+1}</span>
                   <span className="text-lg font-black leading-none">{q.size}</span>
-                  {needsTwo && <span className="absolute -top-2 -right-2 px-1.5 py-0.5 rounded-full bg-amber-400 text-[#0e2533] text-[9px] font-black leading-none">2 fails</span>}
-                  <span className="text-[10px] font-bold mt-0.5">{q.status==='PENDING' ? (needsTwo ? 'needs 2' : '') : q.status==='SUCCESS' ? '✓' : '✕'}</span>
+                  <span className="text-[9px] font-bold mt-0.5 leading-none h-[12px]">{q.status==='PENDING' ? (needsTwo ? '2 fails' : '') : q.status==='SUCCESS' ? '✓' : '✕'}</span>
                 </div>
               );
             })}
