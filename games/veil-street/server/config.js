@@ -1,5 +1,5 @@
 ﻿/**
- * games/quest-of-shadows/server/config.js ΓÇö Ported from reference Veil Street Game v3
+ * games/veil-street/server/config.js — Veil Street config
  * Pure constants, no side effects.
  */
 export const PHASES = Object.freeze({

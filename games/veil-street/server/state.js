@@ -1,26 +1,6 @@
 ﻿/**
- * js/state.js ΓÇö Game mechanics engine (PURE STATE MACHINE)
- * ------------------------------------------------------------------
- * Centralized, robust, immutable reducer for Veil Street.
- * No DOM, no setTimeout, no side effects. All side effects (AI scheduling,
- * timers, storage) are handled by app.js via side-effect descriptors.
- *
- * State shape, phases, and transitions are documented inline.
- * Aggressively guards against phase-desync (D1-D10) and state leakage (L1-L8).
- *
- * Exports:
- *   - createInitialState()
- *   - reducer(state, action) -> { state, effects }
- *   - getPublicState(state)
- *   - getPrivateState(state, playerId)
- *   - getAIView(state, botId)
- *   - selectors: getVision, isGameOver, countWins, etc.
- *
- * Action types:
- *   SETUP_GAME, MARK_REVEALED, NEXT_REVEAL, COMPLETE_REVEAL,
- *   PROPOSE_TEAM, SUBMIT_TEAM_VOTE, FORCE_TEAM_VOTE_REVEAL, RESOLVE_TEAM_VOTE,
- *   SUBMIT_QUEST_VOTE, FORCE_QUEST_REVEAL, RESOLVE_QUEST,
- *   ASSASSINATE, RESET, TIMER_EXPIRED
+ * Veil Street — state machine (5-10p social deduction)
+ * Pure reducer, no DOM/side effects.
  */
 
 import {
