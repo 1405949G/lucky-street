@@ -285,17 +285,14 @@ export class RoomManager {
     return this.getFull(room.id);
   }
 
-  addBot({ roomId, requesterId, botName, avatarColor }) {
+  addBot({ roomId, requesterId, botName }) {
     const room = this._assertHost(roomId, requesterId);
     const total = room.players.length + room.bots.length;
     if (total >= room.maxPlayers) throw new Error("Room is full — increase maxPlayers or remove a player/bot");
     let name = String(botName || "").trim().slice(0, 20);
     if (!name) name = pickBotName(room);
-    // bot name uniqueness in room
     if (room.players.some(p => p.name.toLowerCase() === name.toLowerCase()) || room.bots.some(b => b.name.toLowerCase() === name.toLowerCase())) {
-      // if provided name collides, try to pick a generic unused name instead of error (no numbers)
       const auto = pickBotName(room);
-      // if auto is same as requested (shouldn't happen) then error
       if (auto.toLowerCase() === name.toLowerCase()) {
         throw new Error(`Name "${name}" already taken in this room`);
       }
@@ -304,8 +301,9 @@ export class RoomManager {
     const bot = {
       id: `bot_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
       name,
-      avatar: avatarColor || null,
-      avatarColor: avatarColor || "#8b5cf6",
+      // all bots look the same — uniform bot avatar, no colour choice
+      avatar: null,
+      avatarColor: "#334155",
       isBot: true
     };
     room.bots.push(bot);

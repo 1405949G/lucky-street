@@ -350,7 +350,7 @@ export class LuckyStreetDO {
         }
         case "lobby:addBot": {
           const id = String(data.roomId || sess.currentRoom || "").toUpperCase();
-          const full = this.roomManager.addBot({ roomId: id, requesterId: socketId, botName: data.botName, avatarColor: data.avatarColor });
+          const full = this.roomManager.addBot({ roomId: id, requesterId: socketId, botName: data.botName });
           okAck({ ok: true, room: full });
           this.broadcast({ event: "lobby:update", data: full });
           this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic() });

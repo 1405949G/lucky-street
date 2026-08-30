@@ -39,8 +39,22 @@ export default function CreateRoomModal({ onClose, onCreated }) {
     const mp = Number(maxPlayers);
     if (!Number.isFinite(mp) || mp < 2 || mp > 12) return setError("Max Players must be 2-12");
     if (!gameId) return setError("Choose a game");
+    if (!socket?.connected && !socket?.id) {
+      return setError("Not connected — please wait a moment and try again");
+    }
     setSubmitting(true);
-    socket.emit("room:create", { gameId, maxPlayers: mp, password: password || null }, (res) => {
+    let done = false;
+    const timeout = setTimeout(() => {
+      if (!done) {
+        done = true;
+        setSubmitting(false);
+        setError("Connection slow — please try again");
+      }
+    }, 6000);
+    socket.emit("room:create", { gameId, maxPlayers: mp, password: password ? password.trim() : null }, (res) => {
+      if (done) return;
+      done = true;
+      clearTimeout(timeout);
       setSubmitting(false);
       if (res?.ok) {
         onCreated?.(res.room);

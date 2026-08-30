@@ -287,10 +287,10 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("lobby:addBot", ({ roomId, botName, avatarColor } = {}, ack) => {
+  socket.on("lobby:addBot", ({ roomId, botName } = {}, ack) => {
     try {
       const id = String(roomId || socket.data.currentRoom || "").toUpperCase();
-      const full = roomManager.addBot({ roomId: id, requesterId: socket.id, botName, avatarColor });
+      const full = roomManager.addBot({ roomId: id, requesterId: socket.id, botName });
       if (typeof ack === "function") ack({ ok: true, room: full });
       emitLobbyUpdate(id);
     } catch (e) {
