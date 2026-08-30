@@ -67,21 +67,23 @@ export default function CreateRoomModal({ onClose, onCreated }) {
         </div>
 
         <div className="px-5 py-4 space-y-3">
-          <div className="grid gap-2">
+          <div className="grid gap-2.5">
             {games.map(g => {
               const active = gameId === g.id;
+              const icons = { 'veil-street': '🕵️', 'lucky-roulette': '🎲', 'street-rally': '🏁', 'checkpoint-chaos': '🚩' };
               return (
                 <button
                   type="button"
                   key={g.id}
                   onClick={() => setGameId(g.id)}
-                  className={`text-left p-3.5 rounded-xl border flex items-center justify-between transition-colors ${active ? 'bg-amber-400/10 border-amber-400/40' : 'bg-white/[0.04] border-white/10 hover:bg-white/10'}`}
+                  className={`text-left p-4 rounded-2xl border flex items-center gap-3 transition-all ${active ? 'bg-gradient-to-br from-amber-400/15 to-orange-500/10 border-amber-400/50 shadow-lg shadow-amber-500/10 scale-[1.01]' : 'bg-white/[0.03] border-white/10 hover:bg-white/[0.06] hover:border-white/15'}`}
                 >
-                  <div className="min-w-0">
+                  <span className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0 ${active ? 'bg-amber-400 text-[#0e2533]' : 'bg-white/10 text-white/70'}`}>{icons[g.id] || '🎮'}</span>
+                  <div className="min-w-0 flex-1">
                     <p className={`text-sm font-bold leading-none ${active ? 'text-white' : 'text-white/90'}`}>{g.label}</p>
-                    <p className="text-xs text-white/45 mt-1 truncate">{g.minPlayers}–{g.maxPlayers} players • {g.description}</p>
+                    <p className="text-xs text-white/50 mt-1 truncate">{g.minPlayers}–{g.maxPlayers} • {g.description}</p>
                   </div>
-                  <span className={`ml-3 w-6 h-6 rounded-full border flex items-center justify-center shrink-0 text-xs font-bold ${active ? 'bg-amber-400 border-amber-400 text-[#0e2533]' : 'border-white/15 text-transparent'}`}>✓</span>
+                  <span className={`ml-2 w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 text-xs font-bold transition-colors ${active ? 'bg-amber-400 border-amber-400 text-[#0e2533]' : 'border-white/15 text-transparent'}`}>✓</span>
                 </button>
               );
             })}
