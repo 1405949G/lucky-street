@@ -234,7 +234,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
                   ) : (
                     <div className={`w-10 h-10 mx-auto rounded-full flex items-center justify-center font-black text-xs border ${isMe?'bg-[#f3ecd8] text-[#0a1e2e] border-amber-300':'bg-[#1e2a3a] text-white border-white/10'}`} style={avatarBg ? { background: avatarBg } : undefined}>{p.name.slice(0,2).toUpperCase()}</div>
                   )}
-                    <div className="text-xs font-bold text-white mt-1 truncate flex items-center justify-center gap-1">{p.name} {isMe && <span className="px-1 py-0.5 rounded-full bg-amber-400 text-[#0e2533] text-[8px] font-black">[YOU]</span>}</div>
+                    <div className="text-xs font-bold text-white mt-1 truncate flex items-center justify-center gap-1">{p.name} {isMe && <span className="px-1 py-0.5 rounded-full bg-amber-400 text-[#0e2533] text-[8px] font-black">YOU</span>}</div>
                   <div className={`text-[10px] font-bold ${revealed?'text-emerald-300':'text-white/40'}`}>{revealed?'Ready':'Looking...'}</div>
                 </div>
               );
@@ -280,7 +280,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
                           ) : (
                             <div className={`w-10 h-10 mx-auto rounded-full flex items-center justify-center font-black text-xs border ${isMe?'bg-[#f3ecd8] text-[#0a1e2e] border-amber-300':'text-white border-white/10'}`} style={avatarBg ? { background: avatarBg } : { background: '#1e2a3a' }}>{p.name.slice(0,2).toUpperCase()}</div>
                           )}
-                          <div className="text-xs font-bold text-white mt-1 truncate flex items-center justify-center gap-1">{p.name} {isMe && <span className="px-1 py-0.5 rounded-full bg-amber-400 text-[#0e2533] text-[9px] font-black">[YOU]</span>}</div>
+                          <div className="text-xs font-bold text-white mt-1 truncate flex items-center justify-center gap-1">{p.name} {isMe && <span className="px-1 py-0.5 rounded-full bg-amber-400 text-[#0e2533] text-[9px] font-black">YOU</span>}</div>
                         </button>
                       );
                     })}
@@ -308,7 +308,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
                         ) : (
                           <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-xs border ${p.id===pub.leaderId?'bg-amber-300 text-black ring-2 ring-amber-400': p.id===myId?'bg-[#f3ecd8] text-[#0a1e2e] border-amber-300':'text-white border-white/10'}`} style={avatarBg ? { background: avatarBg } : { background: '#1e2a3a' }}>{p.name.slice(0,2).toUpperCase()}</div>
                         )}
-                        <span className="text-[10px] font-bold text-white/60 flex items-center gap-1">{p.name} {p.id===myId && <span className="px-1 py-0.5 rounded-full bg-amber-400 text-[#0e2533] text-[8px] font-black">[YOU]</span>}</span>
+                        <span className="text-[10px] font-bold text-white/60 flex items-center gap-1">{p.name} {p.id===myId && <span className="px-1 py-0.5 rounded-full bg-amber-400 text-[#0e2533] text-[8px] font-black">YOU</span>}</span>
                       </div>
                     );})}
                   </div>
@@ -337,7 +337,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
                 ) : (
                   <div className="w-12 h-12 rounded-full border border-white/15 flex items-center justify-center font-black text-white text-xs" style={avatarBg ? { background: avatarBg } : { background: '#1e2a3a' }}>{pl?.name?.slice(0,2)?.toUpperCase() || '??'}</div>
                 )}
-                <span className="text-xs font-bold text-white/70 mt-1 flex items-center gap-1">{pl?.name || id.slice(0,4)} {id===myId && <span className="px-1 py-0.5 rounded-full bg-amber-400 text-[#0e2533] text-[8px] font-black">[YOU]</span>}</span></div>;
+                <span className="text-xs font-bold text-white/70 mt-1 flex items-center gap-1">{pl?.name || id.slice(0,4)} {id===myId && <span className="px-1 py-0.5 rounded-full bg-amber-400 text-[#0e2533] text-[8px] font-black">YOU</span>}</span></div>;
             })}
           </div>
           {isSpectator ? <div className="mt-4 py-3 rounded-full bg-white/5 text-white/40 font-bold">Spectating vote… {pub.proposal.voteCount}/{pub.players.length}</div> :
@@ -369,7 +369,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
                   {pub.players.map(p=>{
                     const v = votes[p.id];
                     const acked = !!pub.teamVoteRevealAcks?.[p.id];
-                    return <div key={p.id} className={`flex justify-between rounded-xl px-3 py-2 border text-sm ${v==='APPROVE'?'bg-emerald-500/15 border-emerald-400/30 text-emerald-300':'bg-rose-500/15 border-rose-400/30 text-rose-300'}`}><span className="font-bold text-white flex items-center gap-1">{p.name} {p.id===myId && <span className="px-1 py-0.5 rounded-full bg-amber-400 text-[#0e2533] text-[8px] font-black">[YOU]</span>} {acked && <span className="text-[10px] text-emerald-300">✓</span>}</span><span className="font-black">{v||'-'}</span></div>;
+                    return <div key={p.id} className={`flex justify-between rounded-xl px-3 py-2 border text-sm ${v==='APPROVE'?'bg-emerald-500/15 border-emerald-400/30 text-emerald-300':'bg-rose-500/15 border-rose-400/30 text-rose-300'}`}><span className="font-bold text-white flex items-center gap-1">{p.name} {p.id===myId && <span className="px-1 py-0.5 rounded-full bg-amber-400 text-[#0e2533] text-[8px] font-black">YOU</span>} {acked && <span className="text-[10px] text-emerald-300">✓</span>}</span><span className="font-black">{v||'-'}</span></div>;
                   })}
                 </div>
                 {isSpectator ? (
@@ -511,14 +511,14 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
                 <div key={p.id} className={`flex items-center justify-between rounded-xl px-3 py-2 border ${isMe?'bg-white/10 border-amber-300/30':'bg-white/5 border-white/10'}`}>
                   <div className="flex items-center gap-2">
                     {isBot ? (
-                      <div className="w-8 h-8 rounded-full bg-[#1e2a3a] border border-white/10 flex items-center justify-center text-[14px]">🤖</div>
+                      <div className="w-7 h-7 rounded-full bg-[#1e2a3a] border border-white/10 flex items-center justify-center text-[12px]">🤖</div>
                     ) : avatarIsImage ? (
-                      <div className={`w-8 h-8 rounded-full overflow-hidden border ${isMe?'border-amber-300':'border-white/10'}`}><img src={p.avatar} alt={p.name} className="w-full h-full object-cover" /></div>
+                      <div className={`w-7 h-7 rounded-full overflow-hidden border ${isMe?'border-amber-300':'border-white/10'}`}><img src={p.avatar} alt={p.name} className="w-full h-full object-cover" /></div>
                     ) : (
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs border ${isMe?'bg-[#f3ecd8] text-[#0a1e2e] border-amber-300':'text-white border-white/10'}`} style={avatarBg ? { background: avatarBg } : { background: '#1e2a3a' }}>{p.name.slice(0,2).toUpperCase()}</div>
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center font-black text-[11px] border ${isMe?'bg-[#f3ecd8] text-[#0a1e2e] border-amber-300':'text-white border-white/10'}`} style={avatarBg ? { background: avatarBg } : { background: '#1e2a3a' }}>{p.name.slice(0,2).toUpperCase()}</div>
                     )}
                     <div className="flex flex-col text-left">
-                      <span className="text-sm font-bold text-white leading-none flex items-center gap-1">{p.name} {isMe && <span className="px-1.5 py-0.5 rounded-full bg-amber-400 text-[#0e2533] text-[10px] font-black">[YOU]</span>} {p.isLeader && <span className="text-amber-300 text-xs">👑 Leader</span>}</span>
+                      <span className="text-xs font-bold text-white leading-none flex items-center gap-1">{p.name} {isMe && <span className="px-1 py-0.5 rounded-full bg-amber-400 text-[#0e2533] text-[9px] font-black">YOU</span>} {p.isLeader && <span className="text-amber-300 text-[10px]">👑 Leader</span>}</span>
                       {role && <span className={`text-[10px] font-bold ${alleg==='GOOD'?'text-emerald-300':'text-rose-300'}`}>{role}</span>}
                     </div>
                   </div>
