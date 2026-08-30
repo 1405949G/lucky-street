@@ -118,7 +118,7 @@ lucky-street/
   AGENTS.md                    # AI rule: games go in games/<id>/manifest.js
   games/
     README.md                  # how to add a game (source of truth)
-    quest-of-shadows/manifest.js  # canonical template — copy me
+    veil-street/manifest.js  # canonical template — copy me
     lucky-roulette/manifest.js
     street-rally/manifest.js
     checkpoint-chaos/manifest.js

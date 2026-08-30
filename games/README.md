@@ -9,7 +9,7 @@ Lobby (`server/src/rooms.js:14`, `client/src/components/Lobby.jsx:1`) is generic
 ```
 games/
   README.md                      # you are here
-  quest-of-shadows/
+  veil-street/
     manifest.js                  # canonical example — copy this to start
   lucky-roulette/
     manifest.js
@@ -33,7 +33,7 @@ games/
 mkdir lucky-street/games/my-new-game
 ```
 
-Copy template `games/quest-of-shadows/manifest.js` to `games/my-new-game/manifest.js` and edit:
+Copy template `games/veil-street/manifest.js` to `games/my-new-game/manifest.js` and edit:
 
 ```js
 // games/my-new-game/manifest.js
@@ -70,10 +70,10 @@ Edit `server/src/games.js:1`:
 
 ```js
 import myNewGame from "../../games/my-new-game/manifest.js";
-import quest from "../../games/quest-of-shadows/manifest.js";
+import quest from "../../games/veil-street/manifest.js";
 
 export const GAMES = {
-  "quest-of-shadows": quest,
+  "veil-street": quest,
   "my-new-game": myNewGame,
 };
 export function getGame(id){ return GAMES[id]||null }
@@ -124,12 +124,12 @@ Keep lobby (`RoomManager` + `UserRegistry`) untouched — games handle their own
 - [ ] Registered in `server/src/games.js:6` `GAMES`
 - [ ] `npm run build` passes (`client/vite.config.js:1`)
 - [ ] `GET /api/games` lists new id, `CreateRoomModal` autofills `defaultMaxPlayers`, `Lobby` sliders toggle live
-- [ ] No files added inside `Avalon Game/` — that's legacy
+- [ ] No files added inside `Veil Street Game/` — that's legacy
 - [ ] No sibling `C:/.../Lucky StreeT/NewGame` at workspace root
 
 ## Examples to Copy
 
-- Simplest (toggles only): `games/quest-of-shadows/manifest.js`
+- Simplest (toggles only): `games/veil-street/manifest.js`
 - Sliders + selects: `games/street-rally/manifest.js`, `games/lucky-roulette/manifest.js`
 
 ## Where AI Should Look in New Sessions

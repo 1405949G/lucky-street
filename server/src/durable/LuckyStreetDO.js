@@ -10,7 +10,7 @@ import { RoomManager } from "../rooms.js";
 import { listGames } from "../games.js";
 import { isValidRoomId, sanitizeName } from "../utils.js";
 import { handleQuestEffects } from "../questScheduler.js";
-import { getPublicState as questPublic, getPrivateState as questPrivate } from "../../../games/quest-of-shadows/server/state.js";
+import { getPublicState as questPublic, getPrivateState as questPrivate } from "../../../games/veil-street/server/state.js";
 
 function genSocketId() {
   try { return crypto.randomUUID(); } catch { return "s_" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); }
@@ -647,7 +647,7 @@ export class LuckyStreetDO {
             hostId: socketId,
             hostName: user.username,
             hostAvatar: user.avatar,
-            gameId: data.gameId || "quest-of-shadows",
+            gameId: data.gameId || "veil-street",
             maxPlayers: data.maxPlayers,
             gameOptions: data.gameOptions,
           });

@@ -11,7 +11,7 @@ import { SocketContext } from "../context/SocketContext.jsx";
 
 export default function CreateRoomModal({ onClose, onCreated }) {
   const { games, socket } = useContext(SocketContext);
-  const [gameId, setGameId] = useState(() => games[0]?.id || "quest-of-shadows");
+  const [gameId, setGameId] = useState(() => games[0]?.id || "veil-street");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 

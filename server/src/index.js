@@ -19,7 +19,7 @@ import { RoomManager } from "./rooms.js";
 import { listGames, getGame } from "./games.js";
 import { isValidRoomId, sanitizeName } from "./utils.js";
 import { handleQuestEffects } from "./questScheduler.js";
-import { getPublicState as questPublic, getPrivateState as questPrivate } from "../../games/quest-of-shadows/server/state.js";
+import { getPublicState as questPublic, getPrivateState as questPrivate } from "../../games/veil-street/server/state.js";
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3001;
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || "http://localhost:5173";
@@ -213,7 +213,7 @@ io.on("connection", (socket) => {
         hostId: socket.id,
         hostName: user.username,
         hostAvatar: user.avatar,
-        gameId: gameId || "quest-of-shadows",
+        gameId: gameId || "veil-street",
         maxPlayers,
         gameOptions
       });
@@ -468,7 +468,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  // ——— Quest of Shadows — game lifecycle ———
+  // ——— Veil Street — game lifecycle ———
   socket.on("game:start", ({ roomId } = {}, ack) => {
     try {
       const id = String(roomId || socket.data.currentRoom || "").toUpperCase();

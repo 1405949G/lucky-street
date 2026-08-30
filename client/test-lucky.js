@@ -42,7 +42,7 @@ async function test() {
   console.log("B register Bob:", resB);
 
   // A create room
-  let create = await emitAck(a, "room:create", { gameId: "quest-of-shadows", maxPlayers: 6, password: null });
+  let create = await emitAck(a, "room:create", { gameId: "veil-street", maxPlayers: 6, password: null });
   console.log("A create room:", create?.ok ? create.room.id + " " + create.room.game + " max " + create.room.maxPlayers : create);
   const roomId = create.room.id;
   console.log("Room slotsText", create.room.slotsText);

@@ -4,7 +4,7 @@
  */
 
 const KEY = "luckyStreet:profile";
-const LEGACY_AVALON = "avalon:myName"; // not used but example
+const LEGACY_VEIL_STREET = "veil-street:myName"; // not used but example
 
 export function loadProfile() {
   try {

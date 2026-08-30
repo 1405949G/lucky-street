@@ -47,7 +47,7 @@ Env:
 
 ```bash
 mkdir lucky-street/games/my-new-game
-cp lucky-street/games/quest-of-shadows/manifest.js lucky-street/games/my-new-game/manifest.js
+cp lucky-street/games/veil-street/manifest.js lucky-street/games/my-new-game/manifest.js
 # edit id/label/options, then register in lucky-street/server/src/games.js:1
 ```
 
@@ -59,7 +59,7 @@ lucky-street/
   AGENTS.md                    # AI instructions — read in new sessions
   games/                         # ← ADD GAMES HERE
     README.md                  # how to add a game (detailed)
-    quest-of-shadows/manifest.js # canonical example — copy me
+    veil-street/manifest.js # canonical example — copy me
     lucky-roulette/manifest.js
     street-rally/manifest.js
     checkpoint-chaos/manifest.js

@@ -1,12 +1,11 @@
 /**
- * games/quest-of-shadows/manifest.js — Canonical game module template
- * Copy this file to games/<newId>/manifest.js when adding a game.
+ * games/veil-street/manifest.js — Veil Street (social deduction, 5-10p)
  * See ../README.md for full guide and AGENTS.md for AI rule.
  */
 export default {
-  id: "quest-of-shadows",
-  label: "Quest of Shadows",
-  description: "Social deduction — Good vs Evil, Merlin & Assassin",
+  id: "veil-street",
+  label: "Veil Street",
+  description: "Social deduction — Good vs Evil, hidden roles",
   minPlayers: 5,
   maxPlayers: 10,
   defaultMaxPlayers: 10,

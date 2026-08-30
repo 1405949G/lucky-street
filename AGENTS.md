@@ -4,7 +4,7 @@
 
 ## Project Context
 
-- **Monorepo:** `lucky-street/` is the **full website** (not `reference/Avalon Game/` which is legacy reference for recreating Avalon later).
+- **Monorepo:** `lucky-street/` is the **full website** (not `reference/Veil Street Game/` which is legacy reference for recreating Veil Street later).
 - **Purpose:** Real-time party game lobby — identity + ephemeral rooms + host/player permission matrix + live sync. Games are pluggable modules.
 - **Root docs:** `README.md:1` (quick start), `ARCHITECTURE.md:1` (wire protocol), `TESTING.md:1` (manual checklist), `games/README.md:1` (game template).
 
@@ -17,7 +17,7 @@
 | **Frontend** | React 18 + Vite + Tailwind + React Router. Dual-mode socket: `socket.io-client` for Node fallback, **native WebSocket** for Workers. | `client/src/context/SocketContext.jsx:1` auto-selects: `VITE_SERVER_URL` contains `workers.dev` → native WS (`/ws`), else `socket.io`. |
 | **Backend (Option B)** | **Cloudflare Workers + Durable Object** (`LuckyStreetDO` singleton `global`) — holds `users` + `rooms` Maps in-memory + `storage.setAlarm` for 5-min GC. Reuses same logic as Node. | `server/src/worker.js:1` (entry), `server/src/durable/LuckyStreetDO.js:1` (all events), `server/wrangler.toml:1` |
 | **Backend (Option A fallback)** | Node 20 + Express 4 + Socket.io (`server/src/index.js:14`) — kept for local `node --watch` or Render. Same `users.js`/`rooms.js` logic. | `server/src/index.js:1`, `server/src/users.js:17`, `server/src/rooms.js:14` |
-| **Catalog** | Single source: `games/<id>/manifest.js` imported by `server/src/games.js:1`. | `games/quest-of-shadows/manifest.js:1` is canonical template |
+| **Catalog** | Single source: `games/<id>/manifest.js` imported by `server/src/games.js:1`. | `games/veil-street/manifest.js:1` is canonical template |
 | **Ephemeral DB** | `users` Map: `lower -> {socketId, username, avatar, timer, expiresAt}` + `rooms` Map. GC 5min (`GC_MS`). In DO uses `setAlarm`, in Node uses `setTimeout` + grace reclaim. | `server/src/users.js:17`, `server/src/durable/LuckyStreetDO.js:1` `alarm()` |
 
 **No Render needed for Option B.** Frontend on **Pages**, backend on **Workers** — both free, both GitHub-connected.
@@ -59,7 +59,7 @@ lucky-street/
         Game.jsx              # optional: board UI mounted at /room/:id/play
 ```
 
-**1 Required File: `games/<id>/manifest.js`** (copy `games/quest-of-shadows/manifest.js:1`):
+**1 Required File: `games/<id>/manifest.js`** (copy `games/veil-street/manifest.js:1`):
 
 ```js
 export default {
@@ -80,7 +80,7 @@ export default {
 
 ```js
 import ludo from "../../games/ludo/manifest.js";
-export const GAMES = { "quest-of-shadows": questOfShadows, "ludo": ludo };
+export const GAMES = { "veil-street": questOfShadows, "ludo": ludo };
 ```
 
 `worker.js` and `index.js` both emit `games:list` on WS open; `client/src/components/CreateRoomModal.jsx:9` + `Lobby.jsx:135` consume it — no other lobby changes needed for lobby-only games.
@@ -89,7 +89,7 @@ export const GAMES = { "quest-of-shadows": questOfShadows, "ludo": ludo };
 
 **4 Verify:** `curl https://<worker>/api/games` includes new id; `client` `npm run build` passes; create room → see new game in dropdown → max autofills → host slider syncs live.
 
-**Do NOT:** add inside `reference/Avalon Game/`; create workspace sibling; duplicate `GAMES` in client/server.
+**Do NOT:** add inside `reference/Veil Street Game/`; create workspace sibling; duplicate `GAMES` in client/server.
 
 ## Deployment (GitHub Desktop + Cloudflare Dashboard, no terminal)
 
@@ -114,5 +114,5 @@ Local test: `npx wrangler dev --local --port 3001` (if you have terminal) or kee
 - Lobby: `server/src/rooms.js:14,42,86`, `client/src/components/Lobby.jsx:1,385`, `client/src/components/CreateRoomModal.jsx:18`
 - Identity/GC: `server/src/users.js:17`, `client/src/utils/storage.js:5`
 - Games guide: `games/README.md:1`
-- Full website = `lucky-street/`; reference = `reference/Avalon Game/`
+- Full website = `lucky-street/`; reference = `reference/Veil Street Game/`
 

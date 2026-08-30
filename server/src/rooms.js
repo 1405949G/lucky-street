@@ -21,9 +21,9 @@
 
 import { generateRoomId, isValidRoomId, clamp } from "./utils.js";
 import { getGame, defaultMaxFor } from "./games.js";
-import { createInitialState as createQuestState, reducer as questReducer, getPublicState as questPublic, getPrivateState as questPrivate, getAIView as questAIView } from "../../games/quest-of-shadows/server/state.js";
-import { PHASES as QuestPhases } from "../../games/quest-of-shadows/server/config.js";
-import * as questAI from "../../games/quest-of-shadows/server/ai.js";
+import { createInitialState as createQuestState, reducer as questReducer, getPublicState as questPublic, getPrivateState as questPrivate, getAIView as questAIView } from "../../games/veil-street/server/state.js";
+import { PHASES as QuestPhases } from "../../games/veil-street/server/config.js";
+import * as questAI from "../../games/veil-street/server/ai.js";
 
 const BOT_NAMES = [
   "Ava", "Milo", "Zoe", "Finn", "Luna", "Kai", "Nova", "Rex",
@@ -53,7 +53,7 @@ function pickRandomHost(players) {
 }
 
 function trimQuestOptionsIfNeeded(room) {
-  if (room.game !== 'quest-of-shadows') return false;
+  if (room.game !== 'veil-street') return false;
   const total = room.players.length + room.bots.length;
   const max = total <= 6 ? 1 : total <= 8 ? 2 : 3;
   const enabled = ['morgana','mordred','oberon'].filter(k => !!room.gameOptions[k]);
@@ -442,7 +442,7 @@ export class RoomManager {
     const next = { ...room.gameOptions };
     for (const [k, v] of Object.entries(options || {})) {
       // Enforce evil-extra limit for Quest (5-6:1, 7-8:2, 9-10:3)
-      if (room.game === 'quest-of-shadows' && ['morgana','mordred','oberon'].includes(k)) {
+      if (room.game === 'veil-street' && ['morgana','mordred','oberon'].includes(k)) {
         const isEnabling = !!v && !room.gameOptions[k];
         if (isEnabling) {
           const total = room.players.length + room.bots.length;
@@ -613,12 +613,12 @@ export class RoomManager {
     return { exists: true, isPrivate: false, hostName: room.hostName, game: room.game };
   }
 
-  // ——— Quest of Shadows — game lifecycle ———
+  // ——— Veil Street — game lifecycle ———
   canStartQuest(roomId, requesterId) {
     const room = this.get(roomId);
     if (!room) throw new Error("Room not found");
     if (room.hostId !== requesterId) throw new Error("Only host can start the quest");
-    if (room.game !== "quest-of-shadows") throw new Error("Start Quest only for Quest of Shadows");
+    if (room.game !== "veil-street") throw new Error("Start Quest only for Veil Street");
     const total = room.players.length + room.bots.length;
     const game = getGame(room.game);
     const min = game?.minPlayers || 5;
@@ -652,7 +652,7 @@ export class RoomManager {
   resetQuest(roomId, requesterId) {
     const room = this.get(roomId);
     if (!room) throw new Error("Room not found");
-    if (room.game !== "quest-of-shadows") throw new Error("Not a Quest game");
+    if (room.game !== "veil-street") throw new Error("Not a Quest game");
     // Allow any player to reset when game is over, host only during active game
     const isGameOver = room.gameState?.phase === QuestPhases.GAME_OVER;
     if (!isGameOver && room.hostId !== requesterId) throw new Error("Only host can reset during active quest");
@@ -666,7 +666,7 @@ export class RoomManager {
   handleQuestAction({ roomId, socketId, actionType, payload }) {
     const room = this.get(roomId);
     if (!room) throw new Error("Room not found");
-    if (room.game !== "quest-of-shadows") throw new Error("Not a Quest game");
+    if (room.game !== "veil-street") throw new Error("Not a Quest game");
     if (!room.gameState) throw new Error("Game not started");
     const gs = room.gameState;
     // Build action for reducer — map generic payload to expected shape

@@ -6,7 +6,7 @@
  * See AGENTS.md and games/README.md for AI instructions in new sessions.
  */
 
-import questOfShadows from "../../games/quest-of-shadows/manifest.js";
+import veilStreet from "../../games/veil-street/manifest.js";
 import luckyRoulette from "../../games/lucky-roulette/manifest.js";
 import streetRally from "../../games/street-rally/manifest.js";
 import checkpointChaos from "../../games/checkpoint-chaos/manifest.js";
@@ -15,7 +15,7 @@ import checkpointChaos from "../../games/checkpoint-chaos/manifest.js";
 // import myNewGame from "../../games/my-new-game/manifest.js";
 
 export const GAMES = {
-  "quest-of-shadows": questOfShadows,
+  "veil-street": veilStreet,
   "lucky-roulette": luckyRoulette,
   "street-rally": streetRally,
   "checkpoint-chaos": checkpointChaos,
