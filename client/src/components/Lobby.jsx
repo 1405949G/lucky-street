@@ -246,7 +246,7 @@ export default function Lobby({ spectate = false }) {
             {isTransient && <button onClick={() => { setError(null); socket?._luckyAttemptJoin?.(); if (!room) socket?.emit("room:sync", { roomId: id }, (r)=>{ if(r?.ok) setRoom(r.room); }); }} className="px-5 py-2 rounded-full bg-amber-400 text-[#0e2533] font-bold">Retry</button>}
             <button onClick={() => navigate("/")} className="px-5 py-2 rounded-full bg-white text-[#0e2533] font-bold">Back to Lobbies</button>
           </div>
-          <a href="/admin" className="text-xs text-white/30 underline mt-3 inline-block">Admin: clear ghost rooms</a>
+          <a href="/admin" className="hidden">Admin</a>
         </div>
       </div>
     );
@@ -380,7 +380,7 @@ export default function Lobby({ spectate = false }) {
   }
 
   return (
-    <div className="max-w-[760px] mx-auto px-4 pb-10">
+    <div className="max-w-[820px] mx-auto px-4 pb-10">
       {/* Header: Leave + title + ? rules */}
       <div className="flex items-center justify-between pt-2">
         <button onClick={handleLeave} aria-label="Leave room" className="px-4 py-1.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-xs font-bold text-white/70 flex items-center gap-1.5">
@@ -446,7 +446,7 @@ export default function Lobby({ spectate = false }) {
               <div className="relative">
                 <p className="text-xs tracking-widest font-bold text-white/50">JOIN CODE</p>
                 <div className="font-display font-black text-[36px] tracking-[0.18em] text-[#f3ecd8]" style={{ textShadow: "0 2px 0 rgba(0,0,0,0.25)" }}>{room.id}</div>
-                <p className="text-xs text-white/70 mt-1">Share: <span className="font-mono bg-white/10 px-1.5 py-0.5 rounded break-all">{window.location.origin}/room/{room.id}</span></p>
+                <p className="text-xs text-white/70 mt-1">Share: <span className="font-mono bg-white/10 px-1.5 py-0.5 rounded whitespace-nowrap">{window.location.origin}/room/{room.id}</span></p>
                 <p className="text-xs text-white/40 mt-1">Players look here — answers on their phones.</p>
                 <div className="mt-3 flex justify-center gap-2 flex-wrap">
                   <button onClick={() => { navigator.clipboard?.writeText(`${window.location.origin}/room/${room.id}`); showToast("Invite link copied"); }} className="px-4 py-2 rounded-full bg-[#f3ecd8] hover:bg-white text-[#0e2533] text-xs font-extrabold">Copy Invite Link</button>
@@ -543,7 +543,7 @@ export default function Lobby({ spectate = false }) {
       )}
         </div>
         {/* Controls */}
-        <div className={`${hasGameState ? 'block w-full max-w-[760px]' : mobileTab === "board" ? "hidden lg:block" : "block"} space-y-5`}>
+        <div className={`${hasGameState ? 'block w-full max-w-[820px]' : mobileTab === "board" ? "hidden lg:block" : "block"} space-y-5`}>
 
           {isQuestGame && hasGameState ? (
             <>
@@ -652,7 +652,7 @@ export default function Lobby({ spectate = false }) {
                     );
                   })}
                 </div>
-                <p className="text-xs text-white/30 mt-3">{isGameLocked ? "Reset game to change settings." : isHost ? "Changes show up for everyone right away." : "Only the host can change these settings."}</p>
+                {isGameLocked ? <p className="text-xs text-white/30 mt-3">Reset game to change settings.</p> : !isHost ? <p className="text-xs text-white/30 mt-3">Only the host can change these settings.</p> : null}
               </div>
             </>
           )}
