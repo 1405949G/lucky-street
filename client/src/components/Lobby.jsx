@@ -26,6 +26,8 @@ export default function Lobby() {
   const [botConfirm, setBotConfirm] = useState(null);
   const [mobileTab, setMobileTab] = useState("board"); // board | controls — for phone split-view like Kahoot
   const leavingRef = useRef(false);
+  const roomRef = useRef(null);
+  useEffect(() => { roomRef.current = room; }, [room]);
 
   const id = String(roomId || "").toUpperCase();
 
@@ -42,7 +44,17 @@ export default function Lobby() {
     if (profileStatus !== "ok") return;
 
     function onLobbyUpdate(full) {
-      if (full.id === id) setRoom(full);
+      if (full.id !== id) return;
+      // If we were in room but update no longer contains us -> we were kicked/removed (covers missed player:kicked when TV open or hibernation)
+      const my = socket?.id;
+      const wasInRoom = roomRef.current?.players?.some(p => p.id === my);
+      const nowInRoom = full.players.some(p => p.id === my);
+      if (wasInRoom && !nowInRoom && !leavingRef.current) {
+        setKickedPopup(true);
+        setRoom(full);
+        return;
+      }
+      setRoom(full);
     }
     function onKicked(data) {
       if (data.roomId === id) setKickedPopup(true);
