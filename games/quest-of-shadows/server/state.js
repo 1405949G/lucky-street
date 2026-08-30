@@ -484,6 +484,8 @@ export function reducer(state, action) {
 
       if (passed) {
         const teamNames = state.proposal.teamIds.map(id => state.players.find(p => p.id === id).name).join(', ');
+        const approveNames = Object.entries(votes).filter(([,v])=>v==='APPROVE').map(([id])=>state.players.find(p=>p.id===id)?.name||id).join(', ');
+        const rejectNames = Object.entries(votes).filter(([,v])=>v==='REJECT').map(([id])=>state.players.find(p=>p.id===id)?.name||id).join(', ');
         const newState = {
           ...state,
           phase: PHASES.QUEST_VOTE,
@@ -491,13 +493,14 @@ export function reducer(state, action) {
           questVotes: Object.freeze({}),
           teamVoteRevealAcks: Object.freeze({}),
           phaseLock: false,
-          log: appendLog(state.log, 'VOTE', `Team approved ${voteStr}. Quest team: ${teamNames}. Quest voting begins.`),
+          log: appendLog(state.log, 'VOTE', `Team approved ${voteStr} (Approve: ${approveNames || 'none'}; Reject: ${rejectNames || 'none'}). Quest team: ${teamNames}.`),
         };
         return { state: Object.freeze(newState), effects: Object.freeze([{ type: 'ENTER_QUEST_VOTE' }]) };
       } else {
         const nextTracker = state.proposalTracker + 1;
         if (nextTracker >= MAX_PROPOSAL_TRACKER) {
-          // 5th reject → Evil wins instantly (D6)
+          const approveNames = Object.entries(votes).filter(([,v])=>v==='APPROVE').map(([id])=>state.players.find(p=>p.id===id)?.name||id).join(', ');
+          const rejectNames = Object.entries(votes).filter(([,v])=>v==='REJECT').map(([id])=>state.players.find(p=>p.id===id)?.name||id).join(', ');
           const newState = {
             ...state,
             proposalTracker: nextTracker,
@@ -507,13 +510,15 @@ export function reducer(state, action) {
             winReason: 'TRACKER',
             teamVoteRevealAcks: Object.freeze({}),
             phaseLock: false,
-            log: appendLog(state.log, 'VOTE', `Team rejected ${voteStr}. 5th rejection — Evil wins by deadlock!`),
+            log: appendLog(state.log, 'VOTE', `Team rejected ${voteStr} (Approve: ${approveNames || 'none'}; Reject: ${rejectNames || 'none'}). 5th rejection — Evil wins!`),
           };
           return { state: Object.freeze(newState), effects: Object.freeze([{ type: 'ENTER_GAME_OVER' }]) };
         }
         // Advance leader, reset proposal, stay in TEAM_PROPOSAL
         const nextLeader = nextLeaderIndex(state);
         const leaderName = state.players[nextLeader].name;
+        const approveNames = Object.entries(votes).filter(([,v])=>v==='APPROVE').map(([id])=>state.players.find(p=>p.id===id)?.name||id).join(', ');
+        const rejectNames = Object.entries(votes).filter(([,v])=>v==='REJECT').map(([id])=>state.players.find(p=>p.id===id)?.name||id).join(', ');
         const newState = {
           ...state,
           proposalTracker: nextTracker,
@@ -522,7 +527,7 @@ export function reducer(state, action) {
           phase: PHASES.TEAM_PROPOSAL,
           teamVoteRevealAcks: Object.freeze({}),
           phaseLock: false,
-          log: appendLog(state.log, 'VOTE', `Team rejected ${voteStr} (${nextTracker}/5). Leader → ${leaderName}.`),
+          log: appendLog(state.log, 'VOTE', `Team rejected ${voteStr} (${nextTracker}/5) (Approve: ${approveNames || 'none'}; Reject: ${rejectNames || 'none'}). Leader → ${leaderName}.`),
         };
         // Log reveal then new proposal — need to keep history
         // We also store voteHistory implicitly via log; could add explicit array but log suffices
@@ -551,7 +556,6 @@ export function reducer(state, action) {
       };
       const effects = [];
       if (allVoted) {
-        // Compute quest result immediately so reveal shows correct success/fail
         const questIdx = state.currentQuest;
         const quest = state.quests[questIdx];
         const votesArr = Object.values(newQuestVotes);
@@ -568,12 +572,15 @@ export function reducer(state, action) {
           failCount,
           votesShuffled: Object.freeze(shuffled),
         });
+        const teamNames = state.proposal.teamIds.map(id=>state.players.find(p=>p.id===id)?.name||id).join(', ');
+        const resultText = success ? `Quest ${questIdx+1} succeeded with ${failCount} fail(s) (team: ${teamNames}).` : `Quest ${questIdx+1} failed with ${failCount} fail(s) (needed ${failsRequired} to fail, team: ${teamNames}).`;
         newState = {
           ...newState,
           quests: Object.freeze(newQuests),
           questRevealAcks: Object.freeze({}),
           phase: PHASES.QUEST_REVEAL,
           phaseLock: false,
+          log: appendLog(state.log, success ? 'QUEST_SUCCESS' : 'QUEST_FAIL', resultText),
         };
         effects.push({ type: 'ENTER_QUEST_REVEAL' });
       }
@@ -604,6 +611,8 @@ export function reducer(state, action) {
         failCount,
         votesShuffled: Object.freeze(shuffled),
       });
+      const teamNames = state.proposal.teamIds.map(id=>state.players.find(p=>p.id===id)?.name||id).join(', ');
+      const resultText = success ? `Quest ${questIdx+1} succeeded with ${failCount} fail(s) (team: ${teamNames}).` : `Quest ${questIdx+1} failed with ${failCount} fail(s) (needed ${failsRequired} to fail, team: ${teamNames}).`;
       const newState = {
         ...state,
         questVotes: Object.freeze(filled),
@@ -611,6 +620,7 @@ export function reducer(state, action) {
         phase: PHASES.QUEST_REVEAL,
         questRevealAcks: Object.freeze({}),
         phaseLock: false,
+        log: appendLog(state.log, success ? 'QUEST_SUCCESS' : 'QUEST_FAIL', resultText),
       };
       return { state: Object.freeze(newState), effects: Object.freeze([{ type: 'ENTER_QUEST_REVEAL' }]) };
     }
@@ -620,23 +630,10 @@ export function reducer(state, action) {
       const questIdx = state.currentQuest;
       const quest = state.quests[questIdx];
       if (!quest) throw new Error('No current quest');
-
-      // Count fails (values, shuffled for public view — L3)
-      const votesArr = Object.values(state.questVotes);
-      const failCount = votesArr.filter(v => v === 'FAIL').length;
-      const failsRequired = quest.failsRequired;
-      const success = failCount < failsRequired;
-      const status = success ? 'SUCCESS' : 'FAIL';
-      const shuffled = shuffle(votesArr);
-
-      const newQuests = state.quests.slice();
-      newQuests[questIdx] = Object.freeze({
-        ...quest,
-        status,
-        teamIds: Object.freeze(state.proposal.teamIds.slice()),
-        failCount,
-        votesShuffled: Object.freeze(shuffled),
-      });
+      // Quest already resolved in SUBMIT_QUEST_VOTE, just use its status
+      const status = quest.status;
+      const success = status === 'SUCCESS';
+      const newQuests = state.quests;
 
       const { good, evil } = countWins(newQuests);
       let winner = null;
@@ -667,13 +664,11 @@ export function reducer(state, action) {
 
       let newState = {
         ...state,
-        quests: Object.freeze(newQuests),
         proposalTracker: 0,
         questVotes: Object.freeze({}),
         proposal: Object.freeze({ teamIds: [], votes: Object.freeze({}), result: null, revealed: false }),
         questRevealAcks: Object.freeze({}),
         phaseLock: false,
-        log: appendLog(state.log, success ? 'QUEST_SUCCESS' : 'QUEST_FAIL', resultText),
       };
 
       if (nextPhase === PHASES.ASSASSINATION) {

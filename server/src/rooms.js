@@ -202,20 +202,19 @@ export class RoomManager {
   leave({ roomId, socketId }) {
     const room = this.get(roomId);
     if (!room) return null;
-    // If game in progress, abort it
-    const wasActiveGame = !!(room.gameState && room.gameState.phase !== QuestPhases.LOBBY && room.gameState.phase !== QuestPhases.GAME_OVER);
-    if (wasActiveGame) {
-      room.gameState = null;
-      room.gameStartedAt = null;
-    }
-    // also remove from spectators if present
+    // also remove from spectators if present — spectators never abort the quest
     const specIdx = (room.spectators || []).findIndex(s => s.id === socketId);
     if (specIdx !== -1) {
       room.spectators.splice(specIdx, 1);
       room.updatedAt = Date.now();
       this._notify();
-      // don't delete room for spectators
       return this.getFull(room.id);
+    }
+    // If a player leaves during active quest, abort it
+    const wasActiveGame = !!(room.gameState && room.gameState.phase !== QuestPhases.LOBBY && room.gameState.phase !== QuestPhases.GAME_OVER);
+    if (wasActiveGame) {
+      room.gameState = null;
+      room.gameStartedAt = null;
     }
     const idx = room.players.findIndex(p => p.id === socketId);
     if (idx === -1) return this.getFull(room.id);
@@ -250,7 +249,10 @@ export class RoomManager {
     const room = this.get(roomId);
     if (!room) throw new Error("Room not found");
     if (room.gameState && room.gameState.phase !== QuestPhases.LOBBY && room.gameState.phase !== QuestPhases.GAME_OVER) {
-      throw new Error("Cannot spectate while quest is in progress");
+      // Allow new spectators to watch, but block players from abandoning the quest
+      if (room.players.some(p => p.id === socketId)) {
+        throw new Error("Cannot spectate while quest is in progress — finish the quest first");
+      }
     }
     if (!room.spectators) room.spectators = [];
     if (room.spectators.some(s => s.id === socketId)) return this.getFull(room.id);
@@ -322,13 +324,8 @@ export class RoomManager {
   removePlayerFromAllRooms(socketId) {
     const affected = [];
     for (const room of this.rooms.values()) {
-      const wasActiveGame = !!(room.gameState && room.gameState.phase !== QuestPhases.LOBBY && room.gameState.phase !== QuestPhases.GAME_OVER);
-      if (wasActiveGame) {
-        room.gameState = null;
-        room.gameStartedAt = null;
-      }
       let changed = false;
-      // spectators
+      // spectators — never abort quest
       if (room.spectators) {
         const sIdx = room.spectators.findIndex(s => s.id === socketId);
         if (sIdx !== -1) {
@@ -336,7 +333,15 @@ export class RoomManager {
           room.updatedAt = Date.now();
           changed = true;
           affected.push({ roomId: room.id, deleted: false, room: this.getFull(room.id) });
+          continue; // spectator leave does not affect players/game
         }
+      }
+      const wasActiveGame = !!(room.gameState && room.gameState.phase !== QuestPhases.LOBBY && room.gameState.phase !== QuestPhases.GAME_OVER);
+      // Only abort if this socket is actually a player in this room
+      const isPlayerInRoom = room.players.some(p => p.id === socketId);
+      if (wasActiveGame && isPlayerInRoom) {
+        room.gameState = null;
+        room.gameStartedAt = null;
       }
       const idx = room.players.findIndex(p => p.id === socketId);
       if (idx !== -1) {

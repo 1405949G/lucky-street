@@ -78,6 +78,10 @@ export default function Lobby({ spectate = false }) {
       if (data?.error && (/already taken/i.test(data.error) || /timeout/i.test(data.error) || /Register a profile first/i.test(data.error) || /missing identity/i.test(data.error))) {
         return;
       }
+      if (data?.error && /Cannot spectate while quest/i.test(data.error)) {
+        showToast(data.error);
+        return;
+      }
       setError(data.error);
       setTimeout(() => setError(null), 3000);
     }
