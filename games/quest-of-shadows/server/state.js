@@ -564,7 +564,8 @@ export function reducer(state, action) {
         const failsRequired = quest.failsRequired;
         const success = failCount < failsRequired;
         const status = success ? 'SUCCESS' : 'FAIL';
-        const shuffled = shuffle(votesArr);
+        // Sort with fails on right to not reveal who failed
+        const shuffled = Object.freeze([...votesArr].sort((a,b)=>(a==='FAIL'?1:0)-(b==='FAIL'?1:0)));
         const newQuests = state.quests.slice();
         newQuests[questIdx] = Object.freeze({
           ...quest,
@@ -603,7 +604,7 @@ export function reducer(state, action) {
       const failsRequired = quest.failsRequired;
       const success = failCount < failsRequired;
       const status = success ? 'SUCCESS' : 'FAIL';
-      const shuffled = shuffle(votesArr);
+      const shuffled = Object.freeze([...votesArr].sort((a,b)=>(a==='FAIL'?1:0)-(b==='FAIL'?1:0)));
       const newQuests = state.quests.slice();
       newQuests[questIdx] = Object.freeze({
         ...quest,

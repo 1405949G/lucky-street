@@ -142,6 +142,18 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
               {priv.self.role==='LOYAL' ? 'Loyal — you see nobody.' : priv.self.role==='OBERON' ? 'Oberon — isolated, you see nobody.' : priv.self.role==='MERLIN' && priv.vision.sees.length===0 ? 'Mordred hides from you.' : 'You see nobody.'}
             </p>
           )}
+          <div className="mt-3 pt-3 border-t border-white/10">
+            <p className="text-[10px] tracking-widest font-bold text-white/40">ROLES IN THIS GAME</p>
+            <div className="mt-1.5 flex flex-wrap gap-1.5 justify-center">
+              <span className="px-2 py-1 rounded-full bg-cyan-500/15 border border-white/10 text-[10px] font-bold text-cyan-200">Merlin</span>
+              <span className="px-2 py-1 rounded-full bg-rose-500/15 border border-white/10 text-[10px] font-bold text-rose-200">Assassin</span>
+              {pub.extraRoles?.percival && <span className="px-2 py-1 rounded-full bg-cyan-500/15 border border-white/10 text-[10px] font-bold text-cyan-200">Percival</span>}
+              {pub.extraRoles?.morgana && <span className="px-2 py-1 rounded-full bg-rose-500/15 border border-white/10 text-[10px] font-bold text-rose-200">Morgana</span>}
+              {pub.extraRoles?.mordred && <span className="px-2 py-1 rounded-full bg-rose-500/15 border border-white/10 text-[10px] font-bold text-rose-200">Mordred</span>}
+              {pub.extraRoles?.oberon && <span className="px-2 py-1 rounded-full bg-rose-500/15 border border-white/10 text-[10px] font-bold text-rose-200">Oberon</span>}
+              <span className="px-2 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold text-white/50">{pub.players.length - (2 + (pub.extraRoles?.percival?1:0) + (pub.extraRoles?.morgana?1:0) + (pub.extraRoles?.mordred?1:0) + (pub.extraRoles?.oberon?1:0))}× Loyal/Minion</span>
+            </div>
+          </div>
         </div>
       )}
       {!hideTopAllegiance && isSpectator && !priv?.self && (
@@ -503,18 +515,30 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
               {priv.self.role==='LOYAL' ? 'Loyal — you see nobody.' : priv.self.role==='OBERON' ? 'Oberon — isolated, you see nobody.' : priv.self.role==='MERLIN' && priv.vision.sees.length===0 ? 'Mordred hides from you.' : 'You see nobody.'}
             </p>
           )}
+          <div className="mt-3 pt-3 border-t border-white/10">
+            <p className="text-[10px] tracking-widest font-bold text-white/40">ROLES IN THIS GAME</p>
+            <div className="mt-1.5 flex flex-wrap gap-1.5 justify-center">
+              <span className="px-2 py-1 rounded-full bg-cyan-500/15 border border-white/10 text-[10px] font-bold text-cyan-200">Merlin</span>
+              <span className="px-2 py-1 rounded-full bg-rose-500/15 border border-white/10 text-[10px] font-bold text-rose-200">Assassin</span>
+              {pub.extraRoles?.percival && <span className="px-2 py-1 rounded-full bg-cyan-500/15 border border-white/10 text-[10px] font-bold text-cyan-200">Percival</span>}
+              {pub.extraRoles?.morgana && <span className="px-2 py-1 rounded-full bg-rose-500/15 border border-white/10 text-[10px] font-bold text-rose-200">Morgana</span>}
+              {pub.extraRoles?.mordred && <span className="px-2 py-1 rounded-full bg-rose-500/15 border border-white/10 text-[10px] font-bold text-rose-200">Mordred</span>}
+              {pub.extraRoles?.oberon && <span className="px-2 py-1 rounded-full bg-rose-500/15 border border-white/10 text-[10px] font-bold text-rose-200">Oberon</span>}
+              <span className="px-2 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold text-white/50">{pub.players.length - (2 + (pub.extraRoles?.percival?1:0) + (pub.extraRoles?.morgana?1:0) + (pub.extraRoles?.mordred?1:0) + (pub.extraRoles?.oberon?1:0))}× Loyal/Minion</span>
+            </div>
+          </div>
         </div>
       )}
       {hideTopAllegiance && isSpectator && !priv?.self && (
         <div className="rounded-xl bg-amber-400/10 border border-amber-400/20 p-3 text-center text-xs text-amber-200">Spectating — you see the board only. Private roles hidden.</div>
       )}
 
-      {/* Log */}
+      {/* Log - scrollable to oldest */}
       {pub.log?.length>0 && (
-        <details className="rounded-xl bg-white/[0.03] border border-white/10">
-          <summary className="px-4 py-2 text-xs font-bold text-white/50 cursor-pointer">Log • {pub.log.length} events</summary>
-          <div className="px-4 pb-3 space-y-1 max-h-[160px] overflow-auto">
-            {pub.log.slice(-12).reverse().map(e=>(
+        <details className="rounded-xl bg-white/[0.03] border border-white/10" open>
+          <summary className="px-4 py-2 text-xs font-bold text-white/50 cursor-pointer">Log • {pub.log.length} events (scroll for history)</summary>
+          <div className="px-4 pb-3 space-y-1 max-h-[320px] overflow-auto overscroll-contain">
+            {[...pub.log].reverse().map(e=>(
               <div key={e.id} className="flex gap-2 text-xs border-l-2 border-white/10 pl-2 py-1">
                 <span className="font-bold text-white/40 shrink-0 min-w-[72px] text-left">{e.type}</span>
                 <span className="text-white/60 text-left flex-1">{e.text}</span>
