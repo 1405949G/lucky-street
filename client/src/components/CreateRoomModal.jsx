@@ -57,7 +57,7 @@ export default function CreateRoomModal({ onClose, onCreated }) {
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-[#070b14]/70 backdrop-blur-sm">
-      <form onSubmit={submit} className="w-full max-w-[420px] rounded-[24px] bg-[#142a3d] border border-white/10 shadow-2xl overflow-hidden">
+      <form onSubmit={submit} className="w-full max-w-[440px] rounded-[24px] bg-[#142a3d] border border-white/10 shadow-2xl overflow-hidden">
         <div className="px-6 pt-5 pb-4 border-b border-white/10 flex items-center justify-between">
           <div>
             <h2 className="font-bold text-white text-lg leading-none">Create Room</h2>
@@ -81,7 +81,7 @@ export default function CreateRoomModal({ onClose, onCreated }) {
                   <span className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0 ${active ? 'bg-amber-400 text-[#0e2533]' : 'bg-white/10 text-white/70'}`}>{icons[g.id] || '🎮'}</span>
                   <div className="min-w-0 flex-1">
                     <p className={`text-sm font-bold leading-none ${active ? 'text-white' : 'text-white/90'}`}>{g.label}</p>
-                    <p className="text-xs text-white/50 mt-1 truncate">{g.minPlayers}–{g.maxPlayers} • {g.description}</p>
+                    <p className="text-xs text-white/50 mt-1 leading-snug line-clamp-2">{g.minPlayers}–{g.maxPlayers} • {g.description}</p>
                   </div>
                   <span className={`ml-2 w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 text-xs font-bold transition-colors ${active ? 'bg-amber-400 border-amber-400 text-[#0e2533]' : 'border-white/15 text-transparent'}`}>✓</span>
                 </button>
