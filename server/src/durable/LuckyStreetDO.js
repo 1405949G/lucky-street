@@ -388,18 +388,12 @@ export class LuckyStreetDO {
         case "profile:register": {
           const clean = sanitizeName(data.username);
           const lower = clean.toLowerCase();
-          // --- Fix refresh race: if same name exists with old socket that is no longer active, allow reclaim even without timer ---
+          // --- Fix refresh race: allow reclaim even if old socket still appears active (new WS arrives before old close) ---
           const existing = this.userRegistry.byName.get(lower);
           if (existing && existing.socketId !== socketId) {
             const oldWs = this.socketIdToWs.get(existing.socketId);
-            let isOldActive = false;
-            try {
-              const active = this.state.getWebSockets();
-              isOldActive = !!(oldWs && active.includes(oldWs));
-            } catch {
-              isOldActive = !!(oldWs && this.sessions.has(oldWs));
-            }
-            if (!isOldActive) {
+            // Always reclaim for same lower — force close old WS if still active (refresh), prevents "already taken" on reload
+            if (oldWs) { try { oldWs.close(1000, "replaced"); } catch {} try { this.sessions.delete(oldWs); } catch {} }
               // Old socket gone (refresh) — free the name and re-attach room player if any
               if (existing.timer) clearTimeout(existing.timer);
               // Re-attach room player if oldId still in a room with same name
@@ -431,7 +425,6 @@ export class LuckyStreetDO {
               this.userRegistry.bySocket.delete(existing.socketId);
               this.socketIdToWs.delete(existing.socketId);
               await this.persist();
-            }
           }
           // If this socket had a pending room grace (refresh of same socketId? not needed) — also handle reattach via pendingLeaves for same name
           let reattached = false;

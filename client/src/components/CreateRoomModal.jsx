@@ -12,18 +12,8 @@ import { SocketContext } from "../context/SocketContext.jsx";
 export default function CreateRoomModal({ onClose, onCreated }) {
   const { games, socket } = useContext(SocketContext);
   const [gameId, setGameId] = useState(() => games[0]?.id || "quest-of-shadows");
-  const [maxPlayers, setMaxPlayers] = useState(() => {
-    const g = games.find(x => x.id === (games[0]?.id || "quest-of-shadows"));
-    return g ? String(g.defaultMaxPlayers) : "6";
-  });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
-
-  // When game changes, autofill maxPlayers (dynamic defaults)
-  useEffect(() => {
-    const g = games.find(x => x.id === gameId);
-    if (g) setMaxPlayers(String(g.defaultMaxPlayers));
-  }, [gameId]); // eslint-disable-line
 
   // If games load async, sync initial
   useEffect(() => {
@@ -35,9 +25,9 @@ export default function CreateRoomModal({ onClose, onCreated }) {
   function submit(e) {
     e.preventDefault();
     setError(null);
-    const mp = Number(maxPlayers);
-    if (!Number.isFinite(mp) || mp < 2 || mp > 12) return setError("Max Players must be 2-12");
     if (!gameId) return setError("Choose a game");
+    const selected = games.find(x => x.id === gameId);
+    const mp = selected ? selected.defaultMaxPlayers : 6; // fixed to manifest default
     if (!socket?.connected && !socket?.id) {
       return setError("Not connected — please wait a moment and try again");
     }
@@ -86,17 +76,6 @@ export default function CreateRoomModal({ onClose, onCreated }) {
               ))}
             </select>
             {selectedGame && <p className="text-xs text-white/40 mt-1">{selectedGame.description}</p>}
-          </div>
-
-          <div>
-            <label className="text-xs font-bold tracking-widest text-white/60">MAX PLAYERS</label>
-            <input
-              value={maxPlayers}
-              onChange={e => setMaxPlayers(e.target.value.replace(/\D/g, "").slice(0, 2))}
-              placeholder="e.g., 6"
-              className="mt-1.5 w-full px-3.5 py-3 rounded-xl bg-white/10 border border-white/15 text-white placeholder:text-white/30 text-sm font-semibold outline-none focus:border-amber-400/60"
-            />
-            <p className="text-[11px] text-white/30 mt-1">Set to <span className="text-white/60 font-bold">{selectedGame?.defaultMaxPlayers}</span> for {selectedGame?.label} — you can change it.</p>
           </div>
 
           {selectedGame?.optionSchema?.length > 0 && (

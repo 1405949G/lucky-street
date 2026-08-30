@@ -49,6 +49,10 @@ export default function Lobby() {
         setKickedPopup(true);
         return;
       }
+      // Transient errors during refresh/hibernation — don't show fatal card, will retry
+      if (data?.error && (/already taken/i.test(data.error) || /timeout/i.test(data.error) || /Register a profile first/i.test(data.error))) {
+        return;
+      }
       setError(data.error);
       setTimeout(() => setError(null), 3000);
     }
@@ -59,24 +63,40 @@ export default function Lobby() {
 
     function attemptJoin(retry = 0) {
       socket.emit("room:join", { roomId: id }, (jres) => {
-        if (jres?.ok) { setRoom(jres.room); }
+        if (jres?.ok) { setRoom(jres.room); setError(null); }
         else {
-          if (jres?.error && /Register a profile first/i.test(jres.error) && retry < 2) {
-            setTimeout(() => attemptJoin(retry + 1), 600);
-          } else setError(jres?.error || "Room not found");
+          const msg = jres?.error || "";
+          const transient = /Register a profile first|already taken|timeout/i.test(msg);
+          if (transient && retry < 4) {
+            const delay = 400 * Math.pow(1.5, retry);
+            setTimeout(() => attemptJoin(retry + 1), delay);
+            return;
+          }
+          setError(jres?.error || "Room not found");
         }
       });
     }
-    socket.emit("room:sync", { roomId: id }, (res) => {
-      if (res?.ok) setRoom(res.room);
-      else attemptJoin();
-    });
+    function syncAttempt(retry = 0) {
+      socket.emit("room:sync", { roomId: id }, (res) => {
+        if (res?.ok) { setRoom(res.room); setError(null); }
+        else if (res?.error && /timeout/i.test(res.error) && retry < 3) {
+          setTimeout(() => syncAttempt(retry + 1), 500 * Math.pow(1.5, retry));
+        } else attemptJoin();
+      });
+    }
+    syncAttempt();
     socket._luckyAttemptJoin = attemptJoin;
+    // Re-sync after reconnect (covers hibernation / refresh)
+    function onReconnect() { syncAttempt(); }
+    socket.on("connect", onReconnect);
+    socket.on("connected", onReconnect);
 
     return () => {
       socket.off("lobby:update", onLobbyUpdate);
       socket.off("player:kicked", onKicked);
       socket.off("room:error", onRoomErr);
+      socket.off("connect", onReconnect);
+      socket.off("connected", onReconnect);
     };
   }, [socket, id, hasProfile]);
 
@@ -154,13 +174,6 @@ export default function Lobby() {
     socket.emit("lobby:updateGame", { roomId: id, gameId: newGame }, (res) => {
       if (!res?.ok) showToast(res.error);
       else showToast(`Game set to ${res.room.gameLabel}`);
-    });
-  }
-  function commitMax(e) {
-    const n = Number(e.target.value);
-    if (!Number.isFinite(n)) return;
-    socket.emit("lobby:updateMaxPlayers", { roomId: id, maxPlayers: n }, (res) => {
-      if (!res?.ok) showToast(res.error);
     });
   }
   function handleOptionChange(key, value) {
@@ -352,15 +365,6 @@ export default function Lobby() {
         </div>
         <p className="text-xs text-white/40 mt-1">{games.find(g=>g.id===room.game)?.description || ""}</p>
         <div className="mt-3 grid gap-3">
-          <div className="flex items-center gap-2">
-            <label className="text-xs font-bold text-white/60 w-24">Max Players</label>
-            {isHost ? (
-              <input defaultValue={room.maxPlayers} key={room.game + room.maxPlayers} onBlur={commitMax} onKeyDown={e => { if (e.key === "Enter") commitMax(e); }} className="flex-1 px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-white text-sm font-bold w-20" type="number" min={2} max={12} />
-            ) : (
-              <span className="text-sm font-bold text-white">{room.maxPlayers}</span>
-            )}
-            <span className="text-xs text-white/30">Set automatically — host can change it</span>
-          </div>
           {(game.optionSchema || []).map(opt => (
             <div key={opt.key} className="flex items-center gap-3">
               <label className="text-xs font-bold text-white/60 w-24">{opt.label}</label>

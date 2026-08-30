@@ -15,13 +15,11 @@ export default {
     morgana: true,
     mordred: false,
     oberon: false,
-    timerSeconds: 90,
   },
   optionSchema: [
     { key: "percival", label: "Percival", type: "toggle", side: "GOOD" },
     { key: "morgana", label: "Morgana", type: "toggle", side: "EVIL" },
     { key: "mordred", label: "Mordred", type: "toggle", side: "EVIL" },
     { key: "oberon", label: "Oberon", type: "toggle", side: "EVIL" },
-    { key: "timerSeconds", label: "Turn Timer", type: "slider", min: 30, max: 180, step: 10, unit: "s" },
   ],
 };

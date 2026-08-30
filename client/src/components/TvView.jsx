@@ -17,15 +17,33 @@ export default function TvView({ roomId: propId, embedded = false }) {
 
   useEffect(() => {
     if (!socket || !id) return;
+    let cancelled = false;
     function onUpdate(full) {
-      if (full.id === id) setRoom(full);
+      if (full.id === id) { setRoom(full); setError(null); }
     }
     socket.on("lobby:update", onUpdate);
-    socket.emit("room:sync", { roomId: id }, (res) => {
-      if (res?.ok) setRoom(res.room);
-      else setError(res?.error || "Room not found");
-    });
-    return () => socket.off("lobby:update", onUpdate);
+    function syncWithRetry(retry = 0) {
+      if (cancelled) return;
+      socket.emit("room:sync", { roomId: id }, (res) => {
+        if (cancelled) return;
+        if (res?.ok) { setRoom(res.room); setError(null); }
+        else if (res?.error && /timeout/i.test(res.error) && retry < 4) {
+          setTimeout(() => syncWithRetry(retry + 1), 500 * Math.pow(1.5, retry));
+        } else if (res?.error && /not found/i.test(res.error) && retry < 2) {
+          setTimeout(() => syncWithRetry(retry + 1), 600);
+        } else setError(res?.error || "Room not found");
+      });
+    }
+    syncWithRetry();
+    function onReconnect() { syncWithRetry(); }
+    socket.on("connect", onReconnect);
+    socket.on("connected", onReconnect);
+    return () => {
+      cancelled = true;
+      socket.off("lobby:update", onUpdate);
+      socket.off("connect", onReconnect);
+      socket.off("connected", onReconnect);
+    };
   }, [socket, id]);
 
   if (error) {
