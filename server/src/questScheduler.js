@@ -52,12 +52,18 @@ export function handleQuestEffects({ roomManager, roomId, effects, broadcast, di
         break;
       }
       case 'ENTER_ROLE_REVEAL': {
-        // Bots auto-reveal after short delay
         scheduleBotReveals({ roomManager, roomId, broadcast, dispatchInternal });
         break;
       }
+      case 'ENTER_TEAM_VOTE_REVEAL': {
+        scheduleBotTeamVoteRevealAcks({ roomManager, roomId, broadcast, dispatchInternal });
+        break;
+      }
+      case 'ENTER_QUEST_REVEAL': {
+        scheduleBotQuestRevealAcks({ roomManager, roomId, broadcast, dispatchInternal });
+        break;
+      }
       case 'ENTER_GAME_OVER': {
-        // Game over — no further AI, but scoring is in state (winner, winReason, quests)
         break;
       }
       default:
@@ -182,7 +188,6 @@ function scheduleBotReveals({ roomManager, roomId, broadcast, dispatchInternal }
   const room = roomManager.get(roomId);
   if (!room || !room.gameState) return;
   const gs = room.gameState;
-  // Each bot auto-reveals immediately in lobby — fast stagger with jitter
   gs.players.forEach((p, idx) => {
     if (!p.isBot) return;
     const d = 120 + idx * 90 + Math.random() * 260;
@@ -199,6 +204,54 @@ function scheduleBotReveals({ roomManager, roomId, broadcast, dispatchInternal }
           handleQuestEffects({ roomManager, roomId, effects: res.effects, broadcast, dispatchInternal });
         }
       } catch (e) { console.warn('[bot reveal] ', e.message); }
+    }, d);
+  });
+}
+
+function scheduleBotTeamVoteRevealAcks({ roomManager, roomId, broadcast, dispatchInternal }) {
+  const room = roomManager.get(roomId);
+  if (!room || !room.gameState) return;
+  const gs = room.gameState;
+  gs.players.forEach((p, idx) => {
+    if (!p.isBot) return;
+    const d = 400 + idx * 180 + Math.random() * 700;
+    setTimeout(() => {
+      const curRoom = roomManager.get(roomId);
+      if (!curRoom || !curRoom.gameState) return;
+      const cur = curRoom.gameState;
+      if (cur.phase !== 'TEAM_VOTE_REVEAL') return;
+      if (cur.teamVoteRevealAcks?.[p.id]) return;
+      try {
+        const res = roomManager.handleQuestAction({ roomId, socketId: p.id, actionType: 'ACK_TEAM_VOTE_REVEAL', payload: {} });
+        if (res) {
+          broadcast(roomId);
+          handleQuestEffects({ roomManager, roomId, effects: res.effects, broadcast, dispatchInternal });
+        }
+      } catch (e) { console.warn('[bot ack team reveal] ', e.message); }
+    }, d);
+  });
+}
+
+function scheduleBotQuestRevealAcks({ roomManager, roomId, broadcast, dispatchInternal }) {
+  const room = roomManager.get(roomId);
+  if (!room || !room.gameState) return;
+  const gs = room.gameState;
+  gs.players.forEach((p, idx) => {
+    if (!p.isBot) return;
+    const d = 500 + idx * 200 + Math.random() * 800;
+    setTimeout(() => {
+      const curRoom = roomManager.get(roomId);
+      if (!curRoom || !curRoom.gameState) return;
+      const cur = curRoom.gameState;
+      if (cur.phase !== 'QUEST_REVEAL') return;
+      if (cur.questRevealAcks?.[p.id]) return;
+      try {
+        const res = roomManager.handleQuestAction({ roomId, socketId: p.id, actionType: 'ACK_QUEST_REVEAL', payload: {} });
+        if (res) {
+          broadcast(roomId);
+          handleQuestEffects({ roomManager, roomId, effects: res.effects, broadcast, dispatchInternal });
+        }
+      } catch (e) { console.warn('[bot ack quest reveal] ', e.message); }
     }, d);
   });
 }

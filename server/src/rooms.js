@@ -695,10 +695,25 @@ export class RoomManager {
       case 'ASSASSINATE': {
         const targetId = payload?.targetId;
         if (!targetId) throw new Error("targetId required");
-        // Verify requester is Assassin (check role)
         const me = gs.players.find(p => p.id === socketId);
         if (!me || me.role !== 'ASSASSIN') throw new Error("Only the Assassin may assassinate");
         action = { type: 'ASSASSINATE', payload: { targetId } };
+        break;
+      }
+      case 'ACK_TEAM_VOTE_REVEAL': {
+        action = { type: 'ACK_TEAM_VOTE_REVEAL', payload: { playerId: socketId } };
+        break;
+      }
+      case 'ACK_QUEST_REVEAL': {
+        action = { type: 'ACK_QUEST_REVEAL', payload: { playerId: socketId } };
+        break;
+      }
+      case 'RESOLVE_TEAM_VOTE': {
+        action = { type: 'RESOLVE_TEAM_VOTE' };
+        break;
+      }
+      case 'RESOLVE_QUEST': {
+        action = { type: 'RESOLVE_QUEST' };
         break;
       }
       default:

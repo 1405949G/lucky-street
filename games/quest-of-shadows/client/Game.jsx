@@ -296,16 +296,26 @@ export default function QuestGame({ roomId, isHost, isSpectator }) {
             const approve = Object.values(votes).filter(v=>v==='APPROVE').length;
             const reject = Object.values(votes).length - approve;
             const passed = approve > reject;
+            const ackCount = pub.teamVoteRevealAckCount || 0;
+            const total = pub.players.length;
+            const hasAcked = !!pub.teamVoteRevealAcks?.[myId];
             return (
               <>
                 <h3 className={`font-black text-lg ${passed?'text-emerald-300':'text-rose-300'}`}>{passed?'Approved':'Rejected'} <span className="text-sm font-bold text-white/60">({approve}–{reject})</span></h3>
                 <div className="mt-3 space-y-1 max-w-[320px] mx-auto text-left">
                   {pub.players.map(p=>{
                     const v = votes[p.id];
-                    return <div key={p.id} className={`flex justify-between rounded-xl px-3 py-2 border text-sm ${v==='APPROVE'?'bg-emerald-500/15 border-emerald-400/30 text-emerald-300':'bg-rose-500/15 border-rose-400/30 text-rose-300'}`}><span className="font-bold text-white">{p.name}{p.id===myId?' YOU':''}</span><span className="font-black">{v||'—'}</span></div>;
+                    const acked = !!pub.teamVoteRevealAcks?.[p.id];
+                    return <div key={p.id} className={`flex justify-between rounded-xl px-3 py-2 border text-sm ${v==='APPROVE'?'bg-emerald-500/15 border-emerald-400/30 text-emerald-300':'bg-rose-500/15 border-rose-400/30 text-rose-300'}`}><span className="font-bold text-white flex items-center gap-1">{p.name}{p.id===myId?' YOU':''} {acked && <span className="text-[10px] text-emerald-300">✓</span>}</span><span className="font-black">{v||'—'}</span></div>;
                   })}
                 </div>
-                <p className="text-xs text-white/40 mt-3">Resolving…</p>
+                {isSpectator ? (
+                  <div className="mt-4 py-3 rounded-full bg-white/5 text-white/40 font-bold">Spectating… {ackCount}/{total} ready</div>
+                ) : hasAcked ? (
+                  <div className="mt-4 py-3 rounded-full bg-white/10 border border-white/15 text-white/60 font-bold">Waiting for others… {ackCount}/{total}</div>
+                ) : (
+                  <button onClick={()=>emitAction('ACK_TEAM_VOTE_REVEAL', {})} disabled={actionLoading} className="mt-4 w-full py-3 rounded-full bg-[#f3ecd8] hover:bg-white text-[#0e2533] font-extrabold">Continue ({ackCount}/{total})</button>
+                )}
               </>
             );
           })()}
@@ -353,6 +363,9 @@ export default function QuestGame({ roomId, isHost, isSpectator }) {
             const q = pub.quests[questIdx] || pub.quests[questIdx-1];
             const isSuccess = q?.status==='SUCCESS';
             const votes = q?.votesShuffled || [];
+            const ackCount = pub.questRevealAckCount || 0;
+            const total = pub.players.length;
+            const hasAcked = !!pub.questRevealAcks?.[myId];
             return (
               <>
                 <div className="flex justify-center gap-2 mt-3 flex-wrap">
@@ -360,6 +373,13 @@ export default function QuestGame({ roomId, isHost, isSpectator }) {
                 </div>
                 <h3 className={`font-black text-lg mt-3 ${isSuccess?'text-emerald-300':'text-rose-300'}`}>{isSuccess?'The quest holds':'The quest fails'}</h3>
                 <p className="text-xs text-white/50">{q?.teamIds?.length||0} on quest • {q?.failCount ?? '?'} fail • {isSuccess?'Good holds':'Evil strikes'}</p>
+                {isSpectator ? (
+                  <div className="mt-4 py-3 rounded-full bg-white/5 text-white/40 font-bold">Spectating… {ackCount}/{total}</div>
+                ) : hasAcked ? (
+                  <div className="mt-4 py-3 rounded-full bg-white/10 border border-white/15 text-white/60 font-bold">Waiting… {ackCount}/{total}</div>
+                ) : (
+                  <button onClick={()=>emitAction('ACK_QUEST_REVEAL', {})} disabled={actionLoading} className="mt-4 w-full py-3 rounded-full bg-[#f3ecd8] hover:bg-white text-[#0e2533] font-extrabold">Continue ({ackCount}/{total})</button>
+                )}
               </>
             );
           })()}

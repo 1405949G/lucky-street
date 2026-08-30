@@ -52,6 +52,8 @@ export function createInitialState() {
     assassination: Object.freeze({ targetId: null, success: null }),
     extraRoles: Object.freeze({ percival: false, morgana: false, mordred: false, oberon: false }), // for UI + replays
     roomCode: null, // e.g., 'EQKH' — persisted for distributed play
+    teamVoteRevealAcks: Object.freeze({}), // {playerId: true} for Continue in TEAM_VOTE_REVEAL
+    questRevealAcks: Object.freeze({}), // {playerId: true} for Continue in QUEST_REVEAL
   });
 }
 
@@ -179,6 +181,10 @@ export function getPublicState(state) {
     voteGeneration: state.voteGeneration,
     extraRoles: state.extraRoles,
     roomCode: state.roomCode,
+    teamVoteRevealAcks: state.teamVoteRevealAcks,
+    teamVoteRevealAckCount: Object.keys(state.teamVoteRevealAcks || {}).length,
+    questRevealAcks: state.questRevealAcks,
+    questRevealAckCount: Object.keys(state.questRevealAcks || {}).length,
   });
 }
 
@@ -432,13 +438,14 @@ export function reducer(state, action) {
 
       const effects = [];
       if (allVoted) {
-        // Auto-advance to reveal phase (atomic transition — D2)
         newState = {
           ...newState,
           phase: PHASES.TEAM_VOTE_REVEAL,
-          phaseLock: true,
+          proposal: Object.freeze({ ...newState.proposal, revealed: true }),
+          teamVoteRevealAcks: Object.freeze({}),
+          phaseLock: false,
         };
-        effects.push({ type: 'SCHEDULE_TEAM_VOTE_RESOLVE', ms: 1400, generation: state.voteGeneration });
+        effects.push({ type: 'ENTER_TEAM_VOTE_REVEAL' });
       }
       return { state: Object.freeze(newState), effects: Object.freeze(effects) };
     }
@@ -449,19 +456,19 @@ export function reducer(state, action) {
       // Fill missing votes randomly (should be rare)
       const missing = state.players.filter(p => !state.proposal.votes[p.id]);
       if (missing.length === 0) {
-        // Already all voted — just advance
-        const newState = { ...state, phase: PHASES.TEAM_VOTE_REVEAL, phaseLock: true };
-        return { state: Object.freeze(newState), effects: Object.freeze([{ type: 'SCHEDULE_TEAM_VOTE_RESOLVE', ms: 600 }]) };
+        const newState = { ...state, phase: PHASES.TEAM_VOTE_REVEAL, proposal: Object.freeze({ ...state.proposal, revealed: true }), teamVoteRevealAcks: Object.freeze({}), phaseLock: false };
+        return { state: Object.freeze(newState), effects: Object.freeze([{ type: 'ENTER_TEAM_VOTE_REVEAL' }]) };
       }
       const filled = { ...state.proposal.votes };
       for (const p of missing) filled[p.id] = Math.random() > 0.5 ? 'APPROVE' : 'REJECT';
       const newState = {
         ...state,
-        proposal: Object.freeze({ ...state.proposal, votes: Object.freeze(filled) }),
+        proposal: Object.freeze({ ...state.proposal, votes: Object.freeze(filled), revealed: true }),
         phase: PHASES.TEAM_VOTE_REVEAL,
-        phaseLock: true,
+        teamVoteRevealAcks: Object.freeze({}),
+        phaseLock: false,
       };
-      return { state: Object.freeze(newState), effects: Object.freeze([{ type: 'SCHEDULE_TEAM_VOTE_RESOLVE', ms: 600 }]) };
+      return { state: Object.freeze(newState), effects: Object.freeze([{ type: 'ENTER_TEAM_VOTE_REVEAL' }]) };
     }
 
     case 'RESOLVE_TEAM_VOTE': {
@@ -482,6 +489,7 @@ export function reducer(state, action) {
           phase: PHASES.QUEST_VOTE,
           proposal: Object.freeze({ ...state.proposal, result: 'APPROVED', revealed: true }),
           questVotes: Object.freeze({}),
+          teamVoteRevealAcks: Object.freeze({}),
           phaseLock: false,
           log: appendLog(state.log, 'VOTE', `Team approved ${voteStr}. Quest team: ${teamNames}. Quest voting begins.`),
         };
@@ -497,6 +505,7 @@ export function reducer(state, action) {
             phase: PHASES.GAME_OVER,
             winner: ALLEGIANCE.EVIL,
             winReason: 'TRACKER',
+            teamVoteRevealAcks: Object.freeze({}),
             phaseLock: false,
             log: appendLog(state.log, 'VOTE', `Team rejected ${voteStr}. 5th rejection — Evil wins by deadlock!`),
           };
@@ -511,6 +520,7 @@ export function reducer(state, action) {
           leaderIndex: nextLeader,
           proposal: Object.freeze({ teamIds: [], votes: Object.freeze({}), result: 'REJECTED', revealed: true }),
           phase: PHASES.TEAM_PROPOSAL,
+          teamVoteRevealAcks: Object.freeze({}),
           phaseLock: false,
           log: appendLog(state.log, 'VOTE', `Team rejected ${voteStr} (${nextTracker}/5). Leader → ${leaderName}.`),
         };
@@ -541,8 +551,8 @@ export function reducer(state, action) {
       };
       const effects = [];
       if (allVoted) {
-        newState = { ...newState, phase: PHASES.QUEST_REVEAL, phaseLock: true };
-        effects.push({ type: 'SCHEDULE_QUEST_RESOLVE', ms: 1600 });
+        newState = { ...newState, phase: PHASES.QUEST_REVEAL, questRevealAcks: Object.freeze({}), phaseLock: false };
+        effects.push({ type: 'ENTER_QUEST_REVEAL' });
       }
       return { state: Object.freeze(newState), effects: Object.freeze(effects) };
     }
@@ -553,16 +563,16 @@ export function reducer(state, action) {
       const filled = { ...state.questVotes };
       for (const id of missing) {
         const p = state.players.find(x => x.id === id);
-        // Good must Success, Evil random
         filled[id] = p.allegiance === ALLEGIANCE.GOOD ? 'SUCCESS' : (Math.random() > 0.5 ? 'FAIL' : 'SUCCESS');
       }
       const newState = {
         ...state,
         questVotes: Object.freeze(filled),
         phase: PHASES.QUEST_REVEAL,
-        phaseLock: true,
+        questRevealAcks: Object.freeze({}),
+        phaseLock: false,
       };
-      return { state: Object.freeze(newState), effects: Object.freeze([{ type: 'SCHEDULE_QUEST_RESOLVE', ms: 600 }]) };
+      return { state: Object.freeze(newState), effects: Object.freeze([{ type: 'ENTER_QUEST_REVEAL' }]) };
     }
 
     case 'RESOLVE_QUEST': {
@@ -618,9 +628,10 @@ export function reducer(state, action) {
       let newState = {
         ...state,
         quests: Object.freeze(newQuests),
-        proposalTracker: 0, // reset tracker after quest resolves (D6 correct timing)
+        proposalTracker: 0,
         questVotes: Object.freeze({}),
         proposal: Object.freeze({ teamIds: [], votes: Object.freeze({}), result: null, revealed: false }),
+        questRevealAcks: Object.freeze({}),
         phaseLock: false,
         log: appendLog(state.log, success ? 'QUEST_SUCCESS' : 'QUEST_FAIL', resultText),
       };
@@ -656,6 +667,40 @@ export function reducer(state, action) {
         };
         return { state: Object.freeze(newState), effects: Object.freeze([{ type: 'ENTER_TEAM_PROPOSAL' }]) };
       }
+      }
+
+    case 'ACK_TEAM_VOTE_REVEAL': {
+      assertPhase(state, [PHASES.TEAM_VOTE_REVEAL]);
+      const { playerId } = action.payload || {};
+      assertPlayerExists(state, playerId);
+      if (state.teamVoteRevealAcks[playerId]) return { state, effects: Object.freeze([]) };
+      const newAcks = Object.freeze({ ...state.teamVoteRevealAcks, [playerId]: true });
+      const allAcked = Object.keys(newAcks).length === state.players.length;
+      let newState = {
+        ...state,
+        teamVoteRevealAcks: newAcks,
+      };
+      if (allAcked) {
+        return reducer(newState, { type: 'RESOLVE_TEAM_VOTE' });
+      }
+      return { state: Object.freeze(newState), effects: Object.freeze([]) };
+    }
+
+    case 'ACK_QUEST_REVEAL': {
+      assertPhase(state, [PHASES.QUEST_REVEAL]);
+      const { playerId } = action.payload || {};
+      assertPlayerExists(state, playerId);
+      if (state.questRevealAcks[playerId]) return { state, effects: Object.freeze([]) };
+      const newAcks = Object.freeze({ ...state.questRevealAcks, [playerId]: true });
+      const allAcked = Object.keys(newAcks).length === state.players.length;
+      let newState = {
+        ...state,
+        questRevealAcks: newAcks,
+      };
+      if (allAcked) {
+        return reducer(newState, { type: 'RESOLVE_QUEST' });
+      }
+      return { state: Object.freeze(newState), effects: Object.freeze([]) };
     }
 
     // ——— ASSASSINATION ———
