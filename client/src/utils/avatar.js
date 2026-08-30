@@ -9,8 +9,9 @@ export const PALETTE = [
   "#0ea5e9", "#a855f7"
 ];
 
-// Compress to ~256x256 JPEG ~0.75 quality — keeps avatar under ~80KB and instant over WebSocket
-function compressImage(file, maxSize = 256, quality = 0.75) {
+// Compress to ~10KB target — tiny, instant over WebSocket / DO, no "Checking..." stall
+// We shrink to 96-128px and JPEG 0.5-0.6, iterating until base64 < 15KB (~10KB binary)
+function compressImage(file, maxSize = 128, quality = 0.55) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
@@ -18,15 +19,14 @@ function compressImage(file, maxSize = 256, quality = 0.75) {
       URL.revokeObjectURL(url);
       let { width, height } = img;
       const scale = Math.min(1, maxSize / Math.max(width, height));
-      width = Math.round(width * scale);
-      height = Math.round(height * scale);
+      width = Math.max(1, Math.round(width * scale));
+      height = Math.max(1, Math.round(height * scale));
 
       const canvas = document.createElement("canvas");
       canvas.width = width;
       canvas.height = height;
       const ctx = canvas.getContext("2d");
       if (!ctx) return reject(new Error("Canvas not supported"));
-      // fill white for JPEG (transparent PNG → white)
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, width, height);
       ctx.drawImage(img, 0, 0, width, height);
@@ -45,25 +45,42 @@ function compressImage(file, maxSize = 256, quality = 0.75) {
   });
 }
 
+async function toTargetSize(file) {
+  // Try progressively smaller/ lower quality until < ~14KB base64 (~10KB binary) or lowest quality reached
+  const attempts = [
+    { size: 128, q: 0.55 },
+    { size: 112, q: 0.5 },
+    { size: 96, q: 0.5 },
+    { size: 80, q: 0.45 },
+  ];
+  for (const { size, q } of attempts) {
+    const dataUrl = await compressImage(file, size, q);
+    // dataUrl length includes "data:image/jpeg;base64," (~23 chars) + base64
+    if (dataUrl.length < 14 * 1024) return dataUrl;
+    // if still too big, try next smaller attempt
+    // keep last as fallback
+    if (size === 80) return dataUrl;
+  }
+  // fallback: return smallest
+  return compressImage(file, 80, 0.45);
+}
+
 export function fileToBase64(file) {
   return new Promise(async (resolve, reject) => {
     if (!file) return reject(new Error("No file"));
     if (!file.type.startsWith("image/")) return reject(new Error("Please upload an image"));
-    // Early hard limit — even compressed, >5MB source is excessive
     if (file.size > 5 * 1024 * 1024) return reject(new Error("Image too large — please pick a smaller photo"));
 
     try {
-      // Always compress for consistency and to avoid "Checking..." stuck with large base64
-      const compressed = await compressImage(file, 256, 0.75);
-      // Safety: if still >120KB (base64 length), re-compress more aggressively
-      if (compressed.length > 120 * 1024) {
-        const recompressed = await compressImage(file, 192, 0.6);
-        resolve(recompressed);
+      const compressed = await toTargetSize(file);
+      // Final safety: if somehow still >14KB (shouldn't with 80px), force smallest
+      if (compressed.length > 14 * 1024) {
+        const tiny = await compressImage(file, 64, 0.4);
+        resolve(tiny);
       } else {
         resolve(compressed);
       }
     } catch (e) {
-      // Fallback to raw FileReader if canvas fails
       const reader = new FileReader();
       reader.onload = () => resolve(String(reader.result));
       reader.onerror = () => reject(new Error("Failed to read file"));
