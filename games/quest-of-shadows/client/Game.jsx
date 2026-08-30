@@ -485,8 +485,16 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
           <div className="mt-4 flex gap-2">
             {isHost ? <button onClick={()=>{
               if (!socket) return;
-              socket.emit("game:reset", { roomId }, (res)=>{ if(!res?.ok) showToast(res?.error||'Reset failed'); else showToast('Game reset — back to lobby'); });
-            }} className="flex-1 py-3 rounded-full bg-[#f3ecd8] hover:bg-white text-[#0e2533] font-extrabold">Play Again / Back to Lobby</button> : <div className="flex-1 py-3 rounded-full bg-white/5 text-white/40 font-bold text-center">Waiting for host to reset…</div>}
+              socket.emit("game:reset", { roomId }, (res)=>{
+                if(!res?.ok) showToast(res?.error||'Reset failed');
+                else {
+                  showToast('Game reset — back to lobby');
+                  // Ensure UI clears even if broadcast missed
+                  setPub(null); setPriv(null);
+                  setTimeout(()=> window.location.reload(), 800);
+                }
+              });
+            }} className="flex-1 py-3 rounded-full bg-amber-400 hover:bg-amber-300 text-[#0e2533] font-extrabold shadow-lg">Play Again / Back to Lobby</button> : <div className="flex-1 py-3 rounded-full bg-white/5 text-white/40 font-bold text-center">Waiting for host to reset…</div>}
           </div>
         </div>
       )}
@@ -548,7 +556,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
         </details>
       )}
 
-      {toast && <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-[#1f2937] text-white text-sm font-bold px-4 py-2.5 rounded-full shadow-xl border border-white/10 z-50">{toast}</div>}
+      {toast && <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-amber-400 text-[#0e2533] text-sm font-bold px-4 py-2.5 rounded-full shadow-xl border border-white/20 z-50">{toast}</div>}
     </div>
   );
 }

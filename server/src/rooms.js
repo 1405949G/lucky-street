@@ -652,8 +652,10 @@ export class RoomManager {
   resetQuest(roomId, requesterId) {
     const room = this.get(roomId);
     if (!room) throw new Error("Room not found");
-    if (room.hostId !== requesterId) throw new Error("Only host can reset");
     if (room.game !== "quest-of-shadows") throw new Error("Not a Quest game");
+    // Allow any player to reset when game is over, host only during active game
+    const isGameOver = room.gameState?.phase === QuestPhases.GAME_OVER;
+    if (!isGameOver && room.hostId !== requesterId) throw new Error("Only host can reset during active quest");
     room.gameState = null;
     room.gameStartedAt = null;
     room.updatedAt = Date.now();
