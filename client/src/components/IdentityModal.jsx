@@ -14,14 +14,20 @@ export default function IdentityModal({ blocking = false, onDone, title = "Welco
   const { socket, profileError } = useContext(SocketContext);
 
   const [username, setUsername] = useState(() => profile?.username || "");
-  const [avatar, setAvatar] = useState(() => profile?.avatar || PALETTE[0]);
+  const [avatar, setAvatar] = useState(() => {
+    const a = profile?.avatar || PALETTE[0];
+    return typeof a === "string" && a.startsWith("data:image") ? PALETTE[0] : a;
+  });
   const [localError, setLocalError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const timeoutRef = useRef(null);
 
   useEffect(() => {
     if (profile?.username) setUsername(profile.username);
-    if (profile?.avatar) setAvatar(profile.avatar);
+    if (profile?.avatar) {
+      const a = profile.avatar;
+      setAvatar(typeof a === "string" && a.startsWith("data:image") ? PALETTE[0] : a);
+    }
   }, [profile]);
 
   useEffect(() => {
@@ -37,14 +43,16 @@ export default function IdentityModal({ blocking = false, onDone, title = "Welco
     if (trimmed.length > 20) return setLocalError("Name is too long");
     if (!/^[\p{L}\p{N} _'\-.]+$/u.test(trimmed)) return setLocalError("Name can only use letters, numbers and - _ ' .");
 
-    // avatar size guard — compressed avatars are ~30-80KB, raw large ones could stall
-    if (typeof avatar === "string" && avatar.startsWith("data:image") && avatar.length > 200 * 1024) {
-      return setLocalError("Image is still too large — try a smaller photo or pick a colour");
-    }
-
+    // Solid colours only now — no image upload, so no size check needed
     setSubmitting(true);
 
-    const next = { username: trimmed, avatar, avatarType: avatar?.startsWith("data:") ? "image" : "color" };
+    const next = { username: trimmed, avatar, avatarType: "color" };
+
+    if (socket && !socket.connected && !socket.id) {
+      setSubmitting(false);
+      setLocalError("Not connected — please wait a moment and try again");
+      return;
+    }
 
     // Safety: if server doesn't answer in 6s, stop spinning and show friendly error
     if (timeoutRef.current) clearTimeout(timeoutRef.current);

@@ -10,7 +10,17 @@ import * as storage from "../utils/storage.js";
 export const ProfileContext = createContext(null);
 
 export function ProfileProvider({ children }) {
-  const [profile, setProfileState] = useState(() => storage.loadProfile());
+  const [profile, setProfileState] = useState(() => {
+    const p = storage.loadProfile();
+    // Migrate old image avatars (base64) to solid colour — was causing "Checking..." stalls via large WS payloads
+    if (p && typeof p.avatar === "string" && p.avatar.startsWith("data:image")) {
+      const fallback = "#f59e0b";
+      const migrated = { ...p, avatar: fallback, avatarType: "color" };
+      try { storage.saveProfile(migrated); } catch {}
+      return migrated;
+    }
+    return p;
+  });
   const [showOnboarding, setShowOnboarding] = useState(() => !storage.loadProfile());
 
   // When profile updated externally (e.g., other tab), sync

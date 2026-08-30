@@ -14,8 +14,9 @@ import AvatarPicker from "./AvatarPicker.jsx";
 import { PALETTE } from "../utils/avatar.js";
 
 function EditProfilePopup({ initialName, initialAvatar, onSave, onClose }) {
+  const normalizedAvatar = typeof initialAvatar === "string" && initialAvatar.startsWith("data:image") ? PALETTE[0] : (initialAvatar || PALETTE[0]);
   const [name, setName] = useState(initialName || "");
-  const [avatar, setAvatar] = useState(initialAvatar || PALETTE[0]);
+  const [avatar, setAvatar] = useState(normalizedAvatar);
   const [err, setErr] = useState(null);
   const [saving, setSaving] = useState(false);
 
@@ -247,7 +248,21 @@ export default function Lobby() {
     });
   }
   function handleEditSave({ name, avatar }, done) {
+    if (!socket || (!socket.connected && !socket.id)) {
+      done(false, "Not connected — please wait a moment and try again");
+      return;
+    }
+    let acked = false;
+    const t = setTimeout(() => {
+      if (!acked) {
+        acked = true;
+        done(false, "Connection slow — please try again");
+      }
+    }, 6000);
     socket.emit("profile:update", { username: name, avatar }, (res) => {
+      if (acked) return;
+      acked = true;
+      clearTimeout(t);
       if (!res?.ok) {
         done(false, res?.error || "That name is taken — try another");
         return;
@@ -257,7 +272,7 @@ export default function Lobby() {
         const p = raw ? JSON.parse(raw) : {};
         p.username = res.profile.username;
         p.avatar = res.profile.avatar;
-        p.avatarType = res.profile.avatar?.startsWith("data:") ? "image" : "color";
+        p.avatarType = "color";
         localStorage.setItem("luckyStreet:profile", JSON.stringify(p));
       } catch {}
       showToast("Profile updated");
