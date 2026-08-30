@@ -227,9 +227,9 @@ export default function Lobby({ spectate = false }) {
       <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-[#070b14]/80 backdrop-blur-md">
         <div className="w-full max-w-[380px] rounded-[24px] bg-[#142a3d] border border-white/10 p-6 text-center shadow-2xl">
           <div className="w-12 h-12 rounded-full bg-rose-500/20 border border-rose-500/30 flex items-center justify-center mx-auto text-xl">✕</div>
-          <h2 className="font-extrabold text-white text-lg mt-3">You were kicked</h2>
-          <p className="text-sm text-white/60 mt-1">The host removed you from the lobby.</p>
-          <button onClick={() => { setKickedPopup(false); navigate("/"); }} className="mt-5 w-full py-3 rounded-full bg-[#f3ecd8] hover:bg-white text-[#0e2533] font-extrabold">Back to Lobby</button>
+          <h2 className="font-extrabold text-white text-lg mt-3">You were removed</h2>
+          <p className="text-sm text-white/60 mt-1">You’re no longer in this game.</p>
+          <button onClick={() => { setKickedPopup(false); navigate("/"); }} className="mt-5 w-full py-3 rounded-full bg-[#f3ecd8] hover:bg-white text-[#0e2533] font-extrabold">Back to games</button>
         </div>
       </div>
     );
@@ -241,10 +241,10 @@ export default function Lobby({ spectate = false }) {
       <div className="max-w-[520px] mx-auto px-4 py-10">
         <div className="rounded-2xl bg-rose-500/10 border border-rose-500/20 p-6 text-center">
           <p className="font-bold text-rose-300">{error}</p>
-          <p className="text-xs text-white/50 mt-2">{isTransient ? "Retrying automatically — or tap Retry." : "Check the code and try again."}</p>
+          <p className="text-xs text-white/50 mt-2">{isTransient ? "Trying again — tap Retry if needed." : "Double-check the code and try again."}</p>
           <div className="mt-4 flex gap-2 justify-center">
-            {isTransient && <button onClick={() => { setError(null); socket?._luckyAttemptJoin?.(); if (!room) socket?.emit("room:sync", { roomId: id }, (r)=>{ if(r?.ok) setRoom(r.room); }); }} className="px-5 py-2 rounded-full bg-amber-400 text-[#0e2533] font-bold">Retry</button>}
-            <button onClick={() => navigate("/")} className="px-5 py-2 rounded-full bg-white text-[#0e2533] font-bold">Back to Lobbies</button>
+            {isTransient && <button onClick={() => { setError(null); socket?._luckyAttemptJoin?.(); if (!room) socket?.emit("room:sync", { roomId: id }, (r)=>{ if(r?.ok) setRoom(r.room); }); }} className="px-5 py-2 rounded-full bg-amber-400 text-[#0e2533] font-bold">Try again</button>}
+            <button onClick={() => navigate("/")} className="px-5 py-2 rounded-full bg-white text-[#0e2533] font-bold">Back to games</button>
           </div>
           <a href="/admin" className="hidden">Admin</a>
         </div>
@@ -256,7 +256,7 @@ export default function Lobby({ spectate = false }) {
     return (
       <div className="max-w-[520px] mx-auto px-4 py-16 text-center">
         <div className="w-10 h-10 border-2 border-white/20 border-t-amber-400 rounded-full animate-spin mx-auto"></div>
-        <p className="text-sm text-white/50 mt-3">Loading lobby {id}…</p>
+        <p className="text-sm text-white/50 mt-3">Joining {id}…</p>
       </div>
     );
   }
@@ -446,21 +446,21 @@ export default function Lobby({ spectate = false }) {
               <div className="relative">
                 <p className="text-xs tracking-widest font-bold text-white/50">JOIN CODE</p>
                 <div className="font-display font-black text-[36px] tracking-[0.18em] text-[#f3ecd8]" style={{ textShadow: "0 2px 0 rgba(0,0,0,0.25)" }}>{room.id}</div>
-                <p className="text-xs text-white/70 mt-1">Share: <span className="font-mono bg-white/10 px-1.5 py-0.5 rounded whitespace-nowrap">{window.location.origin}/room/{room.id}</span></p>
-                <p className="text-xs text-white/40 mt-1">Players look here — answers on their phones.</p>
-                <div className="mt-3 flex justify-center gap-2 flex-wrap">
-                  <button onClick={() => { navigator.clipboard?.writeText(`${window.location.origin}/room/${room.id}`); showToast("Invite link copied"); }} className="px-4 py-2 rounded-full bg-[#f3ecd8] hover:bg-white text-[#0e2533] text-xs font-extrabold">Copy Invite Link</button>
-                  <span className="px-3 py-2 rounded-full bg-white/10 border border-white/10 text-xs font-bold text-white/70">{room.slotsText}</span>
-                </div>
+              <p className="text-xs text-white/70 mt-1">Share: <span className="font-mono bg-white/10 px-1.5 py-0.5 rounded whitespace-nowrap">{window.location.origin}/room/{room.id}</span></p>
+              <p className="text-xs text-white/40 mt-1">Everyone look here!</p>
+              <div className="mt-3 flex justify-center gap-2 flex-wrap">
+                <button onClick={() => { navigator.clipboard?.writeText(`${window.location.origin}/room/${room.id}`); showToast("Link copied!"); }} className="px-4 py-2 rounded-full bg-[#f3ecd8] hover:bg-white text-[#0e2533] text-xs font-extrabold">Copy link</button>
+                <span className="px-3 py-2 rounded-full bg-white/10 border border-white/10 text-xs font-bold text-white/70">{room.slotsText}</span>
+              </div>
               </div>
             </div>
           )}
 
       {!hasGameState && (
         <>
-          <div className="mt-6">
-            <h3 className="font-extrabold text-white text-sm">Players & Bots</h3>
-            <p className="text-xs text-white/40">Name and avatar are locked in the room — change them from the main menu.</p>
+      <div className="mt-6">
+        <h3 className="font-extrabold text-white text-sm">Who’s here</h3>
+        <p className="text-xs text-white/40">Change your name and picture from the main screen.</p>
         <div className="mt-3 flex flex-wrap gap-4">
           {room.players.map(p => {
             const isMe = p.id === myId;
@@ -525,19 +525,18 @@ export default function Lobby({ spectate = false }) {
           ))}
         </div>
       </div>
-      {/* Spectators — general view, no name required, count only */}
       <div className="mt-4 rounded-2xl bg-white/[0.04] border border-white/10 p-3">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-white/60">Spectators • {room.spectatorCount || 0}</span>
+          <span className="text-xs font-bold text-white/60">Watching • {room.spectatorCount || 0}</span>
           <div className="flex gap-2">
-            {isPlayer && <button disabled={room.players.length === 1} onClick={handleSpectate} title={room.players.length === 1 ? "Need another player before spectating" : ""} className={`px-3 py-1 rounded-full text-xs ${room.players.length === 1 ? "bg-white/5 text-white/30 cursor-not-allowed" : "bg-white/10 hover:bg-white/15 text-white"}`}>Spectate</button>}
-            {isSpectator && <button onClick={handleJoinAsPlayer} className="px-3 py-1 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold">Join as player</button>}
-            {!isPlayer && !isSpectator && <><button onClick={handleSpectate} className="px-3 py-1 rounded-full bg-white/10 hover:bg-white/15 text-white text-xs">Spectate</button><button onClick={handleJoinAsPlayer} className="px-3 py-1 rounded-full bg-[#f3ecd8] hover:bg-white text-[#0e2533] text-xs font-bold">Join</button></>}
+            {isPlayer && <button disabled={room.players.length === 1} onClick={handleSpectate} title={room.players.length === 1 ? "You’re the only one here" : ""} className={`px-3 py-1 rounded-full text-xs ${room.players.length === 1 ? "bg-white/5 text-white/30 cursor-not-allowed" : "bg-white/10 hover:bg-white/15 text-white"}`}>Watch</button>}
+            {isSpectator && <button onClick={handleJoinAsPlayer} className="px-3 py-1 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold">Join to play</button>}
+            {!isPlayer && !isSpectator && <><button onClick={handleSpectate} className="px-3 py-1 rounded-full bg-white/10 hover:bg-white/15 text-white text-xs">Watch</button><button onClick={handleJoinAsPlayer} className="px-3 py-1 rounded-full bg-[#f3ecd8] hover:bg-white text-[#0e2533] text-xs font-bold">Join</button></>}
           </div>
         </div>
-        {isSpectator && <p className="text-xs text-amber-300 mt-1">You are spectating — tap Join as player to take a slot</p>}
+        {isSpectator && <p className="text-xs text-amber-300 mt-1">You’re watching — tap Join to play</p>}
         {room.spectators?.length > 0 && <div className="mt-2 flex flex-wrap gap-2">{room.spectators.map(s=> <span key={s.id} className="px-2 py-1 rounded-full bg-white/10 border border-white/10 text-white text-xs">{s.name}</span>)}</div>}
-        {!isPlayer && !isSpectator && <p className="text-xs text-white/40 mt-1">Watch without taking a slot — or Join to play</p>}
+        {!isPlayer && !isSpectator && <p className="text-xs text-white/40 mt-1">Watch or join the game</p>}
       </div>
         </>
       )}
@@ -548,10 +547,9 @@ export default function Lobby({ spectate = false }) {
           {isQuestGame && hasGameState ? (
             <>
               <QuestGame roomId={id} isHost={isHost} isSpectator={isSpectator} hideTopAllegiance />
-              {/* Bottom centre Spectators - no button during game */}
               <div className="rounded-2xl bg-white/[0.04] border border-white/10 p-3">
                 <div className="flex items-center justify-center">
-                  <span className="text-xs font-bold text-white/60">Spectators • {room.spectatorCount || 0}</span>
+                  <span className="text-xs font-bold text-white/60">Watching • {room.spectatorCount || 0}</span>
                 </div>
                 {room.spectators?.length>0 && <div className="mt-2 flex flex-wrap gap-2 justify-center">{room.spectators.map(s=> <span key={s.id} className="px-2 py-1 rounded-full bg-white/10 border border-white/10 text-white text-xs">{s.name}</span>)}</div>}
               </div>
@@ -561,7 +559,7 @@ export default function Lobby({ spectate = false }) {
               {isQuestGame && (
                 <div className="rounded-2xl bg-[#0f2231]/80 border border-white/10 p-4">
                   <h4 className="font-bold text-white text-sm">Quest of Shadows</h4>
-                  <p className="text-xs text-white/40 mt-1">{totalPlayers} / {room.maxPlayers} players • Need {room.minPlayers} min{supportsBots ? " (bots count)" : ""} • Good vs Evil</p>
+                  <p className="text-xs text-white/40 mt-1">{totalPlayers} / {room.maxPlayers} — need {room.minPlayers} to start</p>
                   {isHost ? (
                     <>
                       <button onClick={handleStartQuest} disabled={!canStart} className={`mt-3 w-full py-3 rounded-full font-extrabold ${canStart ? "bg-[#f3ecd8] hover:bg-white text-[#0e2533]" : "bg-white/10 text-white/30 cursor-not-allowed"}`}>
@@ -570,7 +568,7 @@ export default function Lobby({ spectate = false }) {
                       {!canStart && supportsBots && <p className="text-xs text-white/30 mt-2">Add bots or wait for players to reach {room.minPlayers}.</p>}
                     </>
                   ) : (
-                    <p className="text-xs text-white/40 mt-3">{canStart ? "Host can start the quest." : `Waiting for ${room.minPlayers}+ players (have ${totalPlayers}).`}</p>
+                    <p className="text-xs text-white/40 mt-3">{canStart ? "Ready to start!" : `Need ${room.minPlayers - totalPlayers} more to start`}</p>
                   )}
                 </div>
               )}
@@ -662,12 +660,12 @@ export default function Lobby({ spectate = false }) {
       {hostActionTarget && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#070b14]/60 backdrop-blur-sm" onClick={() => setHostActionTarget(null)}>
           <div onClick={e => e.stopPropagation()} className="w-full max-w-[320px] rounded-2xl bg-[#142a3d] border border-white/10 p-5 text-center shadow-2xl">
-            <p className="text-sm text-white/60">Host actions for</p>
+            <p className="text-sm text-white/60">What to do with</p>
             <p className="font-extrabold text-white text-lg">{hostActionTarget.name}</p>
             <div className="mt-4 grid gap-2">
-              <button onClick={() => handleTransferHost(hostActionTarget.id, hostActionTarget.name)} className="w-full py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-[#0e2533] font-extrabold flex items-center justify-center gap-2">👑 Make Host</button>
-              <button onClick={() => { handleKick(hostActionTarget.id, hostActionTarget.name); setHostActionTarget(null); }} className="w-full py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold">Kick Player</button>
-              <button onClick={() => setHostActionTarget(null)} className="w-full py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold">Cancel</button>
+              <button onClick={() => handleTransferHost(hostActionTarget.id, hostActionTarget.name)} className="w-full py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-[#0e2533] font-extrabold flex items-center justify-center gap-2">👑 Make host</button>
+              <button onClick={() => { handleKick(hostActionTarget.id, hostActionTarget.name); setHostActionTarget(null); }} className="w-full py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold">Remove</button>
+              <button onClick={() => setHostActionTarget(null)} className="w-full py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold">Close</button>
             </div>
           </div>
         </div>
@@ -676,11 +674,11 @@ export default function Lobby({ spectate = false }) {
       {botConfirm && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#070b14]/60 backdrop-blur-sm" onClick={() => setBotConfirm(null)}>
           <div onClick={e => e.stopPropagation()} className="w-full max-w-[320px] rounded-2xl bg-[#142a3d] border border-white/10 p-5 text-center shadow-2xl">
-            <p className="text-sm text-white/60">Remove bot</p>
+            <p className="text-sm text-white/60">Remove</p>
             <p className="font-extrabold text-white text-lg">{botConfirm.name} 🤖</p>
             <div className="mt-4 grid gap-2">
-              <button onClick={() => handleRemoveBot(botConfirm.id, botConfirm.name)} className="w-full py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold">Remove Bot</button>
-              <button onClick={() => setBotConfirm(null)} className="w-full py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold">Cancel</button>
+              <button onClick={() => handleRemoveBot(botConfirm.id, botConfirm.name)} className="w-full py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold">Remove</button>
+              <button onClick={() => setBotConfirm(null)} className="w-full py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold">Close</button>
             </div>
           </div>
         </div>
@@ -697,22 +695,23 @@ export default function Lobby({ spectate = false }) {
               <button onClick={()=>setShowRules(false)} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/15 flex items-center justify-center text-white">✕</button>
             </div>
             {isQuestGame ? (
-              <div className="mt-4 space-y-3 text-sm text-white/70 leading-relaxed">
-                <p><span className="text-white font-bold">Goal:</span> Good needs 3 successful quests. Evil needs 3 failed quests, or 5 consecutive rejected teams, or Assassin kills Merlin after Good wins.</p>
-                <div className="grid grid-cols-2 gap-2">
+              <div className="mt-4 space-y-4 text-sm leading-relaxed">
+                <p className="text-white/80"><span className="text-white font-bold">How to win:</span> Good wins by completing 3 quests. Evil wins by failing 3 quests, blocking teams 5 times, or having the Assassin find Merlin at the end.</p>
+                <div className="grid grid-cols-2 gap-3">
                   <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3">
-                    <p className="text-xs font-bold tracking-widest text-emerald-300">GOOD</p>
-                    <p className="text-xs mt-1">Loyal, Merlin (sees Evil except Mordred), Percival (sees Merlin+Morgana)</p>
+                    <p className="text-xs font-bold tracking-widest text-emerald-300">GOOD TEAM</p>
+                    <p className="text-xs mt-1.5 text-white/70 leading-snug">• Loyal — no power<br/>• Merlin — knows Evil (except Mordred hides)<br/>• Percival — knows Merlin (but Morgana pretends)</p>
                   </div>
                   <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 p-3">
-                    <p className="text-xs font-bold tracking-widest text-rose-300">EVIL</p>
-                    <p className="text-xs mt-1">Minion, Assassin, Morgana (fools Percival), Mordred (hidden), Oberon (isolated)</p>
+                    <p className="text-xs font-bold tracking-widest text-rose-300">EVIL TEAM</p>
+                    <p className="text-xs mt-1.5 text-white/70 leading-snug">• Minion — with Evil<br/>• Assassin — hunts Merlin<br/>• Morgana — pretends to be Merlin<br/>• Mordred — hidden from Merlin<br/>• Oberon — works alone</p>
                   </div>
                 </div>
-                <p><b>Team sizes:</b> 5p [2,3,2,3,3] • 6p [2,3,4,3,4] • 7p [2,3,3,4,4] • 8-10p [3,4,4,5,5]. <span className="text-amber-200">Q4 needs 2 fails when 7+ players.</span></p>
-                <p><b>Flow:</b> Leader proposes team → All vote Approve/Reject → Majority approves → Team secretly plays Success (Good must) / Fail (Evil may). 1 Fail fails quest — except Q4 with 7+ needs 2.</p>
-                <p><b>Scoring:</b> First to 3 quest wins. 5 rejects in a row → Evil wins. If Good gets 3, Assassin guesses Merlin — correct → Evil steals win.</p>
-                <p className="text-xs text-white/40">Current: {totalPlayers}p • {['morgana','mordred','oberon'].filter(k=> !!room.gameOptions[k]).length}/{totalPlayers<=6?1:totalPlayers<=8?2:3} evil extras • Merlin+Assassin always</p>
+                <div className="rounded-xl bg-white/5 border border-white/10 p-3">
+                  <p className="text-xs font-bold text-white">How a round works</p>
+                  <p className="text-xs text-white/60 mt-1.5 leading-snug">1. Leader picks a team &nbsp;→&nbsp; 2. Everyone votes &nbsp;→&nbsp; 3. If most say yes, that team secretly picks Success or Fail. Good must pick Success. One Fail usually fails the quest — the 4th quest needs 2 fails when you have 7+ players.</p>
+                </div>
+                <p className="text-xs text-white/40">Now: {totalPlayers} players • {['morgana','mordred','oberon'].filter(k=> !!room.gameOptions[k]).length}/{totalPlayers<=6?1:totalPlayers<=8?2:3} extra Evil • Merlin + Assassin always in</p>
               </div>
             ) : (
               <div className="mt-4 space-y-3 text-sm text-white/60">

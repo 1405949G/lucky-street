@@ -38,10 +38,10 @@ export default function IdentityModal({ blocking = false, onDone, title = "Welco
     e?.preventDefault();
     setLocalError(null);
     const trimmed = username.trim();
-    if (!trimmed) return setLocalError("Please enter a name");
-    if (trimmed.length < 2) return setLocalError("Name must be at least 2 characters");
-    if (trimmed.length > 20) return setLocalError("Name is too long");
-    if (!/^[\p{L}\p{N} _'\-.]+$/u.test(trimmed)) return setLocalError("Name can only use letters, numbers and - _ ' .");
+    if (!trimmed) return setLocalError("What should we call you?");
+    if (trimmed.length < 2) return setLocalError("Name is too short");
+    if (trimmed.length > 20) return setLocalError("That name is a bit long");
+    if (!/^[\p{L}\p{N} _'\-.]+$/u.test(trimmed)) return setLocalError("Use letters, numbers and - _ ' .");
 
     const isEdit = !!profile?.username && !blocking;
     if (isEdit) {
@@ -102,7 +102,7 @@ export default function IdentityModal({ blocking = false, onDone, title = "Welco
     }
   }
 
-  const blockingNote = blocking ? "Pick a name to enter this room" : null;
+  const blockingNote = blocking ? "Choose a name to join" : null;
 
   return (
     <div className={`fixed inset-0 z-[80] flex items-center justify-center p-4 ${blocking ? "bg-[#070b14]/90 backdrop-blur-md" : "bg-[#070b14]/80 backdrop-blur-md"}`}>
@@ -113,23 +113,23 @@ export default function IdentityModal({ blocking = false, onDone, title = "Welco
           </div>
           <h2 className="font-display font-extrabold text-[20px] text-center text-[#f3ecd8] mt-3">{title}</h2>
           <p className="text-sm text-white/60 text-center mt-1">
-            Pick a name and avatar to get started.
+            Choose how you’ll appear to others.
           </p>
           {blockingNote && <p className="text-xs text-amber-200/80 text-center mt-2 font-medium">🔒 {blockingNote}</p>}
         </div>
 
         <div className="px-6 pb-6 space-y-4">
           <div>
-            <label className="text-xs font-bold tracking-widest text-white/60">USERNAME *</label>
+            <label className="text-xs font-bold tracking-widest text-white/60">YOUR NAME</label>
             <input
               value={username}
               onChange={e => setUsername(e.target.value)}
-              placeholder="e.g., LuckyCharm"
+              placeholder="e.g., Alex"
               maxLength={20}
               className="mt-1.5 w-full px-4 py-3 rounded-xl bg-white/10 border border-white/15 text-white placeholder:text-white/30 text-sm font-semibold outline-none focus:border-amber-400/60 focus:bg-white/15"
               autoFocus
             />
-            <p className="text-[11px] text-white/30 mt-1">This name is how others will see you in the lobby.</p>
+            <p className="text-[11px] text-white/30 mt-1">Others will see this.</p>
           </div>
 
           <AvatarPicker value={avatar} onChange={setAvatar} />

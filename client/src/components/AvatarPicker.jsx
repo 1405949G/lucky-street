@@ -19,8 +19,8 @@ export default function AvatarPicker({ value, onChange }) {
           <span className="text-xl font-black text-white/90">?</span>
         </div>
         <div className="flex-1">
-          <p className="text-sm font-bold text-white">Avatar</p>
-          <p className="text-xs text-white/50">Choose a colour</p>
+          <p className="text-sm font-bold text-white">Your look</p>
+          <p className="text-xs text-white/50">Pick a color</p>
         </div>
       </div>
 
@@ -38,7 +38,7 @@ export default function AvatarPicker({ value, onChange }) {
       </div>
 
       {error && <p className="text-xs text-rose-400">{error}</p>}
-      <p className="text-[11px] text-white/30">You can change this anytime.</p>
+      <p className="text-[11px] text-white/30">Change anytime.</p>
     </div>
   );
 }
