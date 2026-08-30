@@ -22,7 +22,7 @@ export default function RoomBrowser({ onJoinRoom, onCreateClick }) {
       <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
         <div>
           <h2 className="font-display font-extrabold text-[24px] text-[#f3ecd8]">Active Lobbies</h2>
-          <p className="text-sm text-white/50">Live, real-time — updates instantly via WebSockets.</p>
+          <p className="text-sm text-white/50">Find a room to join or create your own.</p>
         </div>
         <button
           onClick={onCreateClick}
@@ -61,10 +61,10 @@ export default function RoomBrowser({ onJoinRoom, onCreateClick }) {
           <div className="rounded-2xl bg-[#29546c] border border-white/10 p-5">
             <h3 className="font-extrabold text-[#f3ecd8]">How it works</h3>
             <ul className="text-sm text-white/70 mt-2 space-y-1.5 list-disc list-inside">
-              <li>Your profile is cached in <span className="font-mono bg-white/10 px-1 rounded">localStorage</span> — refresh keeps it.</li>
-              <li>Names are globally unique; server Map rejects duplicates.</li>
-              <li>Disconnect → 5 min grace → name freed (GC).</li>
-              <li>Share <span className="font-mono bg-white/10 px-1 rounded">/room/A1B2</span> links — direct join checks identity first.</li>
+              <li>Your name and avatar are saved — you’ll stay signed in when you come back.</li>
+              <li>Names must be unique — if one is taken, try another.</li>
+              <li>If you leave, your name is reserved for a few minutes.</li>
+              <li>Share your invite link with friends to play together.</li>
             </ul>
           </div>
         </div>

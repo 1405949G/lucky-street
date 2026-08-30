@@ -260,7 +260,7 @@ export default function Lobby() {
         <div className="relative">
           <div className="font-display font-black text-[36px] tracking-[0.18em] text-[#f3ecd8]" style={{ textShadow: "0 2px 0 rgba(0,0,0,0.25)" }}>{room.id}</div>
           <p className="text-xs text-white/70 mt-1">Share: <span className="font-mono bg-white/10 px-1.5 py-0.5 rounded">{window.location.origin}/room/{room.id}</span></p>
-          <p className="text-xs text-white/40 mt-1">Friends open link — if no profile, blocking setup shows before lobby.</p>
+          <p className="text-xs text-white/40 mt-1">Send this link to friends to invite them.</p>
           <div className="mt-3 flex justify-center gap-2">
             <button
               onClick={() => { navigator.clipboard?.writeText(`${window.location.origin}/room/${room.id}`); showToast("Invite link copied"); }}
@@ -274,7 +274,7 @@ export default function Lobby() {
       {/* Player grid */}
       <div className="mt-6">
         <h3 className="font-extrabold text-white text-sm">Players & Bots</h3>
-        <p className="text-xs text-white/40">Tap your avatar to rename yourself. {isHost ? "Host can add/remove/rename bots, kick players, and change game/options." : "Players can only rename themselves."}</p>
+        <p className="text-xs text-white/40">{isHost ? "You’re the host — tap your avatar to change your name, or manage bots and game settings below." : "Tap your avatar to change your name."}</p>
         <div className="mt-3 flex flex-wrap gap-3">
           {room.players.map(p => {
             const isMe = p.id === socket?.id;
@@ -345,12 +345,12 @@ export default function Lobby() {
       {/* Host bot adder */}
       {isHost ? (
         <div className="mt-5 rounded-2xl bg-[#0f2231]/80 border border-white/10 p-4">
-          <h4 className="font-bold text-white text-sm">Add AI Bots (host only)</h4>
+          <h4 className="font-bold text-white text-sm">Add Bots</h4>
           <div className="mt-2 flex gap-2 items-center">
             <input
               value={botName}
               onChange={e => setBotName(e.target.value)}
-              placeholder="Bot name (custom)"
+              placeholder="Bot name"
               maxLength={20}
               className="flex-1 px-3 py-2.5 rounded-xl bg-white/10 border border-white/15 text-white placeholder:text-white/30 text-sm outline-none"
             />
@@ -359,13 +359,13 @@ export default function Lobby() {
                 <button key={c} onClick={() => setBotColor(c)} className={`w-7 h-7 rounded-full border-2 ${botColor===c ? "border-white" : "border-white/20"}`} style={{ background: c }} />
               ))}
             </div>
-            <button onClick={handleAddBot} className="px-4 py-2.5 rounded-xl bg-[#f3ecd8] hover:bg-white text-[#0e2533] text-sm font-bold">Add Bot</button>
+            <button onClick={handleAddBot} className="px-4 py-2.5 rounded-xl bg-[#f3ecd8] hover:bg-white text-[#0e2533] text-sm font-bold">Add</button>
           </div>
-          <p className="text-xs text-white/30 mt-1">{room.players.length + room.bots.length} / {room.maxPlayers} — bots count toward slots. Name must be unique in room.</p>
+          <p className="text-xs text-white/30 mt-1">{room.players.length + room.bots.length} / {room.maxPlayers} players — bots take a spot.</p>
         </div>
       ) : (
         <div className="mt-5 rounded-xl bg-white/5 border border-white/10 p-3 text-center">
-          <p className="text-xs text-white/50">Only host can manage bots • you can still rename yourself</p>
+          <p className="text-xs text-white/50">Only the host can add bots</p>
         </div>
       )}
 
@@ -404,7 +404,7 @@ export default function Lobby() {
             ) : (
               <span className="text-sm font-bold text-white">{room.maxPlayers}</span>
             )}
-            <span className="text-xs text-white/30">autofilled on game change; host can overwrite</span>
+            <span className="text-xs text-white/30">Set automatically — host can change it</span>
           </div>
 
           {(game.optionSchema || []).map(opt => (
@@ -456,14 +456,14 @@ export default function Lobby() {
         </div>
 
         <p className="text-xs text-white/30 mt-3">
-          {isHost ? "Changes sync instantly to all clients in this room (global visibility)." : "View-only — host changes sync live; you see them instantly."}
+          {isHost ? "Changes show up for everyone right away." : "Only the host can change these settings."}
         </p>
       </div>
 
       {/* Self rename card */}
       <div className="mt-5 rounded-2xl bg-[#0f2231]/60 border border-white/10 p-4">
-        <h4 className="font-bold text-white text-sm">Your Identity</h4>
-        <p className="text-xs text-white/40">You can modify your own username anytime (global uniqueness enforced). Host can also rename bots and themselves.</p>
+        <h4 className="font-bold text-white text-sm">Your Name</h4>
+        <p className="text-xs text-white/40">Change how others see you.</p>
         <div className="mt-2 flex gap-2">
           <input
             value={selfName}

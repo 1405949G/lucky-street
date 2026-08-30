@@ -83,7 +83,7 @@ export default function CreateRoomModal({ onClose, onCreated }) {
               placeholder="e.g., 6"
               className="mt-1.5 w-full px-3.5 py-3 rounded-xl bg-white/10 border border-white/15 text-white placeholder:text-white/30 text-sm font-semibold outline-none focus:border-amber-400/60"
             />
-            <p className="text-[11px] text-white/30 mt-1">Autofilled to <span className="text-white/60 font-bold">{selectedGame?.defaultMaxPlayers}</span> for {selectedGame?.label}; host can overwrite.</p>
+            <p className="text-[11px] text-white/30 mt-1">Set to <span className="text-white/60 font-bold">{selectedGame?.defaultMaxPlayers}</span> for {selectedGame?.label} — you can change it.</p>
           </div>
 
           <div>
@@ -91,16 +91,16 @@ export default function CreateRoomModal({ onClose, onCreated }) {
             <input
               value={password}
               onChange={e => setPassword(e.target.value)}
-              placeholder="Leave blank for open room (🔓) — set to lock (🔒)"
+              placeholder="Optional"
               type="password"
               className="mt-1.5 w-full px-3.5 py-3 rounded-xl bg-white/10 border border-white/15 text-white placeholder:text-white/30 text-sm outline-none focus:border-amber-400/60"
             />
-            <p className="text-[11px] text-white/30 mt-1">{password ? "🔒 Private — players will be prompted for password" : "🔓 Public — anyone with link can join"}</p>
+            <p className="text-[11px] text-white/30 mt-1">{password ? "🔒 Private — friends will need the password to join" : "🔓 Open — anyone with the link can join"}</p>
           </div>
 
           {selectedGame?.optionSchema?.length > 0 && (
             <div className="rounded-xl bg-white/5 border border-white/10 p-3">
-              <p className="text-xs font-bold text-white/60">Game-specific options are configured inside the lobby after creation (host sliders/toggles).</p>
+              <p className="text-xs font-bold text-white/60">You can adjust game options in the lobby after creating.</p>
             </div>
           )}
 
@@ -112,7 +112,7 @@ export default function CreateRoomModal({ onClose, onCreated }) {
             className="w-full py-3.5 rounded-full bg-[#f3ecd8] hover:bg-white disabled:opacity-50 text-[#0e2533] font-extrabold shadow-md"
           >{submitting ? "Creating…" : "Create Room → Generate 4-char ID"}</button>
 
-          <p className="text-[11px] text-white/30 text-center">Room ID is a random 4-char alphanumeric (e.g., 7F2A) — shareable via URL <span className="font-mono">/room/XXXX</span></p>
+          <p className="text-[11px] text-white/30 text-center">You’ll get a short code to share with friends.</p>
         </div>
       </form>
     </div>
