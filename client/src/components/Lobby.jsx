@@ -248,36 +248,27 @@ export default function Lobby() {
     });
   }
   function handleEditSave({ name, avatar }, done) {
-    if (!socket || (!socket.connected && !socket.id)) {
-      done(false, "Not connected — please wait a moment and try again");
-      return;
+    // Optimistic: close popup immediately, don't get stuck on "Saving..."
+    // Keep solid colours only — avatar is always a hex colour now
+    const color = typeof avatar === "string" && avatar.startsWith("#") ? avatar : PALETTE[0];
+    try {
+      const raw = localStorage.getItem("luckyStreet:profile");
+      const p = raw ? JSON.parse(raw) : {};
+      p.username = name;
+      p.avatar = color;
+      p.avatarType = "color";
+      localStorage.setItem("luckyStreet:profile", JSON.stringify(p));
+    } catch {}
+    done(true);
+    showToast("Profile updated");
+    // Sync to server in background — if it fails (name taken), show error but don't block UI
+    if (socket) {
+      socket.emit("profile:update", { username: name, avatar: color }, (res) => {
+        if (!res?.ok) {
+          showToast(res?.error || "That name is taken — try another");
+        }
+      });
     }
-    let acked = false;
-    const t = setTimeout(() => {
-      if (!acked) {
-        acked = true;
-        done(false, "Connection slow — please try again");
-      }
-    }, 6000);
-    socket.emit("profile:update", { username: name, avatar }, (res) => {
-      if (acked) return;
-      acked = true;
-      clearTimeout(t);
-      if (!res?.ok) {
-        done(false, res?.error || "That name is taken — try another");
-        return;
-      }
-      try {
-        const raw = localStorage.getItem("luckyStreet:profile");
-        const p = raw ? JSON.parse(raw) : {};
-        p.username = res.profile.username;
-        p.avatar = res.profile.avatar;
-        p.avatarType = "color";
-        localStorage.setItem("luckyStreet:profile", JSON.stringify(p));
-      } catch {}
-      showToast("Profile updated");
-      done(true);
-    });
   }
   function handleLeave() {
     let left = false;
