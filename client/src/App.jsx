@@ -33,6 +33,11 @@ function MainPage() {
         navigate(`/room/${id}`);
       } else {
         const msg = res?.error || "";
+        if (/Username already in this room/i.test(msg)) {
+          // Same name already in room (e.g., same user second tab) — open as spectator instead
+          navigate(`/room/${id}/spectate`);
+          return;
+        }
         const transient = /Register a profile first|already taken|timeout|missing identity/i.test(msg);
         if (transient && retry < 4) {
           setTimeout(() => handleJoinRoom(room, retry + 1), 400 * Math.pow(1.5, retry));

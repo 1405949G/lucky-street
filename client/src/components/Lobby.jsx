@@ -39,10 +39,6 @@ export default function Lobby({ spectate = false }) {
   useEffect(() => {
     if (!socket) return;
     if (!connected) return;
-    if (!spectate) {
-      if (!hasProfile) return;
-      if (profileStatus !== "ok") return;
-    }
 
     function onLobbyUpdate(full) {
       if (full.id !== id) return;
@@ -68,6 +64,15 @@ export default function Lobby({ spectate = false }) {
         return;
       }
       // Transient errors during refresh/hibernation — don't show fatal card, will retry
+      // Handle "Username already in this room" by falling back to spectate (same user second tab)
+      if (data?.error && /Username already in this room/i.test(data.error)) {
+        // Try spectate as fallback for same-name second tab
+        const prof = (() => { try { return JSON.parse(localStorage.getItem("luckyStreet:profile")||"{}"); } catch { return {}; } })();
+        socket.emit("room:spectate", { roomId: id, username: prof?.username, avatar: prof?.avatar }, (r) => {
+          if (r?.ok) { setRoom(r.room); setError(null); }
+        });
+        return;
+      }
       if (data?.error && (/already taken/i.test(data.error) || /timeout/i.test(data.error) || /Register a profile first/i.test(data.error) || /missing identity/i.test(data.error))) {
         return;
       }
@@ -84,7 +89,16 @@ export default function Lobby({ spectate = false }) {
         if (jres?.ok) { setRoom(jres.room); setError(null); }
         else {
           const msg = jres?.error || "";
-          const transient = /Register a profile first|already taken|timeout/i.test(msg);
+          // Fallback to spectate if name already in room (same user second tab)
+          if (/Username already in this room/i.test(msg)) {
+            const prof = (() => { try { return JSON.parse(localStorage.getItem("luckyStreet:profile")||"{}"); } catch { return {}; } })();
+            socket.emit("room:spectate", { roomId: id, username: prof?.username, avatar: prof?.avatar }, (r) => {
+              if (r?.ok) { setRoom(r.room); setError(null); }
+              else setError(jres?.error || "Room not found");
+            });
+            return;
+          }
+          const transient = /Register a profile first|already taken|timeout|missing identity/i.test(msg);
           if (transient && retry < 4) {
             const delay = 400 * Math.pow(1.5, retry);
             setTimeout(() => attemptJoin(retry + 1), delay);
@@ -109,6 +123,12 @@ export default function Lobby({ spectate = false }) {
       });
     }
     function syncAttempt(retry = 0) {
+      // Need profile for non-spectate join
+      if (!spectate && !hasProfile) return;
+      // For invite link via code, if we have a profile but not yet registered, wait a tick
+      if (!spectate && hasProfile && profileStatus !== "ok") {
+        if (retry < 6) { setTimeout(() => syncAttempt(retry + 1), 400); return; }
+      }
       socket.emit("room:sync", { roomId: id }, (res) => {
         if (res?.ok) {
           // If room exists but doesn't contain me (direct link join), trigger join/spectate
@@ -120,17 +140,25 @@ export default function Lobby({ spectate = false }) {
           if (meInRoom || nameInRoom) { setRoom(res.room); setError(null); }
           else {
             if (spectate) attemptSpectate();
-            else attemptJoin();
+            else {
+              // Need profile for join, if not ready, retry
+              if (hasProfile && profileStatus !== "ok" && retry < 4) { setTimeout(() => syncAttempt(retry + 1), 400); return; }
+              attemptJoin();
+            }
           }
         }
         else if (res?.error && /timeout/i.test(res.error) && retry < 3) {
           setTimeout(() => syncAttempt(retry + 1), 500 * Math.pow(1.5, retry));
         } else {
           if (spectate) attemptSpectate();
-          else attemptJoin();
+          else {
+            if (hasProfile && profileStatus !== "ok" && retry < 4) { setTimeout(() => syncAttempt(retry + 1), 400); return; }
+            attemptJoin();
+          }
         }
       });
     }
+    // Always sync, even if profile not yet ok — syncAttempt handles waiting
     syncAttempt();
     socket._luckyAttemptJoin = attemptJoin;
     // Re-sync after reconnect (covers hibernation / refresh)
