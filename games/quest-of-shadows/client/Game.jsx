@@ -159,9 +159,18 @@ export default function QuestGame({ roomId, isHost, isSpectator }) {
               const idx = pub.players.findIndex(x=>x.id===p.id);
               const revealed = pub.revealed[idx];
               const isMe = p.id===myId;
+              const isBot = !!p.isBot;
+              const avatarIsImage = p.avatar && typeof p.avatar === "string" && p.avatar.startsWith("data:");
+              const avatarBg = !isBot && !avatarIsImage && p.avatar ? p.avatar : null;
               return (
                 <div key={p.id} className={`rounded-xl p-2 border text-center ${revealed ? 'bg-emerald-500/15 border-emerald-400/30' : 'bg-white/5 border-white/10'} ${isMe?'ring-2 ring-amber-300/50':''}`}>
-                  <div className={`w-10 h-10 mx-auto rounded-full flex items-center justify-center font-black text-xs ${isMe?'bg-[#f3ecd8] text-[#0a1e2e]':'bg-[#1e2a3a] text-white border border-white/10'}`}>{p.name.slice(0,2).toUpperCase()}</div>
+                  {isBot ? (
+                    <div className="w-10 h-10 mx-auto rounded-full bg-[#1e2a3a] border border-white/10 flex items-center justify-center text-[16px]">🤖</div>
+                  ) : avatarIsImage ? (
+                    <div className={`w-10 h-10 mx-auto rounded-full overflow-hidden border ${isMe?'border-amber-300':'border-white/10'}`}><img src={p.avatar} alt={p.name} className="w-full h-full object-cover" /></div>
+                  ) : (
+                    <div className={`w-10 h-10 mx-auto rounded-full flex items-center justify-center font-black text-xs border ${isMe?'bg-[#f3ecd8] text-[#0a1e2e] border-amber-300':'bg-[#1e2a3a] text-white border-white/10'}`} style={avatarBg ? { background: avatarBg } : undefined}>{p.name.slice(0,2).toUpperCase()}</div>
+                  )}
                   <div className="text-xs font-bold text-white mt-1 truncate">{p.name}{isMe?' (YOU)':''}</div>
                   <div className={`text-[10px] font-bold ${revealed?'text-emerald-300':'text-white/40'}`}>{revealed?'READY':'REVEALING'}</div>
                 </div>
@@ -195,10 +204,20 @@ export default function QuestGame({ roomId, isHost, isSpectator }) {
                   <div className="mt-4 grid grid-cols-3 sm:grid-cols-5 gap-2">
                     {pub.players.map(p=>{
                       const sel = selected.includes(p.id);
+                      const isBot = !!p.isBot;
+                      const isMe = p.id===myId;
+                      const avatarIsImage = p.avatar && typeof p.avatar === "string" && p.avatar.startsWith("data:");
+                      const avatarBg = !isBot && !avatarIsImage && p.avatar ? p.avatar : null;
                       return (
                         <button key={p.id} onClick={()=>toggleSelect(p.id)} className={`p-2 rounded-2xl border-2 ${sel?'border-[#7ec8e6] bg-[#7ec8e6]/15':'border-white/10 bg-white/5'}`}>
-                          <div className={`w-10 h-10 mx-auto rounded-full flex items-center justify-center font-black text-xs ${p.id===myId?'bg-[#f3ecd8] text-[#0a1e2e]':'bg-[#1e2a3a] text-white'}`}>{p.name.slice(0,2).toUpperCase()}</div>
-                          <div className="text-xs font-bold text-white mt-1 truncate">{p.name}</div>
+                          {isBot ? (
+                            <div className="w-10 h-10 mx-auto rounded-full bg-[#1e2a3a] border border-white/10 flex items-center justify-center text-[18px]">🤖</div>
+                          ) : avatarIsImage ? (
+                            <div className={`w-10 h-10 mx-auto rounded-full overflow-hidden border ${isMe?'border-amber-300':'border-white/10'}`}><img src={p.avatar} alt={p.name} className="w-full h-full object-cover" /></div>
+                          ) : (
+                            <div className={`w-10 h-10 mx-auto rounded-full flex items-center justify-center font-black text-xs border ${isMe?'bg-[#f3ecd8] text-[#0a1e2e] border-amber-300':'text-white border-white/10'}`} style={avatarBg ? { background: avatarBg } : { background: '#1e2a3a' }}>{p.name.slice(0,2).toUpperCase()}</div>
+                          )}
+                          <div className="text-xs font-bold text-white mt-1 truncate">{p.name}{isMe?' (YOU)':''}</div>
                         </button>
                       );
                     })}
@@ -213,12 +232,22 @@ export default function QuestGame({ roomId, isHost, isSpectator }) {
                   <h3 className="font-black text-white text-lg">{leader?.name || 'Leader'} is choosing</h3>
                   <p className="text-xs text-white/50">They are watching who you leave out.</p>
                   <div className="mt-4 flex flex-wrap justify-center gap-2">
-                    {pub.players.map(p=>(
+                    {pub.players.map(p=>{
+                      const isBot = !!p.isBot;
+                      const avatarIsImage = p.avatar && typeof p.avatar === "string" && p.avatar.startsWith("data:");
+                      const avatarBg = !isBot && !avatarIsImage && p.avatar ? p.avatar : null;
+                      return (
                       <div key={p.id} className="flex flex-col items-center">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-xs ${p.id===pub.leaderId?'bg-amber-300 text-black ring-2 ring-amber-400': p.id===myId?'bg-[#f3ecd8] text-[#0a1e2e]':'bg-white/10 text-white border border-white/10'}`}>{p.name.slice(0,2)}</div>
+                        {isBot ? (
+                          <div className={`w-10 h-10 rounded-full bg-[#1e2a3a] border flex items-center justify-center text-[16px] ${p.id===pub.leaderId?'border-amber-400 ring-2 ring-amber-400':'border-white/10'}`}>🤖</div>
+                        ) : avatarIsImage ? (
+                          <div className={`w-10 h-10 rounded-full overflow-hidden border ${p.id===pub.leaderId?'border-amber-400 ring-2 ring-amber-400': p.id===myId?'border-amber-300':'border-white/10'}`}><img src={p.avatar} alt={p.name} className="w-full h-full object-cover" /></div>
+                        ) : (
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-xs border ${p.id===pub.leaderId?'bg-amber-300 text-black ring-2 ring-amber-400': p.id===myId?'bg-[#f3ecd8] text-[#0a1e2e] border-amber-300':'text-white border-white/10'}`} style={avatarBg ? { background: avatarBg } : { background: '#1e2a3a' }}>{p.name.slice(0,2).toUpperCase()}</div>
+                        )}
                         <span className="text-[10px] font-bold text-white/60">{p.name}{p.id===myId?' YOU':''}</span>
                       </div>
-                    ))}
+                    );})}
                   </div>
                 </div>
               );
@@ -234,7 +263,18 @@ export default function QuestGame({ roomId, isHost, isSpectator }) {
           <div className="flex justify-center gap-2 mt-3 flex-wrap">
             {pub.proposal.teamIds.map(id=>{
               const pl = pub.players.find(p=>p.id===id);
-              return <div key={id} className="flex flex-col items-center"><div className="w-12 h-12 rounded-full bg-[#1e2a3a] border border-white/15 flex items-center justify-center font-black text-white text-xs">{pl?.name?.slice(0,2) || '??'}</div><span className="text-xs font-bold text-white/70 mt-1">{pl?.name || id.slice(0,4)}{id===myId?' YOU':''}</span></div>;
+              const isBot = !!pl?.isBot;
+              const avatarIsImage = pl?.avatar && typeof pl.avatar === "string" && pl.avatar.startsWith("data:");
+              const avatarBg = !isBot && !avatarIsImage && pl?.avatar ? pl.avatar : null;
+              return <div key={id} className="flex flex-col items-center">
+                {isBot ? (
+                  <div className="w-12 h-12 rounded-full bg-[#1e2a3a] border border-white/15 flex items-center justify-center text-[20px]">🤖</div>
+                ) : avatarIsImage ? (
+                  <div className="w-12 h-12 rounded-full overflow-hidden border border-white/15"><img src={pl.avatar} alt={pl.name} className="w-full h-full object-cover" /></div>
+                ) : (
+                  <div className="w-12 h-12 rounded-full border border-white/15 flex items-center justify-center font-black text-white text-xs" style={avatarBg ? { background: avatarBg } : { background: '#1e2a3a' }}>{pl?.name?.slice(0,2)?.toUpperCase() || '??'}</div>
+                )}
+                <span className="text-xs font-bold text-white/70 mt-1">{pl?.name || id.slice(0,4)}{id===myId?' YOU':''}</span></div>;
             })}
           </div>
           {isSpectator ? <div className="mt-4 py-3 rounded-full bg-white/5 text-white/40 font-bold">Spectating vote… {pub.proposal.voteCount}/{pub.players.length}</div> :
@@ -278,7 +318,16 @@ export default function QuestGame({ roomId, isHost, isSpectator }) {
           <div className="flex justify-center gap-2 mt-3 flex-wrap">
             {pub.proposal.teamIds.map(id=>{
               const pl = pub.players.find(p=>p.id===id);
-              return <div key={id} className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-xs ${id===myId?'bg-[#f3ecd8] text-[#0a1e2e]':'bg-[#1e2a3a] text-white border border-white/10'}`}>{pl?.name?.slice(0,2)||'??'}</div>;
+              const isBot = !!pl?.isBot;
+              const avatarIsImage = pl?.avatar && typeof pl.avatar === "string" && pl.avatar.startsWith("data:");
+              const avatarBg = !isBot && !avatarIsImage && pl?.avatar ? pl.avatar : null;
+              return isBot ? (
+                <div key={id} className="w-10 h-10 rounded-full bg-[#1e2a3a] border border-white/10 flex items-center justify-center text-[16px]">🤖</div>
+              ) : avatarIsImage ? (
+                <div key={id} className={`w-10 h-10 rounded-full overflow-hidden border ${id===myId?'border-amber-300':'border-white/10'}`}><img src={pl.avatar} alt={pl.name} className="w-full h-full object-cover" /></div>
+              ) : (
+                <div key={id} className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-xs border ${id===myId?'bg-[#f3ecd8] text-[#0a1e2e] border-amber-300':'text-white border-white/10'}`} style={avatarBg ? { background: avatarBg } : { background: '#1e2a3a' }}>{pl?.name?.slice(0,2)?.toUpperCase()||'??'}</div>
+              );
             })}
           </div>
           {isSpectator ? <div className="mt-4 py-3 rounded-full bg-white/5 text-white/40 font-bold">Quest in progress…</div> :
@@ -331,9 +380,18 @@ export default function QuestGame({ roomId, isHost, isSpectator }) {
                   return !isEvil;
                 }).map(p=>{
                   const sel = assassinPick===p.id;
+                  const isBot = !!p.isBot;
+                  const avatarIsImage = p.avatar && typeof p.avatar === "string" && p.avatar.startsWith("data:");
+                  const avatarBg = !isBot && !avatarIsImage && p.avatar ? p.avatar : null;
                   return (
                     <button key={p.id} onClick={()=>setAssassinPick(p.id)} className={`p-2 rounded-2xl border-2 ${sel?'border-amber-400 bg-amber-400/15':'border-white/10 bg-white/5'}`}>
-                      <div className="w-10 h-10 mx-auto rounded-full bg-[#1e2a3a] border border-white/10 flex items-center justify-center font-black text-white text-xs">{p.name.slice(0,2)}</div>
+                      {isBot ? (
+                        <div className="w-10 h-10 mx-auto rounded-full bg-[#1e2a3a] border border-white/10 flex items-center justify-center text-[16px]">🤖</div>
+                      ) : avatarIsImage ? (
+                        <div className="w-10 h-10 mx-auto rounded-full overflow-hidden border border-white/10"><img src={p.avatar} alt={p.name} className="w-full h-full object-cover" /></div>
+                      ) : (
+                        <div className="w-10 h-10 mx-auto rounded-full border border-white/10 flex items-center justify-center font-black text-white text-xs" style={avatarBg ? { background: avatarBg } : { background: '#1e2a3a' }}>{p.name.slice(0,2).toUpperCase()}</div>
+                      )}
                       <div className="text-xs font-bold text-white mt-1 truncate">{p.name}</div>
                     </button>
                   );
@@ -361,12 +419,21 @@ export default function QuestGame({ roomId, isHost, isSpectator }) {
           <div className="mt-4 space-y-1.5 text-left max-w-[360px] mx-auto">
             {pub.players.map(p=>{
               const isMe = p.id===myId;
+              const isBot = !!p.isBot;
               const role = p.role || (isMe ? priv?.self?.role : null);
               const alleg = p.allegiance || (isMe ? priv?.self?.allegiance : null);
+              const avatarIsImage = p.avatar && typeof p.avatar === "string" && p.avatar.startsWith("data:");
+              const avatarBg = !isBot && !avatarIsImage && p.avatar ? p.avatar : null;
               return (
                 <div key={p.id} className={`flex items-center justify-between rounded-xl px-3 py-2 border ${isMe?'bg-white/10 border-amber-300/30':'bg-white/5 border-white/10'}`}>
                   <div className="flex items-center gap-2">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs ${isMe?'bg-[#f3ecd8] text-[#0a1e2e]':'bg-[#1e2a3a] text-white'}`}>{p.name.slice(0,2)}</div>
+                    {isBot ? (
+                      <div className="w-8 h-8 rounded-full bg-[#1e2a3a] border border-white/10 flex items-center justify-center text-[14px]">🤖</div>
+                    ) : avatarIsImage ? (
+                      <div className={`w-8 h-8 rounded-full overflow-hidden border ${isMe?'border-amber-300':'border-white/10'}`}><img src={p.avatar} alt={p.name} className="w-full h-full object-cover" /></div>
+                    ) : (
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs border ${isMe?'bg-[#f3ecd8] text-[#0a1e2e] border-amber-300':'text-white border-white/10'}`} style={avatarBg ? { background: avatarBg } : { background: '#1e2a3a' }}>{p.name.slice(0,2).toUpperCase()}</div>
+                    )}
                     <div className="flex flex-col text-left">
                       <span className="text-sm font-bold text-white leading-none">{p.name}{isMe?' YOU':''} {p.isLeader ? '👑' : ''} {p.isBot?'🤖':''}</span>
                       {role && <span className={`text-[10px] font-bold ${alleg==='GOOD'?'text-emerald-300':'text-rose-300'}`}>{role}</span>}

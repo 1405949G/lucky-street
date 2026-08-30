@@ -621,8 +621,8 @@ export class RoomManager {
     const room = this.get(roomId);
     // Build players array for engine: humans + bots combined, preserving order (humans first then bots)
     const allParticipants = [
-      ...room.players.map(p => ({ id: p.id, name: p.name, isBot: false })),
-      ...room.bots.map(b => ({ id: b.id, name: b.name, isBot: true })),
+      ...room.players.map(p => ({ id: p.id, name: p.name, isBot: false, avatar: p.avatar || null })),
+      ...room.bots.map(b => ({ id: b.id, name: b.name, isBot: true, avatar: null })),
     ];
     // Shuffle? Engine shuffles roles internally, but keep id order for later mapping
     const opts = room.gameOptions || {};

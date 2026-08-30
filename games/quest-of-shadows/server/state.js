@@ -137,6 +137,7 @@ export function getPublicState(state) {
     id: p.id,
     name: p.name,
     isBot: p.isBot,
+    avatar: p.avatar || null,
     isLeader: state.players[state.leaderIndex]?.id === p.id,
     ...(reveal ? { role: p.role, allegiance: p.allegiance } : {}),
   }));
@@ -281,6 +282,7 @@ export function reducer(state, action) {
           id: p.id || uid('p'),
           name: String(p.name).trim(),
           isBot: !!p.isBot,
+          avatar: p.avatar || null,
           role,
           allegiance: allegianceOf(role),
           isLeader: false, // leader tracked via leaderIndex
