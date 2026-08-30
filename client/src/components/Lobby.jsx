@@ -77,6 +77,7 @@ export default function Lobby() {
   const [error, setError] = useState(null);
   const [showBlocking, setShowBlocking] = useState(false);
   const [needPassword, setNeedPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState(null);
   const [botName, setBotName] = useState("");
   const [toast, setToast] = useState(null);
   const [editingSelf, setEditingSelf] = useState(false);
@@ -104,9 +105,9 @@ export default function Lobby() {
     function onRoomErr(data) {
       if (data?.error && /password/i.test(data.error)) {
         setNeedPassword(true);
+        setPasswordError("Incorrect password — please try again");
         return;
       }
-      // If kicked, already handled via player:kicked, don't show full-screen error for that
       if (data?.error && /kicked/i.test(data.error)) {
         setKickedPopup(true);
         return;
@@ -121,11 +122,12 @@ export default function Lobby() {
 
     function attemptJoin(password = undefined, retry = 0) {
       socket.emit("room:join", { roomId: id, password }, (jres) => {
-        if (jres?.ok) { setRoom(jres.room); setNeedPassword(false); }
+        if (jres?.ok) { setRoom(jres.room); setNeedPassword(false); setPasswordError(null); }
         else {
-          if (jres?.error && /password/i.test(jres.error)) setNeedPassword(true);
-          else if (jres?.error && /Register a profile first/i.test(jres.error) && retry < 2) {
-            // race where profile not yet registered on server — retry shortly
+          if (jres?.error && /password/i.test(jres.error)) {
+            setNeedPassword(true);
+            setPasswordError("Incorrect password — please try again");
+          } else if (jres?.error && /Register a profile first/i.test(jres.error) && retry < 2) {
             setTimeout(() => attemptJoin(password, retry + 1), 600);
           } else setError(jres?.error || "Room not found");
         }
@@ -472,14 +474,22 @@ export default function Lobby() {
       )}
 
       {needPassword && (
-        <PasswordModal roomId={id} onClose={() => { setNeedPassword(false); navigate("/"); }} onSubmit={(pwd) => {
+        <PasswordModal
+          roomId={id}
+          error={passwordError}
+          clearError={() => setPasswordError(null)}
+          onClose={() => { setNeedPassword(false); setPasswordError(null); navigate("/"); }}
+          onSubmit={(pwd) => {
+            setPasswordError(null);
             const fn = socket._luckyAttemptJoin;
             if (fn) fn(pwd);
             else socket.emit("room:join", { roomId: id, password: pwd }, (res) => {
-              if (res?.ok) { setRoom(res.room); setNeedPassword(false); }
+              if (res?.ok) { setRoom(res.room); setNeedPassword(false); setPasswordError(null); }
+              else if (res?.error && /password/i.test(res.error)) setPasswordError("Incorrect password — please try again");
               else setError(res.error);
             });
-          }} />
+          }}
+        />
       )}
       {toast && <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-[#1f2937] text-white text-sm font-bold px-4 py-2.5 rounded-full shadow-xl border border-white/10">{toast}</div>}
     </div>
