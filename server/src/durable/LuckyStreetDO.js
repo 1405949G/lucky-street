@@ -321,16 +321,59 @@ export class LuckyStreetDO {
       switch (event) {
         case "profile:register": {
           const clean = sanitizeName(data.username);
-          // If this socket had a pending room grace, cancel it and re-attach with new id
+          const lower = clean.toLowerCase();
+          // --- Fix refresh race: if same name exists with old socket that is no longer active, allow reclaim even without timer ---
+          const existing = this.userRegistry.byName.get(lower);
+          if (existing && existing.socketId !== socketId) {
+            const oldWs = this.socketIdToWs.get(existing.socketId);
+            let isOldActive = false;
+            try {
+              const active = this.state.getWebSockets();
+              isOldActive = !!(oldWs && active.includes(oldWs));
+            } catch {
+              isOldActive = !!(oldWs && this.sessions.has(oldWs));
+            }
+            if (!isOldActive) {
+              // Old socket gone (refresh) — free the name and re-attach room player if any
+              if (existing.timer) clearTimeout(existing.timer);
+              // Re-attach room player if oldId still in a room with same name
+              for (const room of this.roomManager.rooms.values()) {
+                const pl = room.players.find(p => p.id === existing.socketId && p.name.toLowerCase() === lower);
+                if (pl) {
+                  pl.id = socketId;
+                  if (room.hostId === existing.socketId) { room.hostId = socketId; room.hostName = clean; }
+                  console.log(`[DO] refresh reattach (pre) ${clean} ${existing.socketId} -> ${socketId} in ${room.id}`);
+                  this.broadcast({ event: "lobby:update", data: this.roomManager.getFull(room.id) });
+                }
+              }
+              // Also handle pendingLeaves for oldId
+              for (const [oldId, pend] of Array.from(this.pendingLeaves.entries())) {
+                if (oldId === existing.socketId) {
+                  clearTimeout(pend.timeout);
+                  this.pendingLeaves.delete(oldId);
+                  const room = this.roomManager.get(pend.roomId);
+                  const pl = room?.players.find(p => p.id === oldId);
+                  if (pl) {
+                    pl.id = socketId;
+                    if (room.hostId === oldId) { room.hostId = socketId; room.hostName = clean; }
+                    sess.currentRoom = pend.roomId;
+                    this.broadcast({ event: "lobby:update", data: this.roomManager.getFull(pend.roomId) });
+                  }
+                }
+              }
+              this.userRegistry.byName.delete(lower);
+              this.userRegistry.bySocket.delete(existing.socketId);
+              this.socketIdToWs.delete(existing.socketId);
+              await this.persist();
+            }
+          }
+          // If this socket had a pending room grace (refresh of same socketId? not needed) — also handle reattach via pendingLeaves for same name
           let reattached = false;
           for (const [oldId, pend] of Array.from(this.pendingLeaves.entries())) {
-            const oldSessName = (() => { try { const e = this.userRegistry.byName.get(clean.toLowerCase()); return e?.username; } catch { return null; } })();
-            // Check if pending leave's room still has oldId and new username matches (case-insensitive)
             const room = this.roomManager.get(pend.roomId);
-            if (room && room.players.some(p => p.id === oldId && p.name.toLowerCase() === clean.toLowerCase())) {
+            if (room && room.players.some(p => p.id === oldId && p.name.toLowerCase() === lower)) {
               clearTimeout(pend.timeout);
               this.pendingLeaves.delete(oldId);
-              // Update room player's id to new socketId
               const pl = room.players.find(p => p.id === oldId);
               if (pl) {
                 pl.id = socketId;
@@ -340,7 +383,6 @@ export class LuckyStreetDO {
                 this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic() });
                 await this.persist();
                 reattached = true;
-                // Also need to move currentRoom for new sess
                 sess.currentRoom = pend.roomId;
                 break;
               }
@@ -349,11 +391,9 @@ export class LuckyStreetDO {
           const entry = this.userRegistry.register(socketId, clean, data.avatar ?? null);
           sess.username = entry.username;
           sess.avatar = entry.avatar;
-          // If we reattached, old socketId's user entry was already handled via grace reclaim in register (it clears timer and moves)
           okAck({ ok: true, profile: { username: entry.username, avatar: entry.avatar } });
           this.send(ws, { event: "profile:ok", data: { username: entry.username, avatar: entry.avatar } });
           if (reattached) {
-            // Also broadcast rooms again
             this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic() });
           }
           await this.persist();

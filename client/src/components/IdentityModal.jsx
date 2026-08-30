@@ -43,7 +43,28 @@ export default function IdentityModal({ blocking = false, onDone, title = "Welco
     if (trimmed.length > 20) return setLocalError("Name is too long");
     if (!/^[\p{L}\p{N} _'\-.]+$/u.test(trimmed)) return setLocalError("Name can only use letters, numbers and - _ ' .");
 
-    // Solid colours only now — no image upload, so no size check needed
+    const isEdit = !!profile?.username && !blocking;
+    if (isEdit) {
+      const prev = profile;
+      const nextOptimistic = { username: trimmed, avatar, avatarType: "color" };
+      setProfile(nextOptimistic);
+      onDone?.(nextOptimistic);
+      if (socket) {
+        socket.emit("profile:register", { username: trimmed, avatar }, (res) => {
+          if (!res?.ok) {
+            // Revert on name taken, show toast via localError if modal still mounted, else via alert
+            setProfile(prev);
+            const msg = res?.error || "That name is taken — try another";
+            // Try to show in modal if still open, otherwise toast
+            setLocalError(msg);
+            // Also show as alert if modal closed
+            setTimeout(() => alert(msg), 100);
+          }
+        });
+      }
+      return;
+    }
+
     setSubmitting(true);
 
     const next = { username: trimmed, avatar, avatarType: "color" };

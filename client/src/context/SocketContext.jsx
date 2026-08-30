@@ -229,7 +229,7 @@ export function SocketProvider({ profile, children }) {
     };
   }, []);
 
-  const registerProfile = useCallback((p = profile) => {
+  const registerProfile = useCallback((p = profile, retry = 0) => {
     const s = socketRef.current;
     if (!s || !p?.username) return;
     s.emit("profile:register", { username: p.username, avatar: p.avatar }, (res) => {
@@ -237,8 +237,14 @@ export function SocketProvider({ profile, children }) {
         setProfileStatus("ok");
         setProfileError(null);
       } else {
+        const msg = res?.error || "Registration failed";
+        // Refresh race: same name as before but server says taken because old socket still in grace — retry shortly
+        if (/already taken/i.test(msg) && retry < 2) {
+          setTimeout(() => registerProfile(p, retry + 1), 600);
+          return;
+        }
         setProfileStatus("error");
-        setProfileError(res?.error || "Registration failed");
+        setProfileError(msg);
       }
     });
   }, [profile]);
