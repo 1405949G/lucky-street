@@ -168,7 +168,32 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
         </div>
       )}
       {!hideTopAllegiance && isSpectator && !priv?.self && (
-        <div className="rounded-xl bg-amber-400/10 border border-amber-400/20 p-3 text-center text-xs text-amber-200">Spectating — you see the board only. Private roles hidden.</div>
+        <div className="rounded-xl bg-white/5 border border-white/10 p-3 text-center">
+          <p className="text-xs text-amber-200">Spectating — you see the board only. Private roles hidden.</p>
+          <div className="mt-3 pt-3 border-t border-white/10">
+            <p className="text-[10px] tracking-widest font-bold text-white/40">ROLES IN THIS GAME</p>
+            <div className="mt-2 grid grid-cols-2 gap-3 text-left">
+              <div>
+                <p className="text-[10px] font-bold tracking-widest text-cyan-300">GOOD</p>
+                <div className="mt-1 flex flex-wrap gap-1">
+                  <span className="px-2 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/20 text-[10px] font-bold text-cyan-200">Merlin</span>
+                  {pub.extraRoles?.percival && <span className="px-2 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/20 text-[10px] font-bold text-cyan-200">Percival</span>}
+                  <span className="px-2 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold text-white/60">Loyal</span>
+                </div>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold tracking-widest text-rose-300">EVIL</p>
+                <div className="mt-1 flex flex-wrap gap-1">
+                  <span className="px-2 py-1 rounded-full bg-rose-500/20 border border-rose-500/20 text-[10px] font-bold text-rose-200">Assassin</span>
+                  {pub.extraRoles?.morgana && <span className="px-2 py-1 rounded-full bg-rose-500/20 border border-rose-500/20 text-[10px] font-bold text-rose-200">Morgana</span>}
+                  {pub.extraRoles?.mordred && <span className="px-2 py-1 rounded-full bg-rose-500/20 border border-rose-500/20 text-[10px] font-bold text-rose-200">Mordred</span>}
+                  {pub.extraRoles?.oberon && <span className="px-2 py-1 rounded-full bg-rose-500/20 border border-rose-500/20 text-[10px] font-bold text-rose-200">Oberon</span>}
+                  <span className="px-2 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold text-white/60">Minion</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Phase Body */}
@@ -555,7 +580,32 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
         </div>
       )}
       {hideTopAllegiance && isSpectator && !priv?.self && (
-        <div className="rounded-xl bg-amber-400/10 border border-amber-400/20 p-3 text-center text-xs text-amber-200">Spectating — you see the board only. Private roles hidden.</div>
+        <div className="rounded-xl bg-white/5 border border-white/10 p-3 text-center">
+          <p className="text-xs text-amber-200">Spectating — you see the board only. Private roles hidden.</p>
+          <div className="mt-3 pt-3 border-t border-white/10">
+            <p className="text-[10px] tracking-widest font-bold text-white/40">ROLES IN THIS GAME</p>
+            <div className="mt-2 grid grid-cols-2 gap-3 text-left">
+              <div>
+                <p className="text-[10px] font-bold tracking-widest text-cyan-300">GOOD</p>
+                <div className="mt-1 flex flex-wrap gap-1">
+                  <span className="px-2 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/20 text-[10px] font-bold text-cyan-200">Merlin</span>
+                  {pub.extraRoles?.percival && <span className="px-2 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/20 text-[10px] font-bold text-cyan-200">Percival</span>}
+                  <span className="px-2 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold text-white/60">Loyal</span>
+                </div>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold tracking-widest text-rose-300">EVIL</p>
+                <div className="mt-1 flex flex-wrap gap-1">
+                  <span className="px-2 py-1 rounded-full bg-rose-500/20 border border-rose-500/20 text-[10px] font-bold text-rose-200">Assassin</span>
+                  {pub.extraRoles?.morgana && <span className="px-2 py-1 rounded-full bg-rose-500/20 border border-rose-500/20 text-[10px] font-bold text-rose-200">Morgana</span>}
+                  {pub.extraRoles?.mordred && <span className="px-2 py-1 rounded-full bg-rose-500/20 border border-rose-500/20 text-[10px] font-bold text-rose-200">Mordred</span>}
+                  {pub.extraRoles?.oberon && <span className="px-2 py-1 rounded-full bg-rose-500/20 border border-rose-500/20 text-[10px] font-bold text-rose-200">Oberon</span>}
+                  <span className="px-2 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold text-white/60">Minion</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {pub.log?.length>0 && (
