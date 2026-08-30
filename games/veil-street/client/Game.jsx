@@ -163,7 +163,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
                   <div className="mt-1.5 flex flex-wrap gap-1.5 justify-center">
                     <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Merlin</span>
                     {hasPercival && <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Percival</span>}
-                    {loyal > 0 && <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/20 text-[10px] font-bold text-emerald-300">Loyal ×{loyal}</span>}
+                    {loyal > 0 && <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Loyal ×{loyal}</span>}
                   </div>
                 </div>
                 <div className="text-center">
@@ -173,7 +173,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
                     {e.includes('morgana') && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Morgana</span>}
                     {e.includes('mordred') && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Mordred</span>}
                     {e.includes('oberon') && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Oberon</span>}
-                    {minion > 0 && <span className="px-2.5 py-1 rounded-full bg-rose-500/15 border border-rose-500/20 text-[10px] font-bold text-rose-300">Minion ×{minion}</span>}
+                    {minion > 0 && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Minion ×{minion}</span>}
                   </div>
                 </div>
               </div>
@@ -193,7 +193,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
                 <div className="mt-1.5 flex flex-wrap gap-1.5 justify-center">
                   <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Merlin</span>
                   {pub.extraRoles?.percival && <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Percival</span>}
-                  <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/20 text-[10px] font-bold text-emerald-300">Loyal</span>
+                  <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Loyal</span>
                 </div>
               </div>
               <div className="text-center">
@@ -203,7 +203,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
                   {pub.extraRoles?.morgana && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Morgana</span>}
                   {pub.extraRoles?.mordred && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Mordred</span>}
                   {pub.extraRoles?.oberon && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Oberon</span>}
-                  <span className="px-2.5 py-1 rounded-full bg-rose-500/15 border border-rose-500/20 text-[10px] font-bold text-rose-300">Minion</span>
+                  <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Minion</span>
                 </div>
               </div>
             </div>
@@ -589,7 +589,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
                   <div className="mt-1.5 flex flex-wrap gap-1.5 justify-center">
                     <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Merlin</span>
                     {hasPercival && <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Percival</span>}
-                    {loyal > 0 && <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/20 text-[10px] font-bold text-emerald-300">Loyal ×{loyal}</span>}
+                    {loyal > 0 && <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Loyal ×{loyal}</span>}
                   </div>
                 </div>
                 <div className="text-center">
@@ -599,7 +599,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
                     {e.includes('morgana') && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Morgana</span>}
                     {e.includes('mordred') && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Mordred</span>}
                     {e.includes('oberon') && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Oberon</span>}
-                    {minion > 0 && <span className="px-2.5 py-1 rounded-full bg-rose-500/15 border border-rose-500/20 text-[10px] font-bold text-rose-300">Minion ×{minion}</span>}
+                    {minion > 0 && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Minion ×{minion}</span>}
                   </div>
                 </div>
               </div>
@@ -631,7 +631,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
                 <div className="mt-1.5 flex flex-wrap gap-1.5 justify-center">
                   <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Merlin</span>
                   {hasPercival && <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Percival</span>}
-                  {loyal > 0 && <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/20 text-[10px] font-bold text-emerald-300">Loyal ×{loyal}</span>}
+                  {loyal > 0 && <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Loyal ×{loyal}</span>}
                 </div>
               </div>
               <div className="text-center">
@@ -641,7 +641,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
                   {pub.extraRoles?.morgana && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Morgana</span>}
                   {pub.extraRoles?.mordred && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Mordred</span>}
                   {pub.extraRoles?.oberon && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Oberon</span>}
-                  {minion > 0 && <span className="px-2.5 py-1 rounded-full bg-rose-500/15 border border-rose-500/20 text-[10px] font-bold text-rose-300">Minion ×{minion}</span>}
+                  {minion > 0 && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Minion ×{minion}</span>}
                 </div>
               </div>
             </div>
@@ -674,7 +674,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
                 <div className="mt-1.5 flex flex-wrap gap-1.5 justify-center">
                   <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Merlin</span>
                   {hasPercival && <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Percival</span>}
-                  {loyal > 0 && <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/20 text-[10px] font-bold text-emerald-300">Loyal ×{loyal}</span>}
+                  {loyal > 0 && <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Loyal ×{loyal}</span>}
                 </div>
               </div>
               <div className="text-center">
@@ -684,7 +684,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
                   {e.includes('morgana') && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Morgana</span>}
                   {e.includes('mordred') && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Mordred</span>}
                   {e.includes('oberon') && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Oberon</span>}
-                  {minion > 0 && <span className="px-2.5 py-1 rounded-full bg-rose-500/15 border border-rose-500/20 text-[10px] font-bold text-rose-300">Minion ×{minion}</span>}
+                  {minion > 0 && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Minion ×{minion}</span>}
                 </div>
               </div>
             </div>
