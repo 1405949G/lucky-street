@@ -9,6 +9,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ProfileContext } from "../context/ProfileContext.jsx";
 import { SocketContext } from "../context/SocketContext.jsx";
 import IdentityModal from "./IdentityModal.jsx";
+import QuestGame from "../../../games/quest-of-shadows/client/Game.jsx";
 
 export default function Lobby({ spectate = false }) {
   const { roomId } = useParams();
@@ -251,8 +252,34 @@ export default function Lobby({ spectate = false }) {
   const isSpectator = !!(myId && room.spectators?.some(s => s.id === myId));
   const isPlayer = !!(myId && room.players.some(p => p.id === myId));
   const game = games.find(g => g.id === room.game) || { label: room.game, optionSchema: [] };
+  const isQuestGame = room.game === "quest-of-shadows";
+  const hasGameState = !!room.hasGame;
+  const hasActiveGame = !!(room.hasGame && room.gameState && room.gameState.phase && room.gameState.phase !== "LOBBY" && room.gameState.phase !== "GAME_OVER") || !!(room.hasGame && room.gamePhase && room.gamePhase !== "LOBBY" && room.gamePhase !== "GAME_OVER");
+  const isGameLocked = hasGameState; // lobby locked while any quest exists (including GAME_OVER until reset)
+  const totalPlayers = room.players.length + room.bots.length;
+  const canStart = !!room.canStart;
+  const supportsBots = room.supportsBots !== false;
 
   function showToast(msg) { setToast(msg); setTimeout(() => setToast(null), 2500); }
+
+  function handleStartQuest() {
+    if (!isHost) return;
+    if (!canStart) {
+      showToast(`Need ${room.minPlayers} players — have ${totalPlayers}. Add bots.`);
+      return;
+    }
+    socket.emit("game:start", { roomId: id }, (res) => {
+      if (!res?.ok) showToast(res?.error || "Start failed");
+      else showToast("Quest started — roles dealt");
+    });
+  }
+
+  function handleResetQuest() {
+    socket.emit("game:reset", { roomId: id }, (res) => {
+      if (!res?.ok) showToast(res?.error || "Reset failed");
+      else showToast("Game reset — back to lobby");
+    });
+  }
 
   function handleSpectate() {
     if (isPlayer && room.players.length === 1) { showToast("Cannot spectate as only player — room would close"); return; }
@@ -276,9 +303,15 @@ export default function Lobby({ spectate = false }) {
 
   function handleChangeGame(e) {
     const newGame = e.target.value;
+    const targetGame = games.find(g=>g.id===newGame);
     socket.emit("lobby:updateGame", { roomId: id, gameId: newGame }, (res) => {
       if (!res?.ok) showToast(res.error);
-      else showToast(`Game set to ${res.room.gameLabel}`);
+      else {
+        showToast(`Game set to ${res.room.gameLabel}`);
+        if (targetGame && targetGame.supportsBots===false && room.bots.length>0) {
+          showToast("Bots removed — this game doesn't support bots");
+        }
+      }
     });
   }
   function handleOptionChange(key, value) {
@@ -287,6 +320,8 @@ export default function Lobby({ spectate = false }) {
     });
   }
   function handleAddBot() {
+    if (!supportsBots) { showToast("This game doesn't support bots"); return; }
+    if (hasActiveGame) { showToast("Cannot add bots while game in progress"); return; }
     socket.emit("lobby:addBot", { roomId: id, botName: botName.trim() || undefined }, (res) => {
       if (!res?.ok) showToast(res.error);
       else { setBotName(""); showToast(`Added bot`); }
@@ -455,64 +490,93 @@ export default function Lobby({ spectate = false }) {
         {/* Controls — private, host-only on desktop right, phone toggles */}
         <div className={`${mobileTab === "board" ? "hidden lg:block" : "block"} space-y-5`}>
 
-      {isHost ? (
-        <div className="rounded-2xl bg-[#0f2231]/80 border border-white/10 p-4">
-          <h4 className="font-bold text-white text-sm">Add Bots</h4>
-          <div className="mt-2 flex gap-2 items-center">
-            <input value={botName} onChange={e => setBotName(e.target.value)} placeholder="Leave empty for random name" maxLength={20} className="flex-1 px-3 py-2.5 rounded-xl bg-white/10 border border-white/15 text-white placeholder:text-white/30 text-sm outline-none" />
-            <button onClick={handleAddBot} className="px-4 py-2.5 rounded-xl bg-[#f3ecd8] hover:bg-white text-[#0e2533] text-sm font-bold">Add</button>
-          </div>
-          <p className="text-xs text-white/30 mt-1">{room.players.length + room.bots.length} / {room.maxPlayers} players — bots take a spot and look the same.</p>
-        </div>
-      ) : null}
-
-      <div className="mt-5 rounded-2xl bg-[#0f2231]/80 border border-white/10 p-4">
-        <div className="flex items-center justify-between gap-3">
-          <span className="font-extrabold text-white text-sm">Game</span>
-          {isHost ? (
-            <select value={room.game} onChange={handleChangeGame} className="px-3 py-1.5 rounded-full bg-white/10 border border-white/15 text-white text-xs font-bold">
-              {games.map(g => <option key={g.id} value={g.id} className="bg-[#0f2231]">{g.label}</option>)}
-            </select>
+          {isQuestGame && hasGameState ? (
+            <QuestGame roomId={id} isHost={isHost} isSpectator={isSpectator} />
           ) : (
-            <span className="px-3 py-1.5 rounded-full bg-white/10 border border-white/15 text-white text-xs font-bold">{game.label}</span>
-          )}
-        </div>
-        <p className="text-xs text-white/40 mt-1">{games.find(g=>g.id===room.game)?.description || ""}</p>
-        <div className="mt-3 grid gap-3">
-          {(game.optionSchema || []).map(opt => (
-            <div key={opt.key} className="flex items-center gap-3">
-              <label className="text-xs font-bold text-white/60 w-24">{opt.label}</label>
-              {opt.type === "toggle" ? (
-                isHost ? (
-                  <button onClick={() => handleOptionChange(opt.key, !room.gameOptions[opt.key])} className={`relative w-12 h-6 rounded-full transition-colors ${room.gameOptions[opt.key] ? "bg-emerald-500" : "bg-white/15"}`}>
-                    <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${room.gameOptions[opt.key] ? "translate-x-6" : ""}`} />
-                  </button>
-                ) : (
-                  <span className={`px-2 py-1 rounded-full text-xs font-bold ${room.gameOptions[opt.key] ? "bg-emerald-500/20 text-emerald-300" : "bg-white/10 text-white/40"}`}>{room.gameOptions[opt.key] ? "On" : "Off"}</span>
-                )
-              ) : opt.type === "slider" ? (
-                isHost ? (
-                  <div className="flex-1 flex items-center gap-2">
-                    <input type="range" min={opt.min} max={opt.max} step={opt.step} value={room.gameOptions[opt.key]} onChange={e => handleOptionChange(opt.key, Number(e.target.value))} className="flex-1 accent-amber-400" />
-                    <span className="text-xs font-bold text-white w-12 text-right">{room.gameOptions[opt.key]}{opt.unit || ""}</span>
-                  </div>
-                ) : (
-                  <span className="text-sm font-bold text-white">{room.gameOptions[opt.key]}{opt.unit || ""}</span>
-                )
-              ) : opt.type === "select" ? (
-                isHost ? (
-                  <select value={room.gameOptions[opt.key]} onChange={e => handleOptionChange(opt.key, e.target.value)} className="flex-1 px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-white text-xs">
-                    {opt.options.map(o => <option key={o} value={o} className="bg-[#0f2231]">{o}</option>)}
-                  </select>
-                ) : (
-                  <span className="text-sm font-bold text-white capitalize">{room.gameOptions[opt.key]}</span>
-                )
+            <>
+              {isQuestGame && (
+                <div className="rounded-2xl bg-[#0f2231]/80 border border-white/10 p-4">
+                  <h4 className="font-bold text-white text-sm">Quest of Shadows</h4>
+                  <p className="text-xs text-white/40 mt-1">{totalPlayers} / {room.maxPlayers} players • Need {room.minPlayers} min{supportsBots ? " (bots count)" : ""} • Good vs Evil</p>
+                  {isHost ? (
+                    <>
+                      <button onClick={handleStartQuest} disabled={!canStart} className={`mt-3 w-full py-3 rounded-full font-extrabold ${canStart ? "bg-[#f3ecd8] hover:bg-white text-[#0e2533]" : "bg-white/10 text-white/30 cursor-not-allowed"}`}>
+                        {canStart ? "▶ Start Quest" : `Need ${room.minPlayers} players (have ${totalPlayers})`}
+                      </button>
+                      {!canStart && supportsBots && <p className="text-xs text-white/30 mt-2">Add bots or wait for players to reach {room.minPlayers}.</p>}
+                    </>
+                  ) : (
+                    <p className="text-xs text-white/40 mt-3">{canStart ? "Host can start the quest." : `Waiting for ${room.minPlayers}+ players (have ${totalPlayers}).`}</p>
+                  )}
+                </div>
+              )}
+
+              {isHost ? (
+                <div className={`rounded-2xl border p-4 ${supportsBots ? "bg-[#0f2231]/80 border-white/10" : "bg-white/5 border-white/10 opacity-60"}`}>
+                  <h4 className="font-bold text-white text-sm">Add Bots</h4>
+                  {!supportsBots ? (
+                    <p className="text-xs text-amber-300 mt-2">Bots not supported for {game.label}. Switch to Quest of Shadows to use bots, or play with humans only.</p>
+                  ) : (
+                    <>
+                      <div className="mt-2 flex gap-2 items-center">
+                        <input value={botName} onChange={e => setBotName(e.target.value)} placeholder="Leave empty for random name" maxLength={20} className="flex-1 px-3 py-2.5 rounded-xl bg-white/10 border border-white/15 text-white placeholder:text-white/30 text-sm outline-none" />
+                        <button onClick={handleAddBot} className="px-4 py-2.5 rounded-xl bg-[#f3ecd8] hover:bg-white text-[#0e2533] text-sm font-bold">Add</button>
+                      </div>
+                      <p className="text-xs text-white/30 mt-1">{totalPlayers} / {room.maxPlayers} players — bots take a spot and look the same.</p>
+                    </>
+                  )}
+                </div>
               ) : null}
-            </div>
-          ))}
-        </div>
-        <p className="text-xs text-white/30 mt-3">{isHost ? "Changes show up for everyone right away." : "Only the host can change these settings."}</p>
-        </div>
+
+              <div className={`mt-5 rounded-2xl border p-4 ${isGameLocked ? "bg-white/5 border-white/10 opacity-60" : "bg-[#0f2231]/80 border-white/10"}`}>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-extrabold text-white text-sm">Game</span>
+                  {isHost ? (
+                    <select value={room.game} onChange={handleChangeGame} disabled={isGameLocked} className={`px-3 py-1.5 rounded-full border text-xs font-bold ${isGameLocked ? "bg-white/5 border-white/10 text-white/30 cursor-not-allowed" : "bg-white/10 border-white/15 text-white"}`}>
+                      {games.map(g => <option key={g.id} value={g.id} className="bg-[#0f2231]">{g.label}{g.supportsBots===false ? " (no bots)" : " (bots)"}</option>)}
+                    </select>
+                  ) : (
+                    <span className="px-3 py-1.5 rounded-full bg-white/10 border border-white/15 text-white text-xs font-bold">{game.label}</span>
+                  )}
+                </div>
+                <p className="text-xs text-white/40 mt-1">{games.find(g=>g.id===room.game)?.description || ""} {isGameLocked && <span className="text-amber-300">• Lobby locked during game</span>}</p>
+                <div className="mt-3 grid gap-3">
+                  {(game.optionSchema || []).map(opt => (
+                    <div key={opt.key} className="flex items-center gap-3">
+                      <label className="text-xs font-bold text-white/60 w-24">{opt.label}</label>
+                      {opt.type === "toggle" ? (
+                        isHost ? (
+                          <button disabled={isGameLocked} onClick={() => handleOptionChange(opt.key, !room.gameOptions[opt.key])} className={`relative w-12 h-6 rounded-full transition-colors ${isGameLocked ? "opacity-40 cursor-not-allowed" : ""} ${room.gameOptions[opt.key] ? "bg-emerald-500" : "bg-white/15"}`}>
+                            <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${room.gameOptions[opt.key] ? "translate-x-6" : ""}`} />
+                          </button>
+                        ) : (
+                          <span className={`px-2 py-1 rounded-full text-xs font-bold ${room.gameOptions[opt.key] ? "bg-emerald-500/20 text-emerald-300" : "bg-white/10 text-white/40"}`}>{room.gameOptions[opt.key] ? "On" : "Off"}</span>
+                        )
+                      ) : opt.type === "slider" ? (
+                        isHost ? (
+                          <div className="flex-1 flex items-center gap-2">
+                            <input type="range" min={opt.min} max={opt.max} step={opt.step} value={room.gameOptions[opt.key]} onChange={e => handleOptionChange(opt.key, Number(e.target.value))} disabled={isGameLocked} className={`flex-1 accent-amber-400 ${isGameLocked ? "opacity-40" : ""}`} />
+                            <span className="text-xs font-bold text-white w-12 text-right">{room.gameOptions[opt.key]}{opt.unit || ""}</span>
+                          </div>
+                        ) : (
+                          <span className="text-sm font-bold text-white">{room.gameOptions[opt.key]}{opt.unit || ""}</span>
+                        )
+                      ) : opt.type === "select" ? (
+                        isHost ? (
+                          <select value={room.gameOptions[opt.key]} onChange={e => handleOptionChange(opt.key, e.target.value)} disabled={isGameLocked} className={`flex-1 px-3 py-2 rounded-xl border text-xs ${isGameLocked ? "bg-white/5 border-white/10 text-white/30" : "bg-white/10 border-white/15 text-white"}`}>
+                            {opt.options.map(o => <option key={o} value={o} className="bg-[#0f2231]">{o}</option>)}
+                          </select>
+                        ) : (
+                          <span className="text-sm font-bold text-white capitalize">{room.gameOptions[opt.key]}</span>
+                        )
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-white/30 mt-3">{isGameLocked ? "Reset game to change settings." : isHost ? "Changes show up for everyone right away." : "Only the host can change these settings."}</p>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

@@ -10,6 +10,7 @@ export default {
   minPlayers: 5,
   maxPlayers: 10,
   defaultMaxPlayers: 10,
+  supportsBots: true,
   defaultOptions: {
     percival: true,
     morgana: true,

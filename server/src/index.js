@@ -18,6 +18,8 @@ import UserRegistry from "./users.js";
 import { RoomManager } from "./rooms.js";
 import { listGames, getGame } from "./games.js";
 import { isValidRoomId, sanitizeName } from "./utils.js";
+import { handleQuestEffects } from "./questScheduler.js";
+import { getPublicState as questPublic, getPrivateState as questPrivate } from "../../games/quest-of-shadows/server/state.js";
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3001;
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || "http://localhost:5173";
@@ -79,6 +81,34 @@ function emitLobbyUpdate(roomId) {
   io.to(roomId).emit("lobby:update", full);
   // Also update global browser list
   broadcastRooms();
+}
+
+function broadcastQuestState(roomId) {
+  const room = roomManager.get(roomId);
+  if (!room || !room.gameState) {
+    emitLobbyUpdate(roomId);
+    return;
+  }
+  const pub = questPublic(room.gameState);
+  io.to(roomId).emit("game:update", pub);
+  io.to(roomId).emit("lobby:update", roomManager.getFull(roomId));
+  // Private per player (humans only, bots ignored)
+  for (const p of room.gameState.players) {
+    if (p.isBot) continue;
+    const sock = io.sockets.sockets.get(p.id);
+    if (sock) {
+      try {
+        const priv = questPrivate(room.gameState, p.id);
+        sock.emit("game:private", priv);
+      } catch {}
+    }
+  }
+}
+
+function questDispatchInternal(roomId, action) {
+  const res = roomManager.dispatchQuestInternal(roomId, action);
+  if (res) broadcastQuestState(roomId);
+  return res;
 }
 
 // ——— Socket handlers ———
@@ -421,8 +451,81 @@ io.on("connection", (socket) => {
     if (full) {
       if (typeof ack === "function") ack({ ok: true, room: full });
       socket.emit("lobby:update", full);
+      // Also send current game state if any (public + private)
+      const room = roomManager.get(id);
+      if (room && room.gameState) {
+        const pub = questPublic(room.gameState);
+        socket.emit("game:update", pub);
+        try {
+          const priv = questPrivate(room.gameState, socket.id);
+          socket.emit("game:private", priv);
+        } catch {
+          socket.emit("game:private", null);
+        }
+      }
     } else {
       if (typeof ack === "function") ack({ ok: false, error: "Room not found" });
+    }
+  });
+
+  // ——— Quest of Shadows — game lifecycle ———
+  socket.on("game:start", ({ roomId } = {}, ack) => {
+    try {
+      const id = String(roomId || socket.data.currentRoom || "").toUpperCase();
+      const { room, effects } = roomManager.startQuest(id, socket.id);
+      if (typeof ack === "function") ack({ ok: true, room });
+      broadcastQuestState(id);
+      handleQuestEffects({ roomManager, roomId: id, effects, broadcast: broadcastQuestState, dispatchInternal: questDispatchInternal });
+    } catch (e) {
+      if (typeof ack === "function") ack({ ok: false, error: e.message });
+      socket.emit("room:error", { error: e.message });
+    }
+  });
+
+  socket.on("game:reset", ({ roomId } = {}, ack) => {
+    try {
+      const id = String(roomId || socket.data.currentRoom || "").toUpperCase();
+      const room = roomManager.resetQuest(id, socket.id);
+      if (typeof ack === "function") ack({ ok: true, room });
+      io.to(id).emit("game:update", null);
+      io.to(id).emit("game:private", null);
+      io.to(id).emit("lobby:update", room);
+      broadcastRooms();
+    } catch (e) {
+      if (typeof ack === "function") ack({ ok: false, error: e.message });
+      socket.emit("room:error", { error: e.message });
+    }
+  });
+
+  socket.on("game:action", ({ roomId, type, payload } = {}, ack) => {
+    try {
+      const id = String(roomId || socket.data.currentRoom || "").toUpperCase();
+      const result = roomManager.handleQuestAction({ roomId: id, socketId: socket.id, actionType: type, payload });
+      if (typeof ack === "function") ack({ ok: true, public: questPublic(result.state) });
+      broadcastQuestState(id);
+      handleQuestEffects({ roomManager, roomId: id, effects: result.effects, broadcast: broadcastQuestState, dispatchInternal: questDispatchInternal });
+    } catch (e) {
+      if (typeof ack === "function") ack({ ok: false, error: e.message });
+      socket.emit("room:error", { error: e.message });
+    }
+  });
+
+  socket.on("game:requestState", ({ roomId } = {}, ack) => {
+    try {
+      const id = String(roomId || socket.data.currentRoom || "").toUpperCase();
+      const room = roomManager.get(id);
+      if (!room || !room.gameState) {
+        if (typeof ack === "function") ack({ ok: true, public: null, private: null });
+        return;
+      }
+      const pub = questPublic(room.gameState);
+      let priv = null;
+      try { priv = questPrivate(room.gameState, socket.id); } catch { priv = null; }
+      if (typeof ack === "function") ack({ ok: true, public: pub, private: priv });
+      socket.emit("game:update", pub);
+      if (priv) socket.emit("game:private", priv);
+    } catch (e) {
+      if (typeof ack === "function") ack({ ok: false, error: e.message });
     }
   });
 

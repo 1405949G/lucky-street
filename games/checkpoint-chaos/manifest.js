@@ -5,6 +5,7 @@ export default {
   minPlayers: 2,
   maxPlayers: 4,
   defaultMaxPlayers: 4,
+  supportsBots: false,
   defaultOptions: { difficulty: "normal", timeLimit: 120, friendlyFire: false },
   optionSchema: [
     { key: "difficulty", label: "Difficulty", type: "select", options: ["easy", "normal", "hard"] },

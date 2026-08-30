@@ -21,6 +21,9 @@
 
 import { generateRoomId, isValidRoomId, clamp } from "./utils.js";
 import { getGame, defaultMaxFor } from "./games.js";
+import { createInitialState as createQuestState, reducer as questReducer, getPublicState as questPublic, getPrivateState as questPrivate, getAIView as questAIView } from "../../games/quest-of-shadows/server/state.js";
+import { PHASES as QuestPhases } from "../../games/quest-of-shadows/server/config.js";
+import * as questAI from "../../games/quest-of-shadows/server/ai.js";
 
 const BOT_NAMES = [
   "Ava", "Milo", "Zoe", "Finn", "Luna", "Kai", "Nova", "Rex",
@@ -90,22 +93,35 @@ export class RoomManager {
     // includes players/bots details for lobby sync
     const r = this.get(roomId);
     if (!r) return null;
+    const game = getGame(r.game);
+    // Sanitize gameState: public only for lobby sync (prevents role leak)
+    let gamePublic = null;
+    if (r.gameState) {
+      try { gamePublic = questPublic(r.gameState); } catch { gamePublic = null; }
+    }
     return {
       id: r.id,
       hostId: r.hostId,
       hostName: r.hostName,
       game: r.game,
-      gameLabel: getGame(r.game)?.label || r.game,
+      gameLabel: game?.label || r.game,
       maxPlayers: r.maxPlayers,
       isPrivate: false,
       gameOptions: r.gameOptions,
+      supportsBots: game?.supportsBots !== false,
+      minPlayers: game?.minPlayers || 2,
       players: r.players.map(p => ({ ...p })),
       bots: r.bots.map(b => ({ ...b })),
       spectators: (r.spectators || []).map(s => ({ ...s })),
       spectatorCount: (r.spectators || []).length,
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
-      slotsText: `${r.players.length + r.bots.length} / ${r.maxPlayers} Players (including ${r.bots.length} Bots)`
+      slotsText: `${r.players.length + r.bots.length} / ${r.maxPlayers} Players (including ${r.bots.length} Bots)`,
+      canStart: (r.players.length + r.bots.length) >= (game?.minPlayers || 2) && (r.players.length + r.bots.length) <= (game?.maxPlayers || 12),
+      gameState: gamePublic,
+      hasGame: !!r.gameState,
+      gamePhase: r.gameState?.phase || null,
+      gameStartedAt: r.gameStartedAt || null
     };
   }
 
@@ -137,6 +153,8 @@ export class RoomManager {
       players: [{ id: hostId, name: hostName, avatar: hostAvatar || null, isHost: true }],
       bots: [],
       spectators: [],
+      gameState: null,
+      gameStartedAt: null,
       createdAt: Date.now(),
       updatedAt: Date.now()
     };
@@ -148,6 +166,9 @@ export class RoomManager {
   join({ roomId, socketId, username, avatar }) {
     const room = this.get(roomId);
     if (!room) throw new Error("Room not found");
+    if (room.gameState && room.gameState.phase !== QuestPhases.LOBBY && room.gameState.phase !== QuestPhases.GAME_OVER) {
+      throw new Error("Game in progress — join as spectator");
+    }
     if (room.players.some(p => p.id === socketId)) throw new Error("Already in room");
     if (room.players.some(p => p.name.toLowerCase() === username.toLowerCase())) {
       throw new Error("Username already in this room");
@@ -166,6 +187,12 @@ export class RoomManager {
   leave({ roomId, socketId }) {
     const room = this.get(roomId);
     if (!room) return null;
+    // If game in progress, abort it
+    const wasActiveGame = !!(room.gameState && room.gameState.phase !== QuestPhases.LOBBY && room.gameState.phase !== QuestPhases.GAME_OVER);
+    if (wasActiveGame) {
+      room.gameState = null;
+      room.gameStartedAt = null;
+    }
     // also remove from spectators if present
     const specIdx = (room.spectators || []).findIndex(s => s.id === socketId);
     if (specIdx !== -1) {
@@ -252,6 +279,9 @@ export class RoomManager {
   promoteSpectator({ roomId, socketId, username, avatar }) {
     const room = this.get(roomId);
     if (!room) throw new Error("Room not found");
+    if (room.gameState && room.gameState.phase !== QuestPhases.LOBBY && room.gameState.phase !== QuestPhases.GAME_OVER) {
+      throw new Error("Game in progress — cannot join as player now");
+    }
     if (!room.spectators) room.spectators = [];
     const sIdx = room.spectators.findIndex(s => s.id === socketId);
     // if already player, ignore
@@ -273,6 +303,11 @@ export class RoomManager {
   removePlayerFromAllRooms(socketId) {
     const affected = [];
     for (const room of this.rooms.values()) {
+      const wasActiveGame = !!(room.gameState && room.gameState.phase !== QuestPhases.LOBBY && room.gameState.phase !== QuestPhases.GAME_OVER);
+      if (wasActiveGame) {
+        room.gameState = null;
+        room.gameStartedAt = null;
+      }
       let changed = false;
       // spectators
       if (room.spectators) {
@@ -321,8 +356,15 @@ export class RoomManager {
     return room;
   }
 
+  _assertNoActiveGame(room) {
+    if (room.gameState && room.gameState.phase !== QuestPhases.LOBBY && room.gameState.phase !== QuestPhases.GAME_OVER) {
+      throw new Error("Cannot modify lobby while game is in progress — reset the game first");
+    }
+  }
+
   updateGame({ roomId, requesterId, gameId }) {
     const room = this._assertHost(roomId, requesterId);
+    this._assertNoActiveGame(room);
     const game = getGame(gameId);
     if (!game) throw new Error("Unknown game");
     room.game = gameId;
@@ -331,6 +373,16 @@ export class RoomManager {
     room.maxPlayers = game.defaultMaxPlayers;
     // Reset options to new game's defaults (preserve? then merge defaults)
     room.gameOptions = { ...game.defaultOptions };
+    // Handle bots support: if new game doesn't support bots, kick all bots
+    const supportsBots = game.supportsBots !== false;
+    if (!supportsBots && room.bots.length > 0) {
+      room.bots = [];
+    }
+    // Clear game state when switching games
+    if (room.gameState) {
+      room.gameState = null;
+      room.gameStartedAt = null;
+    }
     room.updatedAt = Date.now();
     this._notify();
     return this.getFull(room.id);
@@ -338,6 +390,7 @@ export class RoomManager {
 
   updateMaxPlayers({ roomId, requesterId, maxPlayers }) {
     const room = this._assertHost(roomId, requesterId);
+    this._assertNoActiveGame(room);
     const n = Number(maxPlayers);
     if (!Number.isFinite(n) || n < 2 || n > 12) throw new Error("maxPlayers must be 2-12");
     const total = room.players.length + room.bots.length;
@@ -350,6 +403,7 @@ export class RoomManager {
 
   updateOptions({ roomId, requesterId, options }) {
     const room = this._assertHost(roomId, requesterId);
+    this._assertNoActiveGame(room);
     const game = getGame(room.game);
     if (!game) throw new Error("Game not found");
     // Validate keys exist in schema, but allow flexible
@@ -377,6 +431,9 @@ export class RoomManager {
 
   addBot({ roomId, requesterId, botName }) {
     const room = this._assertHost(roomId, requesterId);
+    this._assertNoActiveGame(room);
+    const game = getGame(room.game);
+    if (game && game.supportsBots === false) throw new Error("This game does not support bots");
     const total = room.players.length + room.bots.length;
     if (total >= room.maxPlayers) throw new Error("Room is full — increase maxPlayers or remove a player/bot");
     let name = String(botName || "").trim().slice(0, 20);
@@ -404,6 +461,7 @@ export class RoomManager {
 
   removeBot({ roomId, requesterId, botId }) {
     const room = this._assertHost(roomId, requesterId);
+    this._assertNoActiveGame(room);
     const idx = room.bots.findIndex(b => b.id === botId);
     if (idx === -1) throw new Error("Bot not found");
     room.bots.splice(idx, 1);
@@ -428,6 +486,7 @@ export class RoomManager {
 
   kickPlayer({ roomId, requesterId, targetId }) {
     const room = this._assertHost(roomId, requesterId);
+    this._assertNoActiveGame(room);
     if (targetId === room.hostId) throw new Error("Cannot kick yourself");
     const idx = room.players.findIndex(p => p.id === targetId);
     if (idx === -1) throw new Error("Player not found in room");
@@ -508,5 +567,157 @@ export class RoomManager {
     const room = this.get(roomId);
     if (!room) return { exists: false };
     return { exists: true, isPrivate: false, hostName: room.hostName, game: room.game };
+  }
+
+  // ——— Quest of Shadows — game lifecycle ———
+  canStartQuest(roomId, requesterId) {
+    const room = this.get(roomId);
+    if (!room) throw new Error("Room not found");
+    if (room.hostId !== requesterId) throw new Error("Only host can start the quest");
+    if (room.game !== "quest-of-shadows") throw new Error("Start Quest only for Quest of Shadows");
+    const total = room.players.length + room.bots.length;
+    const game = getGame(room.game);
+    const min = game?.minPlayers || 5;
+    const max = game?.maxPlayers || 10;
+    if (total < min) throw new Error(`Need ${min} players (have ${total}) — add bots or wait`);
+    if (total > max) throw new Error(`Too many players (${total} > ${max})`);
+    if (room.gameState && room.gameState.phase !== QuestPhases.LOBBY && room.gameState.phase !== QuestPhases.GAME_OVER) {
+      throw new Error("Game already in progress");
+    }
+    return true;
+  }
+
+  startQuest(roomId, requesterId) {
+    this.canStartQuest(roomId, requesterId);
+    const room = this.get(roomId);
+    // Build players array for engine: humans + bots combined, preserving order (humans first then bots)
+    const allParticipants = [
+      ...room.players.map(p => ({ id: p.id, name: p.name, isBot: false })),
+      ...room.bots.map(b => ({ id: b.id, name: b.name, isBot: true })),
+    ];
+    // Shuffle? Engine shuffles roles internally, but keep id order for later mapping
+    const opts = room.gameOptions || {};
+    const result = questReducer(undefined, { type: 'SETUP_GAME', payload: { players: allParticipants, opts, roomCode: room.id } });
+    room.gameState = result.state;
+    room.gameStartedAt = Date.now();
+    room.updatedAt = Date.now();
+    this._notify();
+    return { room: this.getFull(room.id), effects: result.effects };
+  }
+
+  resetQuest(roomId, requesterId) {
+    const room = this.get(roomId);
+    if (!room) throw new Error("Room not found");
+    if (room.hostId !== requesterId) throw new Error("Only host can reset");
+    if (room.game !== "quest-of-shadows") throw new Error("Not a Quest game");
+    room.gameState = null;
+    room.gameStartedAt = null;
+    room.updatedAt = Date.now();
+    this._notify();
+    return this.getFull(room.id);
+  }
+
+  handleQuestAction({ roomId, socketId, actionType, payload }) {
+    const room = this.get(roomId);
+    if (!room) throw new Error("Room not found");
+    if (room.game !== "quest-of-shadows") throw new Error("Not a Quest game");
+    if (!room.gameState) throw new Error("Game not started");
+    const gs = room.gameState;
+    // Build action for reducer — map generic payload to expected shape
+    let action;
+    switch (actionType) {
+      case 'REVEAL_ROLE': {
+        // payload: { playerId } or socketId implied
+        const pid = payload?.playerId || socketId;
+        // Only allow self reveal (or bot auto)
+        const target = gs.players.find(p => p.id === pid);
+        if (!target) throw new Error("Player not in game");
+        // Allow any player to reveal only themselves unless bot
+        if (pid !== socketId && !target.isBot) throw new Error("Can only reveal your own role");
+        action = { type: 'REVEAL_ROLE', payload: { playerId: pid } };
+        break;
+      }
+      case 'PROPOSE_TEAM': {
+        const teamIds = payload?.teamIds;
+        if (!Array.isArray(teamIds)) throw new Error("teamIds required");
+        // Verify requester is current leader
+        const leader = gs.players[gs.leaderIndex];
+        if (!leader || leader.id !== socketId) throw new Error("Only the Leader may propose");
+        action = { type: 'PROPOSE_TEAM', payload: { teamIds, proposerId: socketId } };
+        break;
+      }
+      case 'SUBMIT_TEAM_VOTE': {
+        const vote = payload?.vote;
+        if (vote !== 'APPROVE' && vote !== 'REJECT') throw new Error("Vote must be APPROVE or REJECT");
+        // Prevent double vote
+        if (gs.proposal.votes[socketId]) throw new Error("Already voted");
+        action = { type: 'SUBMIT_TEAM_VOTE', payload: { playerId: socketId, vote } };
+        break;
+      }
+      case 'SUBMIT_QUEST_VOTE': {
+        const vote = payload?.vote;
+        if (vote !== 'SUCCESS' && vote !== 'FAIL') throw new Error("Quest vote must be SUCCESS or FAIL");
+        if (gs.questVotes[socketId]) throw new Error("Already quest-voted");
+        // Must be on team
+        if (!gs.proposal.teamIds.includes(socketId)) throw new Error("Only team members may quest-vote");
+        action = { type: 'SUBMIT_QUEST_VOTE', payload: { playerId: socketId, vote } };
+        break;
+      }
+      case 'ASSASSINATE': {
+        const targetId = payload?.targetId;
+        if (!targetId) throw new Error("targetId required");
+        // Verify requester is Assassin (check role)
+        const me = gs.players.find(p => p.id === socketId);
+        if (!me || me.role !== 'ASSASSIN') throw new Error("Only the Assassin may assassinate");
+        action = { type: 'ASSASSINATE', payload: { targetId } };
+        break;
+      }
+      default:
+        throw new Error(`Unknown quest action: ${actionType}`);
+    }
+    const result = questReducer(gs, action);
+    room.gameState = result.state;
+    room.updatedAt = Date.now();
+    this._notify();
+    return { room: this.getFull(room.id), state: result.state, effects: result.effects };
+  }
+
+  // Internal dispatch for scheduled resolves / bot actions (no permission check beyond isBot or system)
+  dispatchQuestInternal(roomId, action) {
+    const room = this.get(roomId);
+    if (!room || !room.gameState) return null;
+    try {
+      const result = questReducer(room.gameState, action);
+      room.gameState = result.state;
+      room.updatedAt = Date.now();
+      this._notify();
+      return { room: this.getFull(room.id), state: result.state, effects: result.effects };
+    } catch (e) {
+      console.warn(`[quest internal] ${action.type} fail: ${e.message}`);
+      return null;
+    }
+  }
+
+  getQuestPublic(roomId) {
+    const room = this.get(roomId);
+    if (!room || !room.gameState) return null;
+    return questPublic(room.gameState);
+  }
+
+  getQuestPrivate(roomId, playerId) {
+    const room = this.get(roomId);
+    if (!room || !room.gameState) return null;
+    try {
+      return questPrivate(room.gameState, playerId);
+    } catch {
+      // For spectators / not-in-game, return public
+      return questPublic(room.gameState);
+    }
+  }
+
+  getQuestAIView(roomId, botId) {
+    const room = this.get(roomId);
+    if (!room || !room.gameState) return null;
+    return questAIView(room.gameState, botId);
   }
 }

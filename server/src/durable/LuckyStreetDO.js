@@ -9,6 +9,8 @@ import UserRegistry from "../users.js";
 import { RoomManager } from "../rooms.js";
 import { listGames } from "../games.js";
 import { isValidRoomId, sanitizeName } from "../utils.js";
+import { handleQuestEffects } from "../questScheduler.js";
+import { getPublicState as questPublic, getPrivateState as questPrivate } from "../../../games/quest-of-shadows/server/state.js";
 
 function genSocketId() {
   try { return crypto.randomUUID(); } catch { return "s_" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); }
@@ -129,6 +131,37 @@ export class LuckyStreetDO {
 
   _syncAttachment(ws, sess) {
     try { ws.serializeAttachment({ socketId: sess.socketId, username: sess.username || null, avatar: sess.avatar || null, currentRoom: sess.currentRoom || null }); } catch {}
+  }
+
+  broadcastQuestState(roomId) {
+    const room = this.roomManager.get(roomId);
+    if (!room || !room.gameState) {
+      const full = this.roomManager.getFull(roomId);
+      if (full) this.broadcast({ event: "lobby:update", data: full });
+      return;
+    }
+    let pub = null;
+    try { pub = questPublic(room.gameState); } catch { pub = null; }
+    if (pub) {
+      this.broadcast({ event: "game:update", data: pub });
+      this.broadcast({ event: "lobby:update", data: this.roomManager.getFull(roomId) });
+      for (const p of room.gameState.players) {
+        if (p.isBot) continue;
+        const ws = this.socketIdToWs.get(p.id);
+        if (ws) {
+          try {
+            const priv = questPrivate(room.gameState, p.id);
+            this.send(ws, { event: "game:private", data: priv });
+          } catch {}
+        }
+      }
+    }
+  }
+
+  questDispatchInternal(roomId, action) {
+    const res = this.roomManager.dispatchQuestInternal(roomId, action);
+    if (res) this.broadcastQuestState(roomId);
+    return res;
   }
 
   async fetch(request) {
@@ -876,8 +909,64 @@ export class LuckyStreetDO {
           if (full) {
             okAck({ ok: true, room: full });
             this.send(ws, { event: "lobby:update", data: full });
+            const room = this.roomManager.get(id);
+            if (room && room.gameState) {
+              try {
+                const pub = questPublic(room.gameState);
+                this.send(ws, { event: "game:update", data: pub });
+              } catch {}
+              try {
+                const priv = questPrivate(room.gameState, socketId);
+                this.send(ws, { event: "game:private", data: priv });
+              } catch {}
+            }
           } else {
             okAck({ ok: false, error: "Room not found" });
+          }
+          break;
+        }
+        case "game:start": {
+          const id = String(data.roomId || sess.currentRoom || "").toUpperCase();
+          const { room, effects } = this.roomManager.startQuest(id, socketId);
+          okAck({ ok: true, room });
+          this.broadcastQuestState(id);
+          handleQuestEffects({ roomManager: this.roomManager, roomId: id, effects, broadcast: (rid) => this.broadcastQuestState(rid), dispatchInternal: (rid, act) => this.questDispatchInternal(rid, act) });
+          this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic() });
+          await this.persist();
+          break;
+        }
+        case "game:reset": {
+          const id = String(data.roomId || sess.currentRoom || "").toUpperCase();
+          const room = this.roomManager.resetQuest(id, socketId);
+          okAck({ ok: true, room });
+          this.broadcast({ event: "game:update", data: null });
+          this.broadcast({ event: "game:private", data: null });
+          this.broadcast({ event: "lobby:update", data: room });
+          this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic() });
+          await this.persist();
+          break;
+        }
+        case "game:action": {
+          const id = String(data.roomId || sess.currentRoom || "").toUpperCase();
+          const result = this.roomManager.handleQuestAction({ roomId: id, socketId, actionType: data.type, payload: data.payload });
+          okAck({ ok: true, public: questPublic(result.state) });
+          this.broadcastQuestState(id);
+          handleQuestEffects({ roomManager: this.roomManager, roomId: id, effects: result.effects, broadcast: (rid) => this.broadcastQuestState(rid), dispatchInternal: (rid, act) => this.questDispatchInternal(rid, act) });
+          await this.persist();
+          break;
+        }
+        case "game:requestState": {
+          const id = String(data.roomId || sess.currentRoom || "").toUpperCase();
+          const room = this.roomManager.get(id);
+          if (!room || !room.gameState) {
+            okAck({ ok: true, public: null, private: null });
+          } else {
+            const pub = questPublic(room.gameState);
+            let priv = null;
+            try { priv = questPrivate(room.gameState, socketId); } catch { priv = null; }
+            okAck({ ok: true, public: pub, private: priv });
+            this.send(ws, { event: "game:update", data: pub });
+            if (priv) this.send(ws, { event: "game:private", data: priv });
           }
           break;
         }
