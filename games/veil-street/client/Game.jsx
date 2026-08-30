@@ -142,29 +142,44 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
               {priv.self.role==='LOYAL' ? 'You’re Loyal — no extra info.' : priv.self.role==='OBERON' ? 'You’re Oberon — you work alone.' : priv.self.role==='MERLIN' && priv.vision.sees.length===0 ? 'Mordred is hiding — you see no one.' : 'You see no one.'}
             </p>
           )}
-          <div className="mt-3 pt-3 border-t border-white/10">
-            <p className="text-[10px] tracking-widest font-bold text-white/40">ROLES IN THIS GAME</p>
-            <div className="mt-2 grid grid-cols-2 gap-3">
-              <div className="text-center">
-                <p className="text-[10px] font-bold tracking-widest text-emerald-300">GOOD</p>
-                <div className="mt-1.5 flex flex-wrap gap-1.5 justify-center">
-                  <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Merlin</span>
-                  {pub.extraRoles?.percival && <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Percival</span>}
-                  <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/20 text-[10px] font-bold text-emerald-300">Loyal</span>
+          {(() => {
+            const n = pub.players.length;
+            const opts = pub.extraRoles || {};
+            const maxEvil = n <= 6 ? 1 : n <= 8 ? 2 : 3;
+            const e = ['morgana','mordred','oberon'].filter(k=> !!opts[k]).slice(0, maxEvil);
+            const hasPercival = !!opts.percival;
+            // Role counts from config
+            const base = { 5:{good:3,evil:2,loyal:2,minion:1}, 6:{good:4,evil:2,loyal:3,minion:1}, 7:{good:4,evil:3,loyal:3,minion:2}, 8:{good:5,evil:3,loyal:4,minion:2}, 9:{good:6,evil:3,loyal:5,minion:2}, 10:{good:6,evil:4,loyal:5,minion:3} }[n] || {good:3,evil:2,loyal:2,minion:1};
+            let loyal = base.loyal - (hasPercival?1:0);
+            let minion = base.minion - e.length;
+            loyal = Math.max(0, loyal);
+            minion = Math.max(0, minion);
+            return (
+            <div className="mt-3 pt-3 border-t border-white/10">
+              <p className="text-[10px] tracking-widest font-bold text-white/40">ROLES IN THIS GAME</p>
+              <div className="mt-2 grid grid-cols-2 gap-3">
+                <div className="text-center">
+                  <p className="text-[10px] font-bold tracking-widest text-emerald-300">GOOD — {1 + (hasPercival?1:0) + loyal}</p>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5 justify-center">
+                    <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Merlin</span>
+                    {hasPercival && <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Percival</span>}
+                    {loyal > 0 && <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/20 text-[10px] font-bold text-emerald-300">Loyal ×{loyal}</span>}
+                  </div>
                 </div>
-              </div>
-              <div className="text-center">
-                <p className="text-[10px] font-bold tracking-widest text-rose-300">EVIL</p>
-                <div className="mt-1.5 flex flex-wrap gap-1.5 justify-center">
-                  <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Assassin</span>
-                  {pub.extraRoles?.morgana && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Morgana</span>}
-                  {pub.extraRoles?.mordred && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Mordred</span>}
-                  {pub.extraRoles?.oberon && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Oberon</span>}
-                  <span className="px-2.5 py-1 rounded-full bg-rose-500/15 border border-rose-500/20 text-[10px] font-bold text-rose-300">Minion</span>
+                <div className="text-center">
+                  <p className="text-[10px] font-bold tracking-widest text-rose-300">EVIL — {1 + e.length + minion}</p>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5 justify-center">
+                    <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Assassin</span>
+                    {e.includes('morgana') && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Morgana</span>}
+                    {e.includes('mordred') && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Mordred</span>}
+                    {e.includes('oberon') && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Oberon</span>}
+                    {minion > 0 && <span className="px-2.5 py-1 rounded-full bg-rose-500/15 border border-rose-500/20 text-[10px] font-bold text-rose-300">Minion ×{minion}</span>}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+            );
+          })()}
         </div>
       )}
       {!hideTopAllegiance && isSpectator && !priv?.self && (
@@ -554,57 +569,128 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
               {priv.self.role==='LOYAL' ? 'You’re Loyal — no extra info.' : priv.self.role==='OBERON' ? 'You’re Oberon — you work alone.' : priv.self.role==='MERLIN' && priv.vision.sees.length===0 ? 'Mordred is hiding — you see no one.' : 'You see no one.'}
             </p>
           )}
-          <div className="mt-3 pt-3 border-t border-white/10">
-            <p className="text-[10px] tracking-widest font-bold text-white/40">ROLES IN THIS GAME</p>
-            <div className="mt-2 grid grid-cols-2 gap-3">
-              <div className="text-center">
-                <p className="text-[10px] font-bold tracking-widest text-emerald-300">GOOD</p>
-                <div className="mt-1.5 flex flex-wrap gap-1.5 justify-center">
-                  <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Merlin</span>
-                  {pub.extraRoles?.percival && <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Percival</span>}
-                  <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/20 text-[10px] font-bold text-emerald-300">Loyal</span>
+          {(() => {
+            const n = pub.players.length;
+            const opts = pub.extraRoles || {};
+            const maxEvil = n <= 6 ? 1 : n <= 8 ? 2 : 3;
+            const e = ['morgana','mordred','oberon'].filter(k=> !!opts[k]).slice(0, maxEvil);
+            const hasPercival = !!opts.percival;
+            const base = { 5:{loyal:2,minion:1}, 6:{loyal:3,minion:1}, 7:{loyal:3,minion:2}, 8:{loyal:4,minion:2}, 9:{loyal:5,minion:2}, 10:{loyal:5,minion:3} }[n] || {loyal:2,minion:1};
+            let loyal = base.loyal - (hasPercival?1:0);
+            let minion = base.minion - e.length;
+            loyal = Math.max(0, loyal);
+            minion = Math.max(0, minion);
+            return (
+            <div className="mt-3 pt-3 border-t border-white/10">
+              <p className="text-[10px] tracking-widest font-bold text-white/40">ROLES IN THIS GAME</p>
+              <div className="mt-2 grid grid-cols-2 gap-3">
+                <div className="text-center">
+                  <p className="text-[10px] font-bold tracking-widest text-emerald-300">GOOD — {1 + (hasPercival?1:0) + loyal}</p>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5 justify-center">
+                    <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Merlin</span>
+                    {hasPercival && <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Percival</span>}
+                    {loyal > 0 && <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/20 text-[10px] font-bold text-emerald-300">Loyal ×{loyal}</span>}
+                  </div>
                 </div>
-              </div>
-              <div className="text-center">
-                <p className="text-[10px] font-bold tracking-widest text-rose-300">EVIL</p>
-                <div className="mt-1.5 flex flex-wrap gap-1.5 justify-center">
-                  <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Assassin</span>
-                  {pub.extraRoles?.morgana && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Morgana</span>}
-                  {pub.extraRoles?.mordred && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Mordred</span>}
-                  {pub.extraRoles?.oberon && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Oberon</span>}
-                  <span className="px-2.5 py-1 rounded-full bg-rose-500/15 border border-rose-500/20 text-[10px] font-bold text-rose-300">Minion</span>
+                <div className="text-center">
+                  <p className="text-[10px] font-bold tracking-widest text-rose-300">EVIL — {1 + e.length + minion}</p>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5 justify-center">
+                    <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Assassin</span>
+                    {e.includes('morgana') && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Morgana</span>}
+                    {e.includes('mordred') && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Mordred</span>}
+                    {e.includes('oberon') && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Oberon</span>}
+                    {minion > 0 && <span className="px-2.5 py-1 rounded-full bg-rose-500/15 border border-rose-500/20 text-[10px] font-bold text-rose-300">Minion ×{minion}</span>}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+            );
+          })()}
         </div>
       )}
-      {hideTopAllegiance && isSpectator && !priv?.self && (
+      {!hideTopAllegiance && isSpectator && !priv?.self && (
         <div className="rounded-xl bg-white/5 border border-white/10 p-3 text-center">
           <p className="text-xs text-amber-200">Spectating — you see the board only. Private roles hidden.</p>
+          {(() => {
+            const n = pub.players.length;
+            const opts = pub.extraRoles || {};
+            const maxEvil = n <= 6 ? 1 : n <= 8 ? 2 : 3;
+            const e = ['morgana','mordred','oberon'].filter(k=> !!opts[k]).slice(0, maxEvil);
+            const hasPercival = !!opts.percival;
+            const base = { 5:{loyal:2,minion:1}, 6:{loyal:3,minion:1}, 7:{loyal:3,minion:2}, 8:{loyal:4,minion:2}, 9:{loyal:5,minion:2}, 10:{loyal:5,minion:3} }[n] || {loyal:2,minion:1};
+            let loyal = base.loyal - (hasPercival?1:0);
+            let minion = base.minion - e.length;
+            loyal = Math.max(0, loyal);
+            minion = Math.max(0, minion);
+            return (
           <div className="mt-3 pt-3 border-t border-white/10">
             <p className="text-[10px] tracking-widest font-bold text-white/40">ROLES IN THIS GAME</p>
             <div className="mt-2 grid grid-cols-2 gap-3">
               <div className="text-center">
-                <p className="text-[10px] font-bold tracking-widest text-emerald-300">GOOD</p>
+                <p className="text-[10px] font-bold tracking-widest text-emerald-300">GOOD — {1 + (hasPercival?1:0) + loyal}</p>
                 <div className="mt-1.5 flex flex-wrap gap-1.5 justify-center">
                   <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Merlin</span>
-                  {pub.extraRoles?.percival && <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Percival</span>}
-                  <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/20 text-[10px] font-bold text-emerald-300">Loyal</span>
+                  {hasPercival && <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Percival</span>}
+                  {loyal > 0 && <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/20 text-[10px] font-bold text-emerald-300">Loyal ×{loyal}</span>}
                 </div>
               </div>
               <div className="text-center">
-                <p className="text-[10px] font-bold tracking-widest text-rose-300">EVIL</p>
+                <p className="text-[10px] font-bold tracking-widest text-rose-300">EVIL — {1 + e.length + minion}</p>
                 <div className="mt-1.5 flex flex-wrap gap-1.5 justify-center">
                   <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Assassin</span>
                   {pub.extraRoles?.morgana && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Morgana</span>}
                   {pub.extraRoles?.mordred && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Mordred</span>}
                   {pub.extraRoles?.oberon && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Oberon</span>}
-                  <span className="px-2.5 py-1 rounded-full bg-rose-500/15 border border-rose-500/20 text-[10px] font-bold text-rose-300">Minion</span>
+                  {minion > 0 && <span className="px-2.5 py-1 rounded-full bg-rose-500/15 border border-rose-500/20 text-[10px] font-bold text-rose-300">Minion ×{minion}</span>}
                 </div>
               </div>
             </div>
           </div>
+            );
+          })()}
+        </div>
+      )}
+      {!hideTopAllegiance && isSpectator && !priv?.self && (
+        <div className="rounded-xl bg-[#0f2231] border border-white/10 p-4 text-center shadow-lg">
+          <p className="text-sm font-bold text-white">👁️ Spectating</p>
+          <p className="text-xs font-medium text-amber-200 mt-1">You see the board only — private roles are hidden</p>
+          {(() => {
+            const n = pub.players.length;
+            const opts = pub.extraRoles || {};
+            const maxEvil = n <= 6 ? 1 : n <= 8 ? 2 : 3;
+            const e = ['morgana','mordred','oberon'].filter(k=> !!opts[k]).slice(0, maxEvil);
+            const hasPercival = !!opts.percival;
+            const base = { 5:{loyal:2,minion:1}, 6:{loyal:3,minion:1}, 7:{loyal:3,minion:2}, 8:{loyal:4,minion:2}, 9:{loyal:5,minion:2}, 10:{loyal:5,minion:3} }[n] || {loyal:2,minion:1};
+            let loyal = base.loyal - (hasPercival?1:0);
+            let minion = base.minion - e.length;
+            loyal = Math.max(0, loyal);
+            minion = Math.max(0, minion);
+            return (
+          <div className="mt-3 pt-3 border-t border-white/10">
+            <p className="text-[10px] tracking-widest font-bold text-white/40">ROLES IN THIS GAME</p>
+            <div className="mt-2 grid grid-cols-2 gap-3">
+              <div className="text-center">
+                <p className="text-[10px] font-bold tracking-widest text-emerald-300">GOOD — {1 + (hasPercival?1:0) + loyal}</p>
+                <div className="mt-1.5 flex flex-wrap gap-1.5 justify-center">
+                  <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Merlin</span>
+                  {hasPercival && <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Percival</span>}
+                  {loyal > 0 && <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/20 text-[10px] font-bold text-emerald-300">Loyal ×{loyal}</span>}
+                </div>
+              </div>
+              <div className="text-center">
+                <p className="text-[10px] font-bold tracking-widest text-rose-300">EVIL — {1 + e.length + minion}</p>
+                <div className="mt-1.5 flex flex-wrap gap-1.5 justify-center">
+                  <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Assassin</span>
+                  {e.includes('morgana') && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Morgana</span>}
+                  {e.includes('mordred') && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Mordred</span>}
+                  {e.includes('oberon') && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Oberon</span>}
+                  {minion > 0 && <span className="px-2.5 py-1 rounded-full bg-rose-500/15 border border-rose-500/20 text-[10px] font-bold text-rose-300">Minion ×{minion}</span>}
+                </div>
+              </div>
+            </div>
+          </div>
+            );
+          })()}
         </div>
       )}
 
