@@ -43,6 +43,10 @@ function MainPage() {
       }
     });
   }
+  function handleSpectate(room) {
+    const id = String(room.id || room).toUpperCase();
+    navigate(`/room/${id}/spectate`);
+  }
 
   function handleCreated(room) {
     setShowCreate(false);
@@ -89,7 +93,7 @@ function MainPage() {
       </header>
 
       <main className="px-4 py-6 sm:py-8">
-        <RoomBrowser onJoinRoom={handleJoinRoom} onCreateClick={handleCreateClick} />
+        <RoomBrowser onJoinRoom={handleJoinRoom} onSpectate={handleSpectate} onCreateClick={handleCreateClick} />
         {error && <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-rose-600 text-white px-4 py-2.5 rounded-full shadow-xl text-sm font-bold">{error}</div>}
       </main>
 
@@ -104,6 +108,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<MainPage />} />
       <Route path="/room/:roomId" element={<Lobby />} />
+      <Route path="/room/:roomId/spectate" element={<Lobby spectate />} />
       <Route path="/admin" element={<AdminView />} />
     </Routes>
   );

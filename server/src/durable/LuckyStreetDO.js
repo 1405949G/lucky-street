@@ -264,8 +264,19 @@ export class LuckyStreetDO {
     // Try to persist username state
     this.persist();
 
-    // Room grace — don't remove immediately, keep slot 30s for refresh
+    // Handle spectator disconnect immediately (no grace, just count)
     const roomId = sess.currentRoom;
+    if (roomId) {
+      const room = this.roomManager.get(roomId);
+      if (room && room.spectators?.some(s => s.id === socketId)) {
+        room.spectators = room.spectators.filter(s => s.id !== socketId);
+        room.updatedAt = Date.now();
+        this.broadcast({ event: "lobby:update", data: this.roomManager.getFull(roomId) });
+        this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic() });
+        await this.persist();
+      }
+    }
+    // Room grace — don't remove immediately, keep slot 10s for refresh
     if (roomId) {
       const room = this.roomManager.get(roomId);
       if (room) {
@@ -388,12 +399,18 @@ export class LuckyStreetDO {
         case "profile:register": {
           const clean = sanitizeName(data.username);
           const lower = clean.toLowerCase();
-          // --- Fix refresh race: allow reclaim even if old socket still appears active (new WS arrives before old close) ---
+          // --- Fix refresh race: if same name exists with old socket that is no longer active, allow reclaim even without timer ---
           const existing = this.userRegistry.byName.get(lower);
           if (existing && existing.socketId !== socketId) {
             const oldWs = this.socketIdToWs.get(existing.socketId);
-            // Always reclaim for same lower — force close old WS if still active (refresh), prevents "already taken" on reload
-            if (oldWs) { try { oldWs.close(1000, "replaced"); } catch {} try { this.sessions.delete(oldWs); } catch {} }
+            let isOldActive = false;
+            try {
+              const active = this.state.getWebSockets();
+              isOldActive = !!(oldWs && active.includes(oldWs));
+            } catch {
+              isOldActive = !!(oldWs && this.sessions.has(oldWs));
+            }
+            if (!isOldActive) {
               // Old socket gone (refresh) — free the name and re-attach room player if any
               if (existing.timer) clearTimeout(existing.timer);
               // Re-attach room player if oldId still in a room with same name
@@ -425,6 +442,7 @@ export class LuckyStreetDO {
               this.userRegistry.bySocket.delete(existing.socketId);
               this.socketIdToWs.delete(existing.socketId);
               await this.persist();
+            }
           }
           // If this socket had a pending room grace (refresh of same socketId? not needed) — also handle reattach via pendingLeaves for same name
           let reattached = false;
@@ -608,6 +626,56 @@ export class LuckyStreetDO {
           this.send(ws, { event: "room:joined", data: full });
           this.broadcast({ event: "lobby:update", data: full });
           this.broadcast({ event: "lobby:playerJoined", data: { roomId: id, player: { id: socketId, name: user.username } } }, ws);
+          this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic() });
+          await this.persist();
+          break;
+        }
+        case "room:spectate": {
+          // Join as spectator — no username required, count only
+          const id = String(data.roomId || "").toUpperCase().trim();
+          if (!isValidRoomId(id)) throw new Error("Invalid Room ID");
+          const room = this.roomManager.get(id);
+          if (!room) throw new Error("Room not found");
+          const user = this.userRegistry.getBySocket(socketId);
+          const name = user?.username || data.username || `Spectator ${Math.floor(Math.random()*900+100)}`;
+          const avatar = user?.avatar || data.avatar || null;
+          // If already player, first leave as player (become spectator)
+          if (room.players.some(p => p.id === socketId)) {
+            this.roomManager.leave({ roomId: id, socketId });
+          }
+          const full = this.roomManager.addSpectator({ roomId: id, socketId, username: name, avatar });
+          sess.currentRoom = id;
+          this._syncAttachment(ws, sess);
+          // spectators don't need userRegistry, but keep sess username for reattach
+          if (!sess.username) { sess.username = name; sess.avatar = avatar; }
+          okAck({ ok: true, room: full });
+          this.send(ws, { event: "room:spectated", data: full });
+          this.broadcast({ event: "lobby:update", data: full });
+          this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic() });
+          await this.persist();
+          break;
+        }
+        case "spectator:join": {
+          const user = this.userRegistry.getBySocket(socketId);
+          if (!user) throw new Error("Register a profile first — missing identity");
+          const id = String(data.roomId || sess.currentRoom || "").toUpperCase();
+          const full = this.roomManager.promoteSpectator({ roomId: id, socketId, username: user.username, avatar: user.avatar });
+          // keep spectator -> player, update sess
+          sess.currentRoom = id;
+          this._syncAttachment(ws, sess);
+          okAck({ ok: true, room: full });
+          this.broadcast({ event: "lobby:update", data: full });
+          this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic() });
+          await this.persist();
+          break;
+        }
+        case "spectator:leave": {
+          const id = String(data.roomId || sess.currentRoom || "").toUpperCase();
+          if (!id) throw new Error("No room");
+          const full = this.roomManager.removeSpectator({ roomId: id, socketId });
+          if (sess.currentRoom === id) { sess.currentRoom = null; this._syncAttachment(ws, sess); }
+          okAck({ ok: true, room: full });
+          if (full) this.broadcast({ event: "lobby:update", data: full });
           this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic() });
           await this.persist();
           break;

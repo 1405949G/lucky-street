@@ -10,7 +10,7 @@ import { ProfileContext } from "../context/ProfileContext.jsx";
 import { SocketContext } from "../context/SocketContext.jsx";
 import IdentityModal from "./IdentityModal.jsx";
 
-export default function Lobby() {
+export default function Lobby({ spectate = false }) {
   const { roomId } = useParams();
   const navigate = useNavigate();
   const { hasProfile } = useContext(ProfileContext);
@@ -38,20 +38,23 @@ export default function Lobby() {
 
   useEffect(() => {
     if (!socket) return;
-    if (!hasProfile) return;
     if (!connected) return;
-    // Wait for profile to be registered on server before sync/join (prevents "Register a profile first")
-    if (profileStatus !== "ok") return;
+    if (!spectate) {
+      if (!hasProfile) return;
+      if (profileStatus !== "ok") return;
+    }
 
     function onLobbyUpdate(full) {
       if (full.id !== id) return;
       // If we were in room but update no longer contains us -> we were kicked/removed (covers missed player:kicked when TV open or hibernation)
       const my = socket?.id;
-      const wasInRoom = roomRef.current?.players?.some(p => p.id === my);
-      const nowInRoom = full.players.some(p => p.id === my);
+      const wasInRoom = roomRef.current?.players?.some(p => p.id === my) || roomRef.current?.spectators?.some(s => s.id === my);
+      const nowInRoom = full.players.some(p => p.id === my) || full.spectators?.some(s => s.id === my);
       if (wasInRoom && !nowInRoom && !leavingRef.current) {
-        setKickedPopup(true);
-        setRoom(full);
+        // Check if we were player vs spectator to show correct message
+        const wasPlayer = roomRef.current?.players?.some(p => p.id === my);
+        if (wasPlayer) setKickedPopup(true);
+        else setRoom(full);
         return;
       }
       setRoom(full);
@@ -91,21 +94,41 @@ export default function Lobby() {
         }
       });
     }
+    function attemptSpectate(retry = 0) {
+      const prof = (() => { try { return JSON.parse(localStorage.getItem("luckyStreet:profile")||"{}"); } catch { return {}; } })();
+      socket.emit("room:spectate", { roomId: id, username: prof?.username, avatar: prof?.avatar }, (jres) => {
+        if (jres?.ok) { setRoom(jres.room); setError(null); }
+        else {
+          const msg = jres?.error || "";
+          if (/timeout/i.test(msg) && retry < 3) {
+            setTimeout(() => attemptSpectate(retry + 1), 500);
+            return;
+          }
+          setError(jres?.error || "Spectate failed");
+        }
+      });
+    }
     function syncAttempt(retry = 0) {
       socket.emit("room:sync", { roomId: id }, (res) => {
         if (res?.ok) {
-          // If room exists but doesn't contain me (direct link join), trigger join
-          const meInRoom = res.room.players.some(p => p.id === socket.id);
+          // If room exists but doesn't contain me (direct link join), trigger join/spectate
+          const meInRoom = res.room.players.some(p => p.id === socket.id) || res.room.spectators?.some(s => s.id === socket.id);
           // Fallback: check by name if id not yet synced (refresh race)
           const nameInRoom = (() => {
-            try { const pn = JSON.parse(localStorage.getItem("luckyStreet:profile")||"{}")?.username; return pn && res.room.players.some(p => p.name.toLowerCase() === pn.toLowerCase()); } catch { return false; }
+            try { const pn = JSON.parse(localStorage.getItem("luckyStreet:profile")||"{}")?.username; return pn && (res.room.players.some(p => p.name.toLowerCase() === pn.toLowerCase()) || res.room.spectators?.some(s => s.name.toLowerCase() === pn.toLowerCase())); } catch { return false; }
           })();
           if (meInRoom || nameInRoom) { setRoom(res.room); setError(null); }
-          else { attemptJoin(); }
+          else {
+            if (spectate) attemptSpectate();
+            else attemptJoin();
+          }
         }
         else if (res?.error && /timeout/i.test(res.error) && retry < 3) {
           setTimeout(() => syncAttempt(retry + 1), 500 * Math.pow(1.5, retry));
-        } else attemptJoin();
+        } else {
+          if (spectate) attemptSpectate();
+          else attemptJoin();
+        }
       });
     }
     syncAttempt();
@@ -122,7 +145,21 @@ export default function Lobby() {
       socket.off("connect", onReconnect);
       socket.off("connected", onReconnect);
     };
-  }, [socket, id, hasProfile, connected, profileStatus]);
+  }, [socket, id, hasProfile, connected, profileStatus, spectate]);
+
+  // Auto-switch to spectator if navigated to /room/:id/spectate while already a player
+  useEffect(() => {
+    if (!spectate || !socket || !room) return;
+    const myId = socket.id;
+    if (!myId) return;
+    const isPlayer = room.players.some(p => p.id === myId);
+    if (isPlayer) {
+      // move from player to spectator
+      socket.emit("room:spectate", { roomId: id }, (res) => {
+        if (res?.ok) showToast("Switched to spectator");
+      });
+    }
+  }, [spectate, socket, room, id]);
 
   // If user hits browser back / component unmounts while still in room, try to leave
   // (prevents 30s grace keeping ghost player). Intentional Leave also calls handleLeave.
@@ -195,9 +232,24 @@ export default function Lobby() {
 
   const myId = socket?.id;
   const isHost = !!(myId && room.hostId === myId);
+  const isSpectator = !!(myId && room.spectators?.some(s => s.id === myId));
+  const isPlayer = !!(myId && room.players.some(p => p.id === myId));
   const game = games.find(g => g.id === room.game) || { label: room.game, optionSchema: [] };
 
   function showToast(msg) { setToast(msg); setTimeout(() => setToast(null), 2500); }
+
+  function handleSpectate() {
+    socket.emit("room:spectate", { roomId: id }, (res) => {
+      if (!res?.ok) showToast(res.error || "Spectate failed");
+      else showToast(isPlayer ? "Switched to spectator" : "Spectating");
+    });
+  }
+  function handleJoinAsPlayer() {
+    socket.emit("spectator:join", { roomId: id }, (res) => {
+      if (!res?.ok) showToast(res.error || "Join failed");
+      else showToast("Joined as player");
+    });
+  }
 
   function handleChangeGame(e) {
     const newGame = e.target.value;
@@ -361,6 +413,20 @@ export default function Lobby() {
             </div>
           ))}
         </div>
+      </div>
+      {/* Spectators — general view, no name required, count only */}
+      <div className="mt-4 rounded-2xl bg-white/[0.04] border border-white/10 p-3">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold text-white/60">Spectators • {room.spectatorCount || 0}</span>
+          <div className="flex gap-2">
+            {isPlayer && <button onClick={handleSpectate} className="px-3 py-1 rounded-full bg-white/10 hover:bg-white/15 text-white text-xs">Spectate</button>}
+            {isSpectator && <button onClick={handleJoinAsPlayer} className="px-3 py-1 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold">Join as player</button>}
+            {!isPlayer && !isSpectator && <><button onClick={handleSpectate} className="px-3 py-1 rounded-full bg-white/10 hover:bg-white/15 text-white text-xs">Spectate</button><button onClick={handleJoinAsPlayer} className="px-3 py-1 rounded-full bg-[#f3ecd8] hover:bg-white text-[#0e2533] text-xs font-bold">Join</button></>}
+          </div>
+        </div>
+        {isSpectator && <p className="text-xs text-amber-300 mt-1">You are spectating — tap Join as player to take a slot</p>}
+        {room.spectators?.length > 0 && <div className="mt-2 flex flex-wrap gap-2">{room.spectators.map(s=> <span key={s.id} className="px-2 py-1 rounded-full bg-white/10 border border-white/10 text-white text-xs">{s.name}</span>)}</div>}
+        {!isPlayer && !isSpectator && <p className="text-xs text-white/40 mt-1">Watch without taking a slot — or Join to play</p>}
       </div>
         </div>
         {/* Controls — private, host-only on desktop right, phone toggles */}

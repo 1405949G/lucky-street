@@ -3,7 +3,7 @@ import { SocketContext } from "../context/SocketContext.jsx";
 import RoomCard from "./RoomCard.jsx";
 import JoinByIdBox from "./JoinByIdBox.jsx";
 
-export default function RoomBrowser({ onJoinRoom, onCreateClick }) {
+export default function RoomBrowser({ onJoinRoom, onSpectate, onCreateClick }) {
   const { rooms } = useContext(SocketContext);
   const [search, setSearch] = useState("");
 
@@ -50,7 +50,7 @@ export default function RoomBrowser({ onJoinRoom, onCreateClick }) {
           ) : (
             <div className="grid gap-3">
               {filtered.map(room => (
-                <RoomCard key={room.id} room={room} onJoin={onJoinRoom} />
+                <RoomCard key={room.id} room={room} onJoin={onJoinRoom} onSpectate={onSpectate} />
               ))}
             </div>
           )}

@@ -11,6 +11,7 @@
  *   gameOptions: object,
  *   players: [{ id: socketId, name, avatar, isHost }],
  *   bots: [{ id: "bot_xxx", name, avatarColor }],
+ *   spectators: [{ id: socketId, name, avatar }],
  *   createdAt: number,
  *   updatedAt: number
  * }
@@ -70,6 +71,7 @@ export class RoomManager {
       maxPlayers: r.maxPlayers,
       currentPlayers: r.players.length,
       botCount: r.bots.length,
+      spectatorCount: (r.spectators || []).length,
       // "X / Y Players (including Z Bots)" where X = players+ bots, Y = max
       slotsText: `${r.players.length + r.bots.length} / ${r.maxPlayers} Players (including ${r.bots.length} Bots)`,
       isPrivate: false,
@@ -99,6 +101,8 @@ export class RoomManager {
       gameOptions: r.gameOptions,
       players: r.players.map(p => ({ ...p })),
       bots: r.bots.map(b => ({ ...b })),
+      spectators: (r.spectators || []).map(s => ({ ...s })),
+      spectatorCount: (r.spectators || []).length,
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
       slotsText: `${r.players.length + r.bots.length} / ${r.maxPlayers} Players (including ${r.bots.length} Bots)`
@@ -132,6 +136,7 @@ export class RoomManager {
       gameOptions: { ...game.defaultOptions, ...(gameOptions || {}) },
       players: [{ id: hostId, name: hostName, avatar: hostAvatar || null, isHost: true }],
       bots: [],
+      spectators: [],
       createdAt: Date.now(),
       updatedAt: Date.now()
     };
@@ -161,6 +166,15 @@ export class RoomManager {
   leave({ roomId, socketId }) {
     const room = this.get(roomId);
     if (!room) return null;
+    // also remove from spectators if present
+    const specIdx = (room.spectators || []).findIndex(s => s.id === socketId);
+    if (specIdx !== -1) {
+      room.spectators.splice(specIdx, 1);
+      room.updatedAt = Date.now();
+      this._notify();
+      // don't delete room for spectators
+      return this.getFull(room.id);
+    }
     const idx = room.players.findIndex(p => p.id === socketId);
     if (idx === -1) return this.getFull(room.id);
 
@@ -168,7 +182,7 @@ export class RoomManager {
     room.players.splice(idx, 1);
 
     if (room.players.length === 0) {
-      // last player left — delete room
+      // last player left — delete room (even if spectators remain, they get cleared)
       this.rooms.delete(room.id);
       this._notify();
       return null;
@@ -188,18 +202,78 @@ export class RoomManager {
     return this.getFull(room.id);
   }
 
+  // ——— Spectator operations ———
+  addSpectator({ roomId, socketId, username, avatar }) {
+    const room = this.get(roomId);
+    if (!room) throw new Error("Room not found");
+    if (!room.spectators) room.spectators = [];
+    if (room.spectators.some(s => s.id === socketId)) return this.getFull(room.id);
+    if (room.players.some(p => p.id === socketId)) throw new Error("Already in room as player");
+    // allow anonymous spectating: if no username, use Spectator + count
+    const name = username ? String(username).trim().slice(0, 20) : `Spectator ${room.spectators.length + 1}`;
+    const entry = { id: socketId, name, avatar: avatar || null, isSpectator: true };
+    room.spectators.push(entry);
+    room.updatedAt = Date.now();
+    this._notify();
+    return this.getFull(room.id);
+  }
+
+  removeSpectator({ roomId, socketId }) {
+    const room = this.get(roomId);
+    if (!room || !room.spectators) return this.getFull(room?.id);
+    const idx = room.spectators.findIndex(s => s.id === socketId);
+    if (idx !== -1) {
+      room.spectators.splice(idx, 1);
+      room.updatedAt = Date.now();
+      this._notify();
+    }
+    return this.getFull(room.id);
+  }
+
+  promoteSpectator({ roomId, socketId, username, avatar }) {
+    const room = this.get(roomId);
+    if (!room) throw new Error("Room not found");
+    if (!room.spectators) room.spectators = [];
+    const sIdx = room.spectators.findIndex(s => s.id === socketId);
+    // if already player, ignore
+    if (room.players.some(p => p.id === socketId)) throw new Error("Already a player");
+    if (room.players.some(p => p.name.toLowerCase() === String(username).toLowerCase())) throw new Error("Username already in this room");
+    const total = room.players.length + room.bots.length;
+    if (total >= room.maxPlayers) throw new Error("Room is full");
+    // remove from spectators if present
+    let spec = null;
+    if (sIdx !== -1) { spec = room.spectators.splice(sIdx, 1)[0]; }
+    const player = { id: socketId, name: username ? String(username).trim().slice(0, 20) : spec?.name || `Player`, avatar: avatar || spec?.avatar || null, isHost: false };
+    room.players.push(player);
+    room.updatedAt = Date.now();
+    this._notify();
+    return this.getFull(room.id);
+  }
+
   // Remove player by socket disconnect (same as leave but called globally)
   removePlayerFromAllRooms(socketId) {
     const affected = [];
     for (const room of this.rooms.values()) {
-      const before = room.players.length;
+      let changed = false;
+      // spectators
+      if (room.spectators) {
+        const sIdx = room.spectators.findIndex(s => s.id === socketId);
+        if (sIdx !== -1) {
+          room.spectators.splice(sIdx, 1);
+          room.updatedAt = Date.now();
+          changed = true;
+          affected.push({ roomId: room.id, deleted: false, room: this.getFull(room.id) });
+        }
+      }
       const idx = room.players.findIndex(p => p.id === socketId);
       if (idx !== -1) {
         const wasHost = room.players[idx].isHost;
         room.players.splice(idx, 1);
         if (room.players.length === 0) {
           this.rooms.delete(room.id);
-          affected.push({ roomId: room.id, deleted: true });
+          // remove from affected if previously added as spectator change, replace with deleted
+          const existing = affected.find(a => a.roomId === room.id);
+          if (existing) { existing.deleted = true; delete existing.room; } else affected.push({ roomId: room.id, deleted: true });
         } else {
           if (wasHost) {
             const newHost = pickRandomHost(room.players);
@@ -209,8 +283,11 @@ export class RoomManager {
             newHost.isHost = true;
           }
           room.updatedAt = Date.now();
-          affected.push({ roomId: room.id, deleted: false, room: this.getFull(room.id) });
+          const existing = affected.find(a => a.roomId === room.id);
+          if (!existing) affected.push({ roomId: room.id, deleted: false, room: this.getFull(room.id) });
+          else { existing.deleted = false; existing.room = this.getFull(room.id); }
         }
+        changed = true;
       }
     }
     if (affected.length) this._notify();

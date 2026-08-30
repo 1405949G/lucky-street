@@ -1,7 +1,7 @@
 import React from "react";
 
-export default function RoomCard({ room, onJoin }) {
-  // room: { id, hostName, gameLabel, maxPlayers, currentPlayers, botCount, slotsText, isPrivate }
+export default function RoomCard({ room, onJoin, onSpectate }) {
+  // room: { id, hostName, gameLabel, maxPlayers, currentPlayers, botCount, slotsText, isPrivate, spectatorCount }
   return (
     <div className="rounded-2xl bg-[#142a3d] border border-white/10 p-4 shadow-md hover:border-white/20 transition-colors flex flex-col gap-3">
       <div className="flex items-start justify-between gap-3">
@@ -23,11 +23,14 @@ export default function RoomCard({ room, onJoin }) {
       </div>
 
       <div className="flex items-center justify-between">
-        <span className="text-xs text-white/40">ID: {room.id}</span>
-        <button
-          onClick={() => onJoin(room)}
-          className="px-4 py-2 rounded-full bg-[#f3ecd8] hover:bg-white text-[#0e2533] text-xs font-extrabold shadow-sm"
-        >Join</button>
+        <span className="text-xs text-white/40">ID: {room.id} {room.spectatorCount ? `• ${room.spectatorCount} 👀` : ""}</span>
+        <div className="flex gap-2">
+          {onSpectate && <button onClick={() => onSpectate(room)} className="px-3 py-2 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-white text-xs font-bold">Spectate</button>}
+          <button
+            onClick={() => onJoin(room)}
+            className="px-4 py-2 rounded-full bg-[#f3ecd8] hover:bg-white text-[#0e2533] text-xs font-extrabold shadow-sm"
+          >Join</button>
+        </div>
       </div>
     </div>
   );
