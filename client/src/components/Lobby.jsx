@@ -1,76 +1,20 @@
 /**
  * Lobby — Host can change game/options, add bots (generic names), transfer host, kick via popup
- * Players edit own avatar/name via avatar click popup (like main menu)
- * Bots have uniform 🤖 avatar, host crown 👑, YOU tag, no X circles (kick via popup)
+ * Name/avatar locked inside room (change only at main menu / direct-link IdentityModal).
+ * Single Leave button (removed duplicate back arrow) — guarantees room:leave before navigate
  */
 
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ProfileContext } from "../context/ProfileContext.jsx";
 import { SocketContext } from "../context/SocketContext.jsx";
 import IdentityModal from "./IdentityModal.jsx";
 import PasswordModal from "./PasswordModal.jsx";
-import AvatarPicker from "./AvatarPicker.jsx";
-import { PALETTE } from "../utils/avatar.js";
-
-function EditProfilePopup({ initialName, initialAvatar, onSave, onClose }) {
-  const normalizedAvatar = typeof initialAvatar === "string" && initialAvatar.startsWith("data:image") ? PALETTE[0] : (initialAvatar || PALETTE[0]);
-  const [name, setName] = useState(initialName || "");
-  const [avatar, setAvatar] = useState(normalizedAvatar);
-  const [err, setErr] = useState(null);
-  const [saving, setSaving] = useState(false);
-
-  function submit(e) {
-    e?.preventDefault();
-    const trimmed = name.trim();
-    if (!trimmed) return setErr("Please enter a name");
-    if (trimmed.length < 2) return setErr("Name must be at least 2 characters");
-    if (trimmed.length > 20) return setErr("Name is too long");
-    if (!/^[\p{L}\p{N} _'\-.]+$/u.test(trimmed)) return setErr("Only letters, numbers and - _ ' . allowed");
-    if (typeof avatar === "string" && avatar.startsWith("data:image") && avatar.length > 200 * 1024) {
-      return setErr("Image is too large — pick a smaller photo or colour");
-    }
-    setSaving(true);
-    let done = false;
-    const t = setTimeout(() => {
-      if (!done) { done = true; setSaving(false); setErr("Connection slow — try again"); }
-    }, 6000);
-    onSave({ name: trimmed, avatar }, (ok, msg) => {
-      if (done) return;
-      done = true;
-      clearTimeout(t);
-      setSaving(false);
-      if (!ok) setErr(msg);
-      else onClose();
-    });
-  }
-
-  return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-[#070b14]/70 backdrop-blur-sm">
-      <form onSubmit={submit} className="w-full max-w-[420px] rounded-[24px] bg-[#142a3d] border border-white/10 shadow-2xl overflow-hidden">
-        <div className="px-6 pt-6 pb-3 border-b border-white/10 flex items-center justify-between">
-          <h2 className="font-extrabold text-white">Edit Profile</h2>
-          <button type="button" onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/15 flex items-center justify-center text-white/60">✕</button>
-        </div>
-        <div className="px-6 py-5 space-y-4">
-          <div>
-            <label className="text-xs font-bold tracking-widest text-white/60">NAME</label>
-            <input value={name} onChange={e => setName(e.target.value)} maxLength={20} autoFocus className="mt-1.5 w-full px-4 py-3 rounded-xl bg-white/10 border border-white/15 text-white placeholder:text-white/30 text-sm font-semibold outline-none focus:border-amber-400/60" placeholder="Your name" />
-          </div>
-          <AvatarPicker value={avatar} onChange={setAvatar} />
-          {err && <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 px-3 py-2 text-xs font-bold text-rose-300">{err}</div>}
-          <button type="submit" disabled={saving} className="w-full py-3 rounded-full bg-[#f3ecd8] hover:bg-white disabled:opacity-50 text-[#0e2533] font-extrabold shadow-md">{saving ? "Saving…" : "Save"}</button>
-          <button type="button" onClick={onClose} className="w-full text-xs text-white/40 hover:text-white/70">Cancel</button>
-        </div>
-      </form>
-    </div>
-  );
-}
 
 export default function Lobby() {
   const { roomId } = useParams();
   const navigate = useNavigate();
-  const { profile, hasProfile } = useContext(ProfileContext);
+  const { hasProfile } = useContext(ProfileContext);
   const { socket, games } = useContext(SocketContext);
 
   const [room, setRoom] = useState(null);
@@ -80,11 +24,11 @@ export default function Lobby() {
   const [passwordError, setPasswordError] = useState(null);
   const [botName, setBotName] = useState("");
   const [toast, setToast] = useState(null);
-  const [editingSelf, setEditingSelf] = useState(false);
   const [kickedPopup, setKickedPopup] = useState(false);
   const [hostActionTarget, setHostActionTarget] = useState(null);
   const [botConfirm, setBotConfirm] = useState(null);
   const [mobileTab, setMobileTab] = useState("board"); // board | controls — for phone split-view like Kahoot
+  const leavingRef = useRef(false);
 
   const id = String(roomId || "").toUpperCase();
 
@@ -147,6 +91,21 @@ export default function Lobby() {
     };
   }, [socket, id, hasProfile]);
 
+  // If user hits browser back / component unmounts while still in room, try to leave
+  // (prevents 30s grace keeping ghost player). Intentional Leave also calls handleLeave.
+  useEffect(() => {
+    return () => {
+      if (leavingRef.current) return;
+      if (!socket || !id) return;
+      // Don't leave if we were kicked / already showing error
+      try {
+        // best-effort fire-and-forget; server will clear immediately if ack arrives,
+        // otherwise webSocketClose grace will hold 30s — but explicit leave avoids grace
+        socket.emit("room:leave", { roomId: id });
+      } catch {}
+    };
+  }, [socket, id]);
+
   if (showBlocking) {
     return <IdentityModal blocking title={`Enter ${id}`} onDone={() => {
       setShowBlocking(false);
@@ -198,7 +157,6 @@ export default function Lobby() {
 
   const myId = socket?.id;
   const isHost = !!(myId && room.hostId === myId);
-  const myPlayer = room.players.find(p => p.id === myId);
   const game = games.find(g => g.id === room.game) || { label: room.game, optionSchema: [] };
 
   function showToast(msg) { setToast(msg); setTimeout(() => setToast(null), 2500); }
@@ -250,48 +208,34 @@ export default function Lobby() {
       }
     });
   }
-  function handleEditSave({ name, avatar }, done) {
-    // Optimistic: close popup immediately, don't get stuck on "Saving..."
-    // Keep solid colours only — avatar is always a hex colour now
-    const color = typeof avatar === "string" && avatar.startsWith("#") ? avatar : PALETTE[0];
-    try {
-      const raw = localStorage.getItem("luckyStreet:profile");
-      const p = raw ? JSON.parse(raw) : {};
-      p.username = name;
-      p.avatar = color;
-      p.avatarType = "color";
-      localStorage.setItem("luckyStreet:profile", JSON.stringify(p));
-    } catch {}
-    done(true);
-    showToast("Profile updated");
-    // Sync to server in background — if it fails (name taken), show error but don't block UI
-    if (socket) {
-      socket.emit("profile:update", { username: name, avatar: color }, (res) => {
-        if (!res?.ok) {
-          showToast(res?.error || "That name is taken — try another");
-        }
-      });
-    }
-  }
   function handleLeave() {
-    let left = false;
-    const go = () => { if (!left) { left = true; navigate("/"); } };
-    const t1 = setTimeout(go, 1500);
+    if (leavingRef.current) return;
+    leavingRef.current = true;
+    let navigated = false;
+    const go = () => { if (!navigated) { navigated = true; navigate("/", { replace: true }); } };
+    // Fire room:leave with ack; navigate on ack or fallback. This cancels server grace immediately.
     try {
-      socket.emit("room:leave", { roomId: id }, () => { clearTimeout(t1); go(); });
-    } catch { clearTimeout(t1); go(); }
-    setTimeout(go, 800);
+      const tFallback = setTimeout(go, 900);
+      socket.emit("room:leave", { roomId: id }, () => { clearTimeout(tFallback); go(); });
+      // Extra safety: if ack never comes (packet loss / hibernation), still navigate but server's webSocketClose grace will expire 30s later
+      setTimeout(go, 500);
+    } catch {
+      go();
+    }
   }
 
   return (
     <div className="max-w-[760px] mx-auto px-4 pb-10">
+      {/* Single header action: only Leave (removed duplicate back arrow) */}
       <div className="flex items-center justify-between pt-2">
-        <button onClick={() => navigate("/")} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 flex items-center justify-center text-white/70">‹</button>
-        <div className="text-center">
+        <button onClick={handleLeave} aria-label="Leave room" className="px-4 py-1.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-xs font-bold text-white/70 flex items-center gap-1.5">
+          <span className="text-sm leading-none">←</span> Leave
+        </button>
+        <div className="text-center flex-1">
           <h1 className="font-display font-extrabold text-[18px] tracking-wide text-[#f3ecd8]">Lucky Street</h1>
           <p className="text-xs text-white/50 -mt-1">Room <span className="font-mono font-bold text-white">{room.id}</span> {room.isPrivate ? "🔒" : "🔓"} • Host: {room.hostName}</p>
         </div>
-        <button onClick={handleLeave} className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-xs font-bold text-white/70">Leave</button>
+        <div className="w-[76px]" aria-hidden />
       </div>
 
       {/* TV button — open spectator view on big screen */}
@@ -327,14 +271,15 @@ export default function Lobby() {
 
       <div className="mt-6">
         <h3 className="font-extrabold text-white text-sm">Players & Bots</h3>
-        <p className="text-xs text-white/40">Tap your avatar to change your name and photo.</p>
+        <p className="text-xs text-white/40">Name and avatar are locked in the room — change them from the main menu.</p>
         <div className="mt-3 flex flex-wrap gap-4">
           {room.players.map(p => {
             const isMe = p.id === myId;
             const isHostPlayer = p.isHost || p.id === room.hostId;
             const avatarIsImage = p.avatar && typeof p.avatar === "string" && p.avatar.startsWith("data:");
             const avatarBg = avatarIsImage ? null : (p.avatar || "#475569");
-            const canEdit = isMe;
+            // Name/avatar editing disabled in room — only host actions on others
+            const canHostAct = isHost && !isMe;
             return (
               <div key={p.id} className="flex flex-col items-center gap-1.5 relative">
                 {isHostPlayer && (
@@ -345,15 +290,14 @@ export default function Lobby() {
                 <div className="relative">
                   <button
                     onClick={() => {
-                      if (canEdit) setEditingSelf(true);
-                      else if (isHost && !isMe) setHostActionTarget(p);
+                      if (canHostAct) setHostActionTarget(p);
                     }}
-                    disabled={!canEdit && !(isHost && !isMe)}
+                    disabled={!canHostAct}
                     className={`w-[64px] h-[64px] rounded-full border-2 flex items-center justify-center overflow-hidden shadow-md transition-transform
                       ${isMe ? "border-emerald-400 scale-[1.02]" : isHostPlayer ? "border-amber-400" : "border-white/15"}
-                      ${canEdit || (isHost && !isMe) ? "cursor-pointer hover:scale-105" : "cursor-default"}`}
+                      ${canHostAct ? "cursor-pointer hover:scale-105" : "cursor-default"}`}
                     style={avatarBg ? { background: avatarBg } : {}}
-                    title={canEdit ? "Edit your profile" : isHost ? "Host actions" : p.name}
+                    title={canHostAct ? "Host actions" : p.name}
                   >
                     {avatarIsImage ? <img src={p.avatar} alt={p.name} className="w-full h-full object-cover" /> : <span className="font-black text-white text-lg">{p.name.slice(0, 2).toUpperCase()}</span>}
                   </button>
@@ -493,9 +437,6 @@ export default function Lobby() {
         </div>
       )}
 
-      {editingSelf && myPlayer && (
-        <EditProfilePopup initialName={myPlayer.name} initialAvatar={myPlayer.avatar || profile?.avatar} onClose={() => setEditingSelf(false)} onSave={handleEditSave} />
-      )}
 
       {needPassword && (
         <PasswordModal

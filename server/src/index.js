@@ -93,6 +93,9 @@ io.on("connection", (socket) => {
   socket.on("profile:register", ({ username, avatar } = {}, ack) => {
     try {
       const clean = sanitizeName(username);
+      if (socket.data.currentRoom && socket.data.username && clean.toLowerCase() !== socket.data.username.toLowerCase()) {
+        throw new Error("Name/avatar locked in room — leave and change at main menu");
+      }
       const entry = userRegistry.register(socket.id, clean, avatar ?? null);
       socket.data.username = entry.username;
       socket.data.avatar = entry.avatar;
@@ -110,6 +113,7 @@ io.on("connection", (socket) => {
 
   socket.on("profile:update", ({ username, avatar } = {}, ack) => {
     try {
+      if (socket.data.currentRoom) throw new Error("Change name/avatar at the main menu — not inside a room");
       // Allow partial: if username provided, rename globally + in rooms
       const current = userRegistry.getBySocket(socket.id);
       if (!current) throw new Error("Not registered — call profile:register first");
@@ -359,9 +363,10 @@ io.on("connection", (socket) => {
     }
   });
 
-  // ——— Rename self / bot unified ———
+  // ——— Rename self / bot unified ——— (locked: use main menu)
   socket.on("lobby:renameSelf", ({ roomId, newName } = {}, ack) => {
     try {
+      throw new Error("Name change is locked inside the room — leave and change at the main menu");
       const id = String(roomId || socket.data.currentRoom || "").toUpperCase();
       const clean = sanitizeName(newName);
       // First check global uniqueness via registry
@@ -387,9 +392,10 @@ io.on("connection", (socket) => {
     }
   });
 
-  // Generic rename (host renaming bot OR self) — kept for flexibility
+  // Generic rename (host renaming bot OR self) — self rename locked in room
   socket.on("lobby:rename", ({ roomId, targetId, newName } = {}, ack) => {
     try {
+      if (targetId === socket.id) throw new Error("Name change is locked inside the room — leave and change at the main menu");
       const id = String(roomId || socket.data.currentRoom || "").toUpperCase();
       const clean = sanitizeName(newName);
       // If target is self, need global check

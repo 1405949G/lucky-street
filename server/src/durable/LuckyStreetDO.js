@@ -388,6 +388,10 @@ export class LuckyStreetDO {
               }
             }
           }
+          // Disallow name change inside a room — must leave first (prevents main-page / lobby desync)
+          if (sess.currentRoom && sess.username && lower !== sess.username.toLowerCase()) {
+            throw new Error("Name/avatar locked in room — leave and change at main menu");
+          }
           const entry = this.userRegistry.register(socketId, clean, data.avatar ?? null);
           sess.username = entry.username;
           sess.avatar = entry.avatar;
@@ -400,6 +404,7 @@ export class LuckyStreetDO {
           break;
         }
         case "profile:update": {
+          if (sess.currentRoom) throw new Error("Change name/avatar at the main menu — not inside a room");
           const current = this.userRegistry.getBySocket(socketId);
           if (!current) throw new Error("Not registered — call profile:register first");
           const newName = data.username ? sanitizeName(data.username) : current.username;
@@ -607,6 +612,7 @@ export class LuckyStreetDO {
           break;
         }
         case "lobby:renameSelf": {
+          throw new Error("Name change is locked inside the room — leave and change at the main menu");
           const id = String(data.roomId || sess.currentRoom || "").toUpperCase();
           const clean = sanitizeName(data.newName);
           const user = this.userRegistry.getBySocket(socketId);
@@ -624,6 +630,7 @@ export class LuckyStreetDO {
           break;
         }
         case "lobby:rename": {
+          if (data.targetId === socketId) throw new Error("Name change is locked inside the room — leave and change at the main menu");
           const id = String(data.roomId || sess.currentRoom || "").toUpperCase();
           const clean = sanitizeName(data.newName);
           if (data.targetId === socketId) {
