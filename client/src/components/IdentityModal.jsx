@@ -1,11 +1,9 @@
 /**
- * IdentityModal — Spec 1
- * First-time: prompt username + avatar. Save to localStorage.
- * Persistence: profile cached, bypass onboarding on return.
- * Blocking: when `blocking` prop true, overlay cannot be dismissed.
+ * IdentityModal — onboarding
+ * Shows once, remembers you next time. Blocking variant for direct room links.
  */
 
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { ProfileContext } from "../context/ProfileContext.jsx";
 import { SocketContext } from "../context/SocketContext.jsx";
 import AvatarPicker from "./AvatarPicker.jsx";
@@ -13,51 +11,69 @@ import { PALETTE } from "../utils/avatar.js";
 
 export default function IdentityModal({ blocking = false, onDone, title = "Welcome to Lucky Street" }) {
   const { profile, setProfile } = useContext(ProfileContext);
-  const { socket, profileError, registerProfile } = useContext(SocketContext);
+  const { socket, profileError } = useContext(SocketContext);
 
   const [username, setUsername] = useState(() => profile?.username || "");
   const [avatar, setAvatar] = useState(() => profile?.avatar || PALETTE[0]);
   const [localError, setLocalError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const timeoutRef = useRef(null);
 
   useEffect(() => {
     if (profile?.username) setUsername(profile.username);
     if (profile?.avatar) setAvatar(profile.avatar);
   }, [profile]);
 
+  useEffect(() => {
+    return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
+  }, []);
+
   async function handleSubmit(e) {
     e?.preventDefault();
     setLocalError(null);
     const trimmed = username.trim();
-    if (!trimmed) return setLocalError("Username is required");
-    if (trimmed.length < 2) return setLocalError("Username must be at least 2 characters");
-    if (trimmed.length > 20) return setLocalError("Username too long (max 20)");
-    if (!/^[\p{L}\p{N} _'\-.]+$/u.test(trimmed)) return setLocalError("Invalid characters");
+    if (!trimmed) return setLocalError("Please enter a name");
+    if (trimmed.length < 2) return setLocalError("Name must be at least 2 characters");
+    if (trimmed.length > 20) return setLocalError("Name is too long");
+    if (!/^[\p{L}\p{N} _'\-.]+$/u.test(trimmed)) return setLocalError("Name can only use letters, numbers and - _ ' .");
+
+    // avatar size guard — compressed avatars are ~30-80KB, raw large ones could stall
+    if (typeof avatar === "string" && avatar.startsWith("data:image") && avatar.length > 200 * 1024) {
+      return setLocalError("Image is still too large — try a smaller photo or pick a colour");
+    }
 
     setSubmitting(true);
-    // optimistic local save
+
     const next = { username: trimmed, avatar, avatarType: avatar?.startsWith("data:") ? "image" : "color" };
-    // Try server registration first to enforce uniqueness
+
+    // Safety: if server doesn't answer in 6s, stop spinning and show friendly error
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      setSubmitting(false);
+      setLocalError("Connection is slow — please try again");
+    }, 6000);
+
     if (socket) {
       socket.emit("profile:register", { username: trimmed, avatar }, (res) => {
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
         setSubmitting(false);
         if (res?.ok) {
           setProfile(next);
           setLocalError(null);
           onDone?.(next);
         } else {
-          setLocalError(res?.error || profileError || "Username taken — choose another");
+          setLocalError(res?.error || profileError || "That name is taken — try another");
         }
       });
     } else {
-      // offline fallback
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
       setProfile(next);
       setSubmitting(false);
       onDone?.(next);
     }
   }
 
-  const blockingNote = blocking ? "Complete your profile to enter this room. This blocks the lobby." : null;
+  const blockingNote = blocking ? "Pick a name to enter this room" : null;
 
   return (
     <div className={`fixed inset-0 z-[80] flex items-center justify-center p-4 ${blocking ? "bg-[#070b14]/90 backdrop-blur-md" : "bg-[#070b14]/80 backdrop-blur-md"}`}>
@@ -68,9 +84,9 @@ export default function IdentityModal({ blocking = false, onDone, title = "Welco
           </div>
           <h2 className="font-display font-extrabold text-[20px] text-center text-[#f3ecd8] mt-3">{title}</h2>
           <p className="text-sm text-white/60 text-center mt-1">
-            Choose a unique username and avatar. Saved in your browser (localStorage) — you’ll skip this next time.
+            Pick a name and avatar to get started.
           </p>
-          {blockingNote && <p className="text-xs text-amber-300/80 text-center mt-2 font-medium">🔒 {blockingNote}</p>}
+          {blockingNote && <p className="text-xs text-amber-200/80 text-center mt-2 font-medium">🔒 {blockingNote}</p>}
         </div>
 
         <div className="px-6 pb-6 space-y-4">
@@ -84,7 +100,7 @@ export default function IdentityModal({ blocking = false, onDone, title = "Welco
               className="mt-1.5 w-full px-4 py-3 rounded-xl bg-white/10 border border-white/15 text-white placeholder:text-white/30 text-sm font-semibold outline-none focus:border-amber-400/60 focus:bg-white/15"
               autoFocus
             />
-            <p className="text-[11px] text-white/30 mt-1">Globally unique across active sessions — server rejects duplicates.</p>
+            <p className="text-[11px] text-white/30 mt-1">This name is how others will see you in the lobby.</p>
           </div>
 
           <AvatarPicker value={avatar} onChange={setAvatar} />
@@ -110,7 +126,7 @@ export default function IdentityModal({ blocking = false, onDone, title = "Welco
           )}
 
           <p className="text-[11px] text-white/25 text-center">
-            Avatar images are stored as Base64 in localStorage. Name expires 5 min after disconnect (GC).
+            You can change your name and avatar anytime.
           </p>
         </div>
       </form>
