@@ -345,6 +345,20 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("lobby:transferHost", ({ roomId, targetId } = {}, ack) => {
+    try {
+      const id = String(roomId || socket.data.currentRoom || "").toUpperCase();
+      const room = roomManager.transferHost({ roomId: id, requesterId: socket.id, targetId });
+      if (typeof ack === "function") ack({ ok: true, room });
+      io.to(id).emit("lobby:update", room);
+      io.to(id).emit("lobby:hostChanged", { roomId: id, hostId: room.hostId, hostName: room.hostName });
+      broadcastRooms();
+    } catch (e) {
+      if (typeof ack === "function") ack({ ok: false, error: e.message });
+      socket.emit("room:error", { error: e.message });
+    }
+  });
+
   // ——— Rename self / bot unified ———
   socket.on("lobby:renameSelf", ({ roomId, newName } = {}, ack) => {
     try {

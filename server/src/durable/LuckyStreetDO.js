@@ -99,9 +99,9 @@ export class LuckyStreetDO {
       this.sessions.set(server, { socketId, username: null, avatar: null, currentRoom: null });
       this.socketIdToWs.set(socketId, server);
 
-      // Send initial data like index.js does on connect
-      // Delay slightly to ensure client has set up listeners after 101
+      // Send initial data like index.js does on connect — also tell client its server-assigned socketId for host checks
       queueMicrotask(() => {
+        this.send(server, { event: "connected", data: { id: socketId } });
         this.send(server, { event: "rooms:update", data: this.roomManager.listPublic() });
         this.send(server, { event: "games:list", data: listGames() });
       });
@@ -384,6 +384,15 @@ export class LuckyStreetDO {
           okAck({ ok: true, room });
           this.broadcast({ event: "lobby:update", data: room });
           this.broadcast({ event: "lobby:playerKicked", data: { roomId: id, kickedId } });
+          this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic() });
+          break;
+        }
+        case "lobby:transferHost": {
+          const id = String(data.roomId || sess.currentRoom || "").toUpperCase();
+          const room = this.roomManager.transferHost({ roomId: id, requesterId: socketId, targetId: data.targetId });
+          okAck({ ok: true, room });
+          this.broadcast({ event: "lobby:update", data: room });
+          this.broadcast({ event: "lobby:hostChanged", data: { roomId: id, hostId: room.hostId, hostName: room.hostName } });
           this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic() });
           break;
         }

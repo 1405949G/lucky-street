@@ -22,6 +22,33 @@
 import { generateRoomId, isValidRoomId, hashPassword, verifyPassword, clamp } from "./utils.js";
 import { getGame, defaultMaxFor } from "./games.js";
 
+const BOT_NAMES = [
+  "Ava", "Milo", "Zoe", "Finn", "Luna", "Kai", "Nova", "Rex",
+  "Mia", "Nash", "Jade", "Cole", "Aria", "Kiko", "Zane", "Ivy",
+  "Theo", "Blake", "Ruby", "Jace", "Sage", "Axel", "Mira", "Leo"
+];
+
+function pickBotName(room) {
+  const taken = new Set([...room.players.map(p => p.name.toLowerCase()), ...room.bots.map(b => b.name.toLowerCase())]);
+  const available = BOT_NAMES.filter(n => !taken.has(n.toLowerCase()));
+  if (available.length > 0) {
+    return available[Math.floor(Math.random() * available.length)];
+  }
+  // fallback: pick any unused variant without numbers — shuffle and append invisible char? Just pick random and ensure uniqueness by retrying with suffixless random
+  // All names taken (rare) — pick random BOT_NAMES + try to find not-taken with minimal suffix
+  for (let i = 0; i < 20; i++) {
+    const cand = BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)];
+    if (!taken.has(cand.toLowerCase())) return cand;
+  }
+  // last resort: allow requested name (will be checked for duplicate elsewhere)
+  return BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)];
+}
+
+function pickRandomHost(players) {
+  if (players.length === 0) return null;
+  return players[Math.floor(Math.random() * players.length)];
+}
+
 export class RoomManager {
   constructor({ onRoomsChanged = null } = {}) {
     /** Map<roomId, room> */
@@ -154,10 +181,13 @@ export class RoomManager {
     }
 
     if (wasHost) {
-      // promote first remaining player to host
-      room.hostId = room.players[0].id;
-      room.hostName = room.players[0].name;
-      room.players[0].isHost = true;
+      // promote random remaining player to host (per spec: random player receives host)
+      const newHost = pickRandomHost(room.players);
+      room.hostId = newHost.id;
+      room.hostName = newHost.name;
+      // clear old host flags
+      room.players.forEach(p => p.isHost = false);
+      newHost.isHost = true;
     }
     room.updatedAt = Date.now();
     this._notify();
@@ -178,9 +208,11 @@ export class RoomManager {
           affected.push({ roomId: room.id, deleted: true });
         } else {
           if (wasHost) {
-            room.hostId = room.players[0].id;
-            room.hostName = room.players[0].name;
-            room.players[0].isHost = true;
+            const newHost = pickRandomHost(room.players);
+            room.hostId = newHost.id;
+            room.hostName = newHost.name;
+            room.players.forEach(p => p.isHost = false);
+            newHost.isHost = true;
           }
           room.updatedAt = Date.now();
           affected.push({ roomId: room.id, deleted: false, room: this.getFull(room.id) });
@@ -257,10 +289,17 @@ export class RoomManager {
     const room = this._assertHost(roomId, requesterId);
     const total = room.players.length + room.bots.length;
     if (total >= room.maxPlayers) throw new Error("Room is full — increase maxPlayers or remove a player/bot");
-    const name = String(botName || `Bot ${room.bots.length + 1}`).trim().slice(0, 20);
+    let name = String(botName || "").trim().slice(0, 20);
+    if (!name) name = pickBotName(room);
     // bot name uniqueness in room
     if (room.players.some(p => p.name.toLowerCase() === name.toLowerCase()) || room.bots.some(b => b.name.toLowerCase() === name.toLowerCase())) {
-      throw new Error(`Name "${name}" already taken in this room`);
+      // if provided name collides, try to pick a generic unused name instead of error (no numbers)
+      const auto = pickBotName(room);
+      // if auto is same as requested (shouldn't happen) then error
+      if (auto.toLowerCase() === name.toLowerCase()) {
+        throw new Error(`Name "${name}" already taken in this room`);
+      }
+      name = auto;
     }
     const bot = {
       id: `bot_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
@@ -308,6 +347,21 @@ export class RoomManager {
     room.updatedAt = Date.now();
     this._notify();
     return { room: this.getFull(room.id), kickedId: targetId };
+  }
+
+  transferHost({ roomId, requesterId, targetId }) {
+    const room = this._assertHost(roomId, requesterId);
+    if (targetId === room.hostId) throw new Error("Already host");
+    const target = room.players.find(p => p.id === targetId);
+    if (!target) throw new Error("Player not found in room");
+    // clear old host
+    room.players.forEach(p => p.isHost = false);
+    target.isHost = true;
+    room.hostId = target.id;
+    room.hostName = target.name;
+    room.updatedAt = Date.now();
+    this._notify();
+    return this.getFull(room.id);
   }
 
   // ——— Player permissions: rename self; host can also rename any; also need global uniqueness check outside —

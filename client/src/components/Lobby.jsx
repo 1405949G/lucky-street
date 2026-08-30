@@ -1,8 +1,7 @@
 /**
- * Lobby — Spec 5: Permission Matrix + Global Visibility via WebSockets
- * Host: can change game, options, add/remove/rename bots, kick, rename self/bots
- * Player: can only rename self
- * All changes instantly sync via `lobby:update` broadcast
+ * Lobby — Host can change game/options, add/remove bots (generic names), kick, transfer host, rename self/bots
+ * Players can only edit their own avatar/name via avatar click popup (like main menu)
+ * Bots have bot avatar 🤖, host shows crown 👑, YOU tag for self, X circles for host to kick
  */
 
 import React, { useContext, useEffect, useState } from "react";
@@ -11,8 +10,66 @@ import { ProfileContext } from "../context/ProfileContext.jsx";
 import { SocketContext } from "../context/SocketContext.jsx";
 import IdentityModal from "./IdentityModal.jsx";
 import PasswordModal from "./PasswordModal.jsx";
+import AvatarPicker from "./AvatarPicker.jsx";
+import { PALETTE } from "../utils/avatar.js";
 
 const PALETTE_BOT = ["#8b5cf6","#f59e0b","#06b6d4","#ec4899","#22c55e","#f97316"];
+
+// Small reusable edit popup for avatar+name (reuses IdentityModal styling but inline)
+function EditProfilePopup({ initialName, initialAvatar, onSave, onClose }) {
+  const [name, setName] = useState(initialName || "");
+  const [avatar, setAvatar] = useState(initialAvatar || PALETTE[0]);
+  const [err, setErr] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  function submit(e) {
+    e?.preventDefault();
+    const trimmed = name.trim();
+    if (!trimmed) return setErr("Please enter a name");
+    if (trimmed.length < 2) return setErr("Name must be at least 2 characters");
+    if (trimmed.length > 20) return setErr("Name is too long");
+    if (!/^[\p{L}\p{N} _'\-.]+$/u.test(trimmed)) return setErr("Only letters, numbers and - _ ' . allowed");
+    if (typeof avatar === "string" && avatar.startsWith("data:image") && avatar.length > 200 * 1024) {
+      return setErr("Image is too large — pick a smaller photo or colour");
+    }
+    setSaving(true);
+    onSave({ name: trimmed, avatar }, (ok, msg) => {
+      setSaving(false);
+      if (!ok) setErr(msg);
+      else onClose();
+    });
+  }
+
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-[#070b14]/70 backdrop-blur-sm">
+      <form onSubmit={submit} className="w-full max-w-[420px] rounded-[24px] bg-[#142a3d] border border-white/10 shadow-2xl overflow-hidden">
+        <div className="px-6 pt-6 pb-3 border-b border-white/10 flex items-center justify-between">
+          <h2 className="font-extrabold text-white">Edit Profile</h2>
+          <button type="button" onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/15 flex items-center justify-center text-white/60">✕</button>
+        </div>
+        <div className="px-6 py-5 space-y-4">
+          <div>
+            <label className="text-xs font-bold tracking-widest text-white/60">NAME</label>
+            <input
+              value={name}
+              onChange={e => setName(e.target.value)}
+              maxLength={20}
+              autoFocus
+              className="mt-1.5 w-full px-4 py-3 rounded-xl bg-white/10 border border-white/15 text-white placeholder:text-white/30 text-sm font-semibold outline-none focus:border-amber-400/60"
+              placeholder="Your name"
+            />
+          </div>
+          <AvatarPicker value={avatar} onChange={setAvatar} />
+          {err && <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 px-3 py-2 text-xs font-bold text-rose-300">{err}</div>}
+          <button type="submit" disabled={saving} className="w-full py-3 rounded-full bg-[#f3ecd8] hover:bg-white disabled:opacity-50 text-[#0e2533] font-extrabold shadow-md">
+            {saving ? "Saving…" : "Save"}
+          </button>
+          <button type="button" onClick={onClose} className="w-full text-xs text-white/40 hover:text-white/70">Cancel</button>
+        </div>
+      </form>
+    </div>
+  );
+}
 
 export default function Lobby() {
   const { roomId } = useParams();
@@ -24,41 +81,34 @@ export default function Lobby() {
   const [error, setError] = useState(null);
   const [showBlocking, setShowBlocking] = useState(false);
   const [needPassword, setNeedPassword] = useState(false);
-  const [editingSelf, setEditingSelf] = useState(false);
-  const [selfName, setSelfName] = useState("");
   const [botName, setBotName] = useState("");
   const [botColor, setBotColor] = useState(PALETTE_BOT[0]);
   const [toast, setToast] = useState(null);
+  const [editingSelf, setEditingSelf] = useState(false);
+  const [kickedPopup, setKickedPopup] = useState(false);
+  const [hostActionTarget, setHostActionTarget] = useState(null); // player to maybe make host
 
   const id = String(roomId || "").toUpperCase();
 
-  // Direct link blocking: if no profile, show blocking modal
   useEffect(() => {
     if (!hasProfile) setShowBlocking(true);
     else setShowBlocking(false);
   }, [hasProfile]);
 
-  // Keep selfName in sync with profile when entering
-  useEffect(() => {
-    if (profile?.username) setSelfName(profile.username);
-  }, [profile]);
-
   // Socket subscriptions
   useEffect(() => {
     if (!socket) return;
-    if (!hasProfile) return; // don't try to join without identity
+    if (!hasProfile) return;
 
     function onLobbyUpdate(full) {
       if (full.id === id) setRoom(full);
     }
     function onKicked(data) {
       if (data.roomId === id) {
-        setToast("You were kicked by the host");
-        setTimeout(() => navigate("/"), 1500);
+        setKickedPopup(true);
       }
     }
     function onRoomErr(data) {
-      // password errors handled via needPassword modal — don't show full-screen error
       if (data?.error && /password/i.test(data.error)) {
         setNeedPassword(true);
         return;
@@ -66,15 +116,12 @@ export default function Lobby() {
       setError(data.error);
       setTimeout(() => setError(null), 3000);
     }
-    function onPlayerJoined() {
-      // lobby:update already handles, but could toast
-    }
 
     socket.on("lobby:update", onLobbyUpdate);
     socket.on("player:kicked", onKicked);
     socket.on("room:error", onRoomErr);
+    // also handle hostChanged via lobby:update, no extra
 
-    // Request sync and ensure joined (if coming via direct link, need to emit join)
     function attemptJoin(password = undefined) {
       socket.emit("room:join", { roomId: id, password }, (jres) => {
         if (jres?.ok) { setRoom(jres.room); setNeedPassword(false); }
@@ -88,50 +135,43 @@ export default function Lobby() {
       if (res?.ok) setRoom(res.room);
       else attemptJoin();
     });
-    // expose for retry after password modal
     socket._luckyAttemptJoin = attemptJoin;
-
-    // If directly landing, ensure we are joined (covers refresh case where socket id changed)
-    // The sync above will attempt join if needed
 
     return () => {
       socket.off("lobby:update", onLobbyUpdate);
       socket.off("player:kicked", onKicked);
       socket.off("room:error", onRoomErr);
     };
-  }, [socket, id, hasProfile, navigate]);
-
-  // Also listen for global lobby updates to keep room fresh via polling fallback
-  useEffect(() => {
-    if (!socket) return;
-    function onRoomsUpdate() {
-      // re-sync
-      socket.emit("room:sync", { roomId: id }, (res) => {
-        if (res?.ok) setRoom(res.room);
-      });
-    }
-    // optional: use rooms:update to refresh if our room changed (e.g., host changed game)
-    // Already covered by lobby:update, but keep for safety
-    return () => {};
-  }, [socket, id]);
+  }, [socket, id, hasProfile]);
 
   if (showBlocking) {
     return <IdentityModal blocking title={`Enter ${id}`} onDone={() => {
       setShowBlocking(false);
-      // after identity set, trigger join ( Lobby effect will run because hasProfile now true — but for same mount we manually retry)
-      const pwd = undefined;
-      if (socket) {
-        // small delay for profile register to propagate
-        setTimeout(() => {
-          if (socket._luckyAttemptJoin) socket._luckyAttemptJoin(pwd);
-          else socket.emit("room:join", { roomId: id }, (jres) => {
-            if (jres?.ok) setRoom(jres.room);
-            else if (jres?.error && /password/i.test(jres.error)) setNeedPassword(true);
-            else if (jres?.error) setError(jres.error);
-          });
-        }, 400);
-      }
+      setTimeout(() => {
+        if (socket?._luckyAttemptJoin) socket._luckyAttemptJoin();
+        else socket?.emit("room:join", { roomId: id }, (jres) => {
+          if (jres?.ok) setRoom(jres.room);
+          else if (jres?.error && /password/i.test(jres.error)) setNeedPassword(true);
+          else if (jres?.error) setError(jres.error);
+        });
+      }, 400);
     }} />;
+  }
+
+  if (kickedPopup) {
+    return (
+      <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-[#070b14]/80 backdrop-blur-md">
+        <div className="w-full max-w-[380px] rounded-[24px] bg-[#142a3d] border border-white/10 p-6 text-center shadow-2xl">
+          <div className="w-12 h-12 rounded-full bg-rose-500/20 border border-rose-500/30 flex items-center justify-center mx-auto text-xl">✕</div>
+          <h2 className="font-extrabold text-white text-lg mt-3">You were kicked</h2>
+          <p className="text-sm text-white/60 mt-1">The host removed you from the lobby.</p>
+          <button
+            onClick={() => { setKickedPopup(false); navigate("/"); }}
+            className="mt-5 w-full py-3 rounded-full bg-[#f3ecd8] hover:bg-white text-[#0e2533] font-extrabold"
+          >Back to Main Menu</button>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
@@ -154,9 +194,10 @@ export default function Lobby() {
     );
   }
 
-  const isHost = socket && room.hostId === socket.id;
-  const me = room.players.find(p => p.id === socket?.id);
-  const canEditSelf = !!me;
+  // Host detection: socket.id is server-assigned for both socket.io and native WS (via connected event)
+  const myId = socket?.id;
+  const isHost = !!(myId && room.hostId === myId);
+  const myPlayer = room.players.find(p => p.id === myId);
   const game = games.find(g => g.id === room.game) || { label: room.game, optionSchema: [] };
 
   function showToast(msg) { setToast(msg); setTimeout(() => setToast(null), 2500); }
@@ -165,14 +206,10 @@ export default function Lobby() {
     const newGame = e.target.value;
     socket.emit("lobby:updateGame", { roomId: id, gameId: newGame }, (res) => {
       if (!res?.ok) showToast(res.error);
-      else showToast(`Game → ${res.room.gameLabel}`);
+      else showToast(`Game set to ${res.room.gameLabel}`);
     });
   }
 
-  function handleMaxChange(e) {
-    const v = e.target.value;
-    // debounce? immediate for now but validate on blur/enter
-  }
   function commitMax(e) {
     const n = Number(e.target.value);
     if (!Number.isFinite(n)) return;
@@ -188,23 +225,15 @@ export default function Lobby() {
   }
 
   function handleAddBot() {
-    if (!botName.trim()) return showToast("Enter bot name");
-    socket.emit("lobby:addBot", { roomId: id, botName: botName.trim(), avatarColor: botColor }, (res) => {
+    // empty name → server picks generic Bot Nick without numbers
+    socket.emit("lobby:addBot", { roomId: id, botName: botName.trim() || undefined, avatarColor: botColor }, (res) => {
       if (!res?.ok) showToast(res.error);
-      else { setBotName(""); showToast(`Added bot ${botName}`); }
+      else { setBotName(""); showToast(`Added bot`); }
     });
   }
 
   function handleRemoveBot(botId) {
     socket.emit("lobby:removeBot", { roomId: id, botId }, (res) => {
-      if (!res?.ok) showToast(res.error);
-    });
-  }
-
-  function handleRenameBot(botId, current) {
-    const next = prompt(`Rename bot "${current}" to:`, current);
-    if (!next || next.trim() === current) return;
-    socket.emit("lobby:renameBot", { roomId: id, botId, newName: next.trim() }, (res) => {
       if (!res?.ok) showToast(res.error);
     });
   }
@@ -217,24 +246,34 @@ export default function Lobby() {
     });
   }
 
-  function handleRenameSelf() {
-    const trimmed = selfName.trim();
-    if (!trimmed) return showToast("Name required");
-    if (trimmed === profile.username) { setEditingSelf(false); return; }
-    socket.emit("lobby:renameSelf", { roomId: id, newName: trimmed }, (res) => {
+  function handleTransferHost(targetId, name) {
+    if (!confirm(`Make ${name} the new host?`)) return;
+    socket.emit("lobby:transferHost", { roomId: id, targetId }, (res) => {
       if (!res?.ok) showToast(res.error);
       else {
-        // also update localStorage via profile context? Socket will emit user:renamed but we manually save
-        // Update local profile cache
-        try {
-          const raw = localStorage.getItem("luckyStreet:profile");
-          const p = raw ? JSON.parse(raw) : {};
-          p.username = trimmed;
-          localStorage.setItem("luckyStreet:profile", JSON.stringify(p));
-        } catch {}
-        setEditingSelf(false);
-        showToast(`Renamed to ${trimmed}`);
+        showToast(`${name} is now host`);
+        setHostActionTarget(null);
       }
+    });
+  }
+
+  function handleEditSave({ name, avatar }, done) {
+    // Update both profile (global) and room — use profile:update which propagates to room
+    socket.emit("profile:update", { username: name, avatar }, (res) => {
+      if (!res?.ok) {
+        done(false, res?.error || "Could not save — name may be taken");
+        return;
+      }
+      try {
+        const raw = localStorage.getItem("luckyStreet:profile");
+        const p = raw ? JSON.parse(raw) : {};
+        p.username = res.profile.username;
+        p.avatar = res.profile.avatar;
+        p.avatarType = res.profile.avatar?.startsWith("data:") ? "image" : "color";
+        localStorage.setItem("luckyStreet:profile", JSON.stringify(p));
+      } catch {}
+      showToast("Profile updated");
+      done(true);
     });
   }
 
@@ -244,7 +283,6 @@ export default function Lobby() {
 
   return (
     <div className="max-w-[760px] mx-auto px-4 pb-10">
-      {/* Header */}
       <div className="flex items-center justify-between pt-2">
         <button onClick={() => navigate("/")} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 flex items-center justify-center text-white/70">‹</button>
         <div className="text-center">
@@ -254,7 +292,6 @@ export default function Lobby() {
         <button onClick={handleLeave} className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-xs font-bold text-white/70">Leave</button>
       </div>
 
-      {/* Invite card */}
       <div className="mt-4 rounded-[24px] bg-[#29546c] border border-white/10 shadow-xl p-6 text-center relative overflow-hidden">
         <div className="absolute inset-0 opacity-20" style={{ background: "radial-gradient(ellipse at top, rgba(255,255,255,0.15), transparent 60%)" }}></div>
         <div className="relative">
@@ -271,66 +308,82 @@ export default function Lobby() {
         </div>
       </div>
 
-      {/* Player grid */}
+      {/* Players & Bots */}
       <div className="mt-6">
         <h3 className="font-extrabold text-white text-sm">Players & Bots</h3>
-        <p className="text-xs text-white/40">{isHost ? "You’re the host — tap your avatar to change your name, or manage bots and game settings below." : "Tap your avatar to change your name."}</p>
-        <div className="mt-3 flex flex-wrap gap-3">
+        <p className="text-xs text-white/40">Tap your avatar to change your name and photo.</p>
+        <div className="mt-3 flex flex-wrap gap-4">
           {room.players.map(p => {
-            const isMe = p.id === socket?.id;
-            const avatarBg = p.avatar && p.avatar.startsWith("data:") ? null : (p.avatar || "#475569");
+            const isMe = p.id === myId;
+            const isHostPlayer = p.isHost || p.id === room.hostId;
+            const avatarIsImage = p.avatar && typeof p.avatar === "string" && p.avatar.startsWith("data:");
+            const avatarBg = avatarIsImage ? null : (p.avatar || "#475569");
+            const canEdit = isMe;
+            const showKick = isHost && !isMe;
             return (
               <div key={p.id} className="flex flex-col items-center gap-1.5 relative">
-                <div
-                  className={`w-[64px] h-[64px] rounded-full border-2 flex items-center justify-center overflow-hidden shadow-md ${isMe ? "border-emerald-400" : p.isHost ? "border-amber-400" : "border-white/15"}`}
-                  style={avatarBg ? { background: avatarBg } : {}}
-                >
-                  {p.avatar && p.avatar.startsWith("data:") ? (
-                    <img src={p.avatar} alt={p.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="font-black text-white text-lg">{p.name.slice(0, 2).toUpperCase()}</span>
+                {/* Crown for host */}
+                {isHostPlayer && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
+                    <span className="text-[16px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]">👑</span>
+                  </div>
+                )}
+                <div className="relative">
+                  <button
+                    onClick={() => {
+                      if (canEdit) setEditingSelf(true);
+                      else if (isHost && !isMe) setHostActionTarget(p);
+                    }}
+                    disabled={!canEdit && !(isHost && !isMe)}
+                    className={`w-[64px] h-[64px] rounded-full border-2 flex items-center justify-center overflow-hidden shadow-md transition-transform
+                      ${isMe ? "border-emerald-400 scale-[1.02]" : isHostPlayer ? "border-amber-400" : "border-white/15"}
+                      ${canEdit || (isHost && !isMe) ? "cursor-pointer hover:scale-105" : "cursor-default"}`}
+                    style={avatarBg ? { background: avatarBg } : {}}
+                    title={canEdit ? "Edit your profile" : isHost ? "Host actions" : p.name}
+                  >
+                    {avatarIsImage ? (
+                      <img src={p.avatar} alt={p.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="font-black text-white text-lg">{p.name.slice(0, 2).toUpperCase()}</span>
+                    )}
+                  </button>
+                  {/* X circle for host to kick players */}
+                  {showKick && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleKick(p.id, p.name); }}
+                      className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-rose-500 hover:bg-rose-600 border-2 border-[#0e2533] flex items-center justify-center text-white text-[10px] font-black shadow-lg"
+                      title={`Kick ${p.name}`}
+                    >✕</button>
                   )}
                 </div>
-                <div className="flex flex-col items-center leading-none">
+                <div className="flex flex-col items-center leading-none gap-0.5">
                   <span className="text-xs font-bold text-white truncate max-w-[72px] text-center">{p.name}</span>
-                  <span className="text-[10px] font-bold tracking-wide mt-0.5 px-1.5 py-0.5 rounded-full border text-[9px] border-white/15 bg-white/5 text-white/60">
-                    {p.isHost ? "HOST" : isMe ? "YOU" : "PLAYER"}
-                  </span>
+                  {isMe ? (
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[9px] font-black tracking-wide">YOU</span>
+                  ) : null}
                 </div>
-                {isMe && editingSelf ? (
-                  <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 bg-[#0f2231] border border-white/10 rounded-xl p-2 shadow-xl z-10 flex gap-1">
-                    <input value={selfName} onChange={e => setSelfName(e.target.value)} className="px-2 py-1 rounded-lg bg-white/10 border border-white/15 text-white text-xs w-24" maxLength={20} />
-                    <button onClick={handleRenameSelf} className="px-2 py-1 rounded-lg bg-emerald-500 text-white text-xs font-bold">OK</button>
-                    <button onClick={() => setEditingSelf(false)} className="px-2 py-1 rounded-lg bg-white/10 text-white text-xs">✕</button>
-                  </div>
-                ) : null}
-                {!editingSelf && isMe && (
-                  <button onClick={() => setEditingSelf(true)} className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-white text-[#0e2533] border border-white shadow flex items-center justify-center text-[10px] font-black">✎</button>
-                )}
-                {isHost && !isMe && (
-                  <button onClick={() => handleKick(p.id, p.name)} className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center text-[10px] shadow" title="Kick">✕</button>
-                )}
               </div>
             );
           })}
           {room.bots.map(b => (
             <div key={b.id} className="flex flex-col items-center gap-1.5 relative">
-              <div className="w-[64px] h-[64px] rounded-full border-2 border-white/10 flex items-center justify-center shadow-md" style={{ background: b.avatarColor || b.avatar || "#6b7280" }}>
-                <span className="font-black text-white text-sm">{b.name.slice(0, 2).toUpperCase()}</span>
+              <div className="relative">
+                <div className="w-[64px] h-[64px] rounded-full border-2 border-white/10 flex items-center justify-center shadow-md bg-[#1e2a3a]">
+                  <span className="text-[24px]">🤖</span>
+                </div>
+                {isHost && (
+                  <button
+                    onClick={() => handleRemoveBot(b.id)}
+                    className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-rose-500 hover:bg-rose-600 border-2 border-[#0e2533] flex items-center justify-center text-white text-[10px] font-black shadow-lg"
+                    title={`Remove ${b.name}`}
+                  >✕</button>
+                )}
               </div>
               <div className="flex flex-col items-center leading-none">
                 <span className="text-xs font-bold text-white truncate max-w-[72px] text-center">{b.name}</span>
-                <span className="text-[9px] font-bold tracking-wide mt-0.5 px-1.5 py-0.5 rounded-full bg-white/10 border border-white/10 text-white/60">BOT</span>
               </div>
-              {isHost && (
-                <div className="absolute -top-1 -right-1 flex gap-1">
-                  <button onClick={() => handleRenameBot(b.id, b.name)} className="w-6 h-6 rounded-full bg-white text-[#0e2533] flex items-center justify-center text-[10px] font-black">✎</button>
-                  <button onClick={() => handleRemoveBot(b.id)} className="w-6 h-6 rounded-full bg-rose-500 text-white flex items-center justify-center text-[10px]">✕</button>
-                </div>
-              )}
             </div>
           ))}
-          {/* Waiting slots */}
           {Array.from({ length: Math.max(0, Math.min(4, room.maxPlayers - room.players.length - room.bots.length)) }).map((_, i) => (
             <div key={`wait-${i}`} className="flex flex-col items-center gap-1.5 opacity-40">
               <div className="w-[64px] h-[64px] rounded-full border-2 border-dashed border-white/25 bg-white/[0.03] flex items-center justify-center">
@@ -350,7 +403,7 @@ export default function Lobby() {
             <input
               value={botName}
               onChange={e => setBotName(e.target.value)}
-              placeholder="Bot name"
+              placeholder="Leave empty for random name"
               maxLength={20}
               className="flex-1 px-3 py-2.5 rounded-xl bg-white/10 border border-white/15 text-white placeholder:text-white/30 text-sm outline-none"
             />
@@ -363,13 +416,9 @@ export default function Lobby() {
           </div>
           <p className="text-xs text-white/30 mt-1">{room.players.length + room.bots.length} / {room.maxPlayers} players — bots take a spot.</p>
         </div>
-      ) : (
-        <div className="mt-5 rounded-xl bg-white/5 border border-white/10 p-3 text-center">
-          <p className="text-xs text-white/50">Only the host can add bots</p>
-        </div>
-      )}
+      ) : null}
 
-      {/* Game picker + options */}
+      {/* Game picker + options - host can change, players view only */}
       <div className="mt-5 rounded-2xl bg-[#0f2231]/80 border border-white/10 p-4">
         <div className="flex items-center justify-between gap-3">
           <span className="font-extrabold text-white text-sm">Game</span>
@@ -460,20 +509,36 @@ export default function Lobby() {
         </p>
       </div>
 
-      {/* Self rename card */}
-      <div className="mt-5 rounded-2xl bg-[#0f2231]/60 border border-white/10 p-4">
-        <h4 className="font-bold text-white text-sm">Your Name</h4>
-        <p className="text-xs text-white/40">Change how others see you.</p>
-        <div className="mt-2 flex gap-2">
-          <input
-            value={selfName}
-            onChange={e => setSelfName(e.target.value)}
-            className="flex-1 px-3 py-2.5 rounded-xl bg-white/10 border border-white/15 text-white text-sm"
-            maxLength={20}
-          />
-          <button onClick={handleRenameSelf} className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-white text-sm font-bold">Rename</button>
+      {/* Host transfer popup */}
+      {hostActionTarget && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#070b14]/60 backdrop-blur-sm" onClick={() => setHostActionTarget(null)}>
+          <div onClick={e => e.stopPropagation()} className="w-full max-w-[320px] rounded-2xl bg-[#142a3d] border border-white/10 p-5 text-center shadow-2xl">
+            <p className="text-sm text-white/60">Host actions for</p>
+            <p className="font-extrabold text-white text-lg">{hostActionTarget.name}</p>
+            <div className="mt-4 grid gap-2">
+              <button
+                onClick={() => handleTransferHost(hostActionTarget.id, hostActionTarget.name)}
+                className="w-full py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-[#0e2533] font-extrabold flex items-center justify-center gap-2"
+              >👑 Make Host</button>
+              <button
+                onClick={() => { handleKick(hostActionTarget.id, hostActionTarget.name); setHostActionTarget(null); }}
+                className="w-full py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold"
+              >✕ Kick Player</button>
+              <button onClick={() => setHostActionTarget(null)} className="w-full py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold">Cancel</button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Edit self popup */}
+      {editingSelf && myPlayer && (
+        <EditProfilePopup
+          initialName={myPlayer.name}
+          initialAvatar={myPlayer.avatar || profile?.avatar}
+          onClose={() => setEditingSelf(false)}
+          onSave={handleEditSave}
+        />
+      )}
 
       {needPassword && (
         <PasswordModal

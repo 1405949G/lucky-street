@@ -71,6 +71,13 @@ class NativeSocket {
         }
         return;
       }
+      // Server-assigned id for host checks (DO generates socketId, not client's native_ id)
+      if (msg.event === "connected" && msg.data?.id) {
+        this.id = msg.data.id;
+        this._emitInternal("connect", msg.data);
+        this._emitInternal("connected", msg.data);
+        return;
+      }
       // Regular event
       if (msg.event) {
         this._emitInternal(msg.event, msg.data);
