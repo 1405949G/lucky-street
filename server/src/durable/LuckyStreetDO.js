@@ -126,6 +126,10 @@ export class LuckyStreetDO {
     this.send(ws, { type: "ack", ackId, data: payload });
   }
 
+  _syncAttachment(ws, sess) {
+    try { ws.serializeAttachment({ socketId: sess.socketId, username: sess.username || null, avatar: sess.avatar || null, currentRoom: sess.currentRoom || null }); } catch {}
+  }
+
   async fetch(request) {
     const url = new URL(request.url);
     if (request.method === "OPTIONS") {
@@ -140,8 +144,10 @@ export class LuckyStreetDO {
       const [client, server] = Object.values(pair);
       this.state.acceptWebSocket(server);
       const socketId = genSocketId();
-      this.sessions.set(server, { socketId, username: null, avatar: null, currentRoom: null });
+      const sess = { socketId, username: null, avatar: null, currentRoom: null };
+      this.sessions.set(server, sess);
       this.socketIdToWs.set(socketId, server);
+      try { server.serializeAttachment({ socketId, username: null, currentRoom: null }); } catch {}
       queueMicrotask(() => {
         this.send(server, { event: "connected", data: { id: socketId } });
         this.send(server, { event: "rooms:update", data: this.roomManager.listPublic() });
@@ -227,11 +233,27 @@ export class LuckyStreetDO {
     try { parsed = JSON.parse(message); } catch { return; }
     const { event, data, ackId } = parsed;
     if (!event) return;
+    // Hibernation-safe: restore sess from attachment if Map lost after eviction
+    let sess = this.sessions.get(ws);
+    if (!sess) {
+      try {
+        const attach = ws.deserializeAttachment?.();
+        if (attach?.socketId) {
+          sess = { socketId: attach.socketId, username: attach.username || null, avatar: attach.avatar || null, currentRoom: attach.currentRoom || null };
+          this.sessions.set(ws, sess);
+          this.socketIdToWs.set(attach.socketId, ws);
+        }
+      } catch {}
+    }
+    if (!sess && event === "ping") { this.sendAck(ws, ackId, { ok: true }); this.send(ws, { event: "pong" }); return; }
     await this.handleEvent(ws, event, data || {}, ackId);
   }
 
   async webSocketClose(ws, code, reason, wasClean) {
-    const sess = this.sessions.get(ws);
+    let sess = this.sessions.get(ws);
+    if (!sess) {
+      try { const a = ws.deserializeAttachment?.(); if (a?.socketId) sess = { socketId: a.socketId, username: a.username || null, avatar: a.avatar || null, currentRoom: a.currentRoom || null }; } catch {}
+    }
     if (!sess) return;
     const socketId = sess.socketId;
     console.log(`[DO disc] ${socketId} (${sess.username || "unknown"}) code=${code} grace=${ROOM_GRACE_MS}ms`);
@@ -361,6 +383,8 @@ export class LuckyStreetDO {
     const okAck = (payload) => this.sendAck(ws, ackId, payload);
     try {
       switch (event) {
+        case "ping": { okAck({ ok: true }); this.send(ws, { event: "pong" }); break; }
+        case "pong": { break; }
         case "profile:register": {
           const clean = sanitizeName(data.username);
           const lower = clean.toLowerCase();
@@ -437,6 +461,7 @@ export class LuckyStreetDO {
           const entry = this.userRegistry.register(socketId, clean, data.avatar ?? null);
           sess.username = entry.username;
           sess.avatar = entry.avatar;
+          this._syncAttachment(ws, sess);
           okAck({ ok: true, profile: { username: entry.username, avatar: entry.avatar } });
           this.send(ws, { event: "profile:ok", data: { username: entry.username, avatar: entry.avatar } });
           if (reattached) {
@@ -453,6 +478,7 @@ export class LuckyStreetDO {
           const updated = this.userRegistry.update(socketId, newName, data.avatar);
           sess.username = updated.username;
           sess.avatar = updated.avatar;
+          this._syncAttachment(ws, sess);
           for (const room of this.roomManager.rooms.values()) {
             const p = room.players.find(x => x.id === socketId);
             if (p) {
@@ -475,11 +501,13 @@ export class LuckyStreetDO {
           if (reclaimed) {
             sess.username = reclaimed.username;
             sess.avatar = reclaimed.avatar;
+            this._syncAttachment(ws, sess);
             okAck({ ok: true, reclaimed: true, profile: { username: reclaimed.username, avatar: reclaimed.avatar } });
             this.send(ws, { event: "profile:ok", data: { username: reclaimed.username, avatar: reclaimed.avatar } });
           } else {
             const entry = this.userRegistry.register(socketId, clean, null);
             sess.username = entry.username;
+            this._syncAttachment(ws, sess);
             okAck({ ok: true, reclaimed: false, profile: { username: entry.username } });
           }
           await this.persist();
@@ -501,6 +529,7 @@ export class LuckyStreetDO {
             gameOptions: data.gameOptions,
           });
           sess.currentRoom = full.id;
+          this._syncAttachment(ws, sess);
           // Cancel any pending leave for this socket (shouldn't exist)
           if (this.pendingLeaves.has(socketId)) {
             const pend = this.pendingLeaves.get(socketId);
@@ -535,6 +564,7 @@ export class LuckyStreetDO {
           }
           const full = this.roomManager.join({ roomId: id, socketId, username: user.username, avatar: user.avatar });
           sess.currentRoom = id;
+          this._syncAttachment(ws, sess);
           // clear pending for this socket if any
           if (this.pendingLeaves.has(socketId)) {
             clearTimeout(this.pendingLeaves.get(socketId).timeout);
@@ -558,6 +588,7 @@ export class LuckyStreetDO {
           }
           const result = this.roomManager.leave({ roomId: id, socketId });
           sess.currentRoom = null;
+          this._syncAttachment(ws, sess);
           okAck({ ok: true });
           this.send(ws, { event: "room:left", data: { roomId: id } });
           if (result) this.broadcast({ event: "lobby:update", data: result });

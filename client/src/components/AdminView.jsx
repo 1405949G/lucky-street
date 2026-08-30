@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { SocketContext } from "../context/SocketContext.jsx";
+import { SocketContext, fetchWithRetry } from "../context/SocketContext.jsx";
 
 export default function AdminView() {
   const { serverUrl } = useContext(SocketContext);
@@ -12,7 +12,7 @@ export default function AdminView() {
   async function load() {
     setLoading(true); setErr(null);
     try {
-      const r = await fetch(`${base}/api/admin/rooms`);
+      const r = await fetchWithRetry(`${base}/api/admin/rooms`, {}, 3);
       const j = await r.json();
       setData(j);
     } catch (e) { setErr(String(e.message || e)); }
@@ -23,7 +23,7 @@ export default function AdminView() {
   async function delOne(id) {
     if (!confirm(`Delete room ${id}?`)) return;
     try {
-      const r = await fetch(`${base}/api/rooms/${id}`, { method: "DELETE" });
+      const r = await fetchWithRetry(`${base}/api/rooms/${id}`, { method: "DELETE" }, 3);
       const j = await r.json();
       if (!j.ok) throw new Error(j.error || "delete failed");
       load();
@@ -32,7 +32,7 @@ export default function AdminView() {
   async function clearAll() {
     if (!confirm(`Delete ALL ${data?.count || 0} rooms?`)) return;
     try {
-      const r = await fetch(`${base}/api/admin/clear`, { method: "POST" });
+      const r = await fetchWithRetry(`${base}/api/admin/clear`, { method: "POST" }, 3);
       const j = await r.json();
       if (!j.ok) throw new Error(j.error || "clear failed");
       load();
