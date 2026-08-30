@@ -249,6 +249,9 @@ export class RoomManager {
   addSpectator({ roomId, socketId, username, avatar }) {
     const room = this.get(roomId);
     if (!room) throw new Error("Room not found");
+    if (room.gameState && room.gameState.phase !== QuestPhases.LOBBY && room.gameState.phase !== QuestPhases.GAME_OVER) {
+      throw new Error("Cannot spectate while quest is in progress");
+    }
     if (!room.spectators) room.spectators = [];
     if (room.spectators.some(s => s.id === socketId)) return this.getFull(room.id);
     if (room.players.some(p => p.id === socketId)) {
