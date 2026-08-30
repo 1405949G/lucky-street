@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import { SocketContext } from "../../../client/src/context/SocketContext.jsx";
 
-export default function QuestGame({ roomId, isHost, isSpectator }) {
+export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegiance = false }) {
   const { socket } = useContext(SocketContext);
   const [pub, setPub] = useState(null);
   const [priv, setPriv] = useState(null);
@@ -119,8 +119,8 @@ export default function QuestGame({ roomId, isHost, isSpectator }) {
 
   return (
     <div className="space-y-4">
-      {/* Private Role Card */}
-      {priv?.self && (
+      {/* Private Role Card - top (hidden when hideTopAllegiance, shown at bottom) */}
+      {!hideTopAllegiance && priv?.self && (
         <div className={`rounded-2xl border p-4 text-center ${priv.self.allegiance==='GOOD' ? 'bg-emerald-500/10 border-emerald-400/30' : 'bg-rose-500/10 border-rose-400/30'}`}>
           <p className="text-xs tracking-widest font-bold text-white/60">YOUR ALLEGIANCE</p>
           <h3 className={`font-black text-lg ${priv.self.allegiance==='GOOD' ? 'text-emerald-300' : 'text-rose-300'}`}>{priv.self.role} • {priv.self.allegiance}</h3>
@@ -144,7 +144,7 @@ export default function QuestGame({ roomId, isHost, isSpectator }) {
           )}
         </div>
       )}
-      {isSpectator && !priv?.self && (
+      {!hideTopAllegiance && isSpectator && !priv?.self && (
         <div className="rounded-xl bg-amber-400/10 border border-amber-400/20 p-3 text-center text-xs text-amber-200">Spectating — you see the board only. Private roles hidden.</div>
       )}
 
@@ -479,6 +479,35 @@ export default function QuestGame({ roomId, isHost, isSpectator }) {
         </div>
       )}
       </div>
+
+      {/* Bottom Allegiance when in centered layout (right above Spectators) */}
+      {hideTopAllegiance && priv?.self && (
+        <div className={`rounded-2xl border p-4 text-center ${priv.self.allegiance==='GOOD' ? 'bg-emerald-500/10 border-emerald-400/30' : 'bg-rose-500/10 border-rose-400/30'}`}>
+          <p className="text-xs tracking-widest font-bold text-white/60">YOUR ALLEGIANCE</p>
+          <h3 className={`font-black text-lg ${priv.self.allegiance==='GOOD' ? 'text-emerald-300' : 'text-rose-300'}`}>{priv.self.role} • {priv.self.allegiance}</h3>
+          {priv.vision?.sees?.length > 0 ? (
+            <div className="mt-3">
+              <p className="text-xs text-white/60">
+                {priv.self.role==='PERCIVAL' ? 'You see Merlin (maybe Morgana):' : priv.self.role==='MERLIN' ? 'You see Evil (except Mordred):' : 'You see fellow Evil (except Oberon):'}
+              </p>
+              <div className="mt-2 flex flex-wrap justify-center gap-2">
+                {priv.vision.sees.map(id=>{
+                  const pl = pub.players.find(p=>p.id===id);
+                  const name = pl?.name || id.slice(0,4);
+                  return <span key={id} className="px-3 py-1.5 rounded-full bg-white/10 border border-white/15 text-xs font-bold text-white">{name}{priv.self.role==='PERCIVAL' ? ' ?' : ''}</span>;
+                })}
+              </div>
+            </div>
+          ) : (
+            <p className="text-xs text-white/50 mt-2">
+              {priv.self.role==='LOYAL' ? 'Loyal — you see nobody.' : priv.self.role==='OBERON' ? 'Oberon — isolated, you see nobody.' : priv.self.role==='MERLIN' && priv.vision.sees.length===0 ? 'Mordred hides from you.' : 'You see nobody.'}
+            </p>
+          )}
+        </div>
+      )}
+      {hideTopAllegiance && isSpectator && !priv?.self && (
+        <div className="rounded-xl bg-amber-400/10 border border-amber-400/20 p-3 text-center text-xs text-amber-200">Spectating — you see the board only. Private roles hidden.</div>
+      )}
 
       {/* Log */}
       {pub.log?.length>0 && (

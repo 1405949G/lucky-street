@@ -385,13 +385,15 @@ export default function Lobby({ spectate = false }) {
         <button onClick={()=>setShowRules(true)} aria-label="Rules" className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 flex items-center justify-center text-white font-bold text-sm">?</button>
       </div>
 
-      {/* Mobile toggle for Kahoot-style split: Board vs Controls */}
-      <div className="mt-4 flex justify-center lg:hidden">
-        <div className="inline-flex rounded-full bg-white/5 border border-white/10 p-1">
-          <button onClick={() => setMobileTab("board")} className={`px-4 py-1.5 rounded-full text-xs font-bold ${mobileTab === "board" ? "bg-[#f3ecd8] text-[#0e2533]" : "text-white/60"}`}>Board</button>
-          <button onClick={() => setMobileTab("controls")} className={`px-4 py-1.5 rounded-full text-xs font-bold ${mobileTab === "controls" ? "bg-[#f3ecd8] text-[#0e2533]" : "text-white/60"}`}>My Controls</button>
+      {/* Mobile toggle - hide when in-game (single column) */}
+      {!hasGameState && (
+        <div className="mt-4 flex justify-center lg:hidden">
+          <div className="inline-flex rounded-full bg-white/5 border border-white/10 p-1">
+            <button onClick={() => setMobileTab("board")} className={`px-4 py-1.5 rounded-full text-xs font-bold ${mobileTab === "board" ? "bg-[#f3ecd8] text-[#0e2533]" : "text-white/60"}`}>Board</button>
+            <button onClick={() => setMobileTab("controls")} className={`px-4 py-1.5 rounded-full text-xs font-bold ${mobileTab === "controls" ? "bg-[#f3ecd8] text-[#0e2533]" : "text-white/60"}`}>My Controls</button>
+          </div>
         </div>
-      </div>
+      )}
 
       {hasGameState && isQuestGame && room.gameState && (
         <div className="mt-4 rounded-[24px] bg-[#0f2231] border border-white/10 shadow-xl p-6 text-center">
@@ -426,10 +428,10 @@ export default function Lobby({ spectate = false }) {
         </div>
       )}
 
-      {/* Split view: board (public) on top/left, controls (private) at bottom/right — PC sees both, phone toggles */}
-      <div className="mt-4 grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-5">
-        {/* Board — public, visible on TV */}
-        <div className={`${mobileTab === "controls" ? "hidden lg:block" : "block"} space-y-4`}>
+      {/* Split view */}
+      <div className={`mt-4 ${hasGameState ? 'flex justify-center' : 'grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-5'}`}>
+        {/* Board — public, visible on TV (hidden during game) */}
+        <div className={`${hasGameState ? 'hidden' : mobileTab === "controls" ? "hidden lg:block" : "block"} space-y-4`}>
           {!hasGameState && (
             <div className="rounded-[24px] bg-[#29546c] border border-white/10 shadow-xl p-6 text-center relative overflow-hidden">
               <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ background: "radial-gradient(ellipse at top, rgba(255,255,255,0.15), transparent 60%)" }}></div>
@@ -446,9 +448,11 @@ export default function Lobby({ spectate = false }) {
             </div>
           )}
 
-      <div className="mt-6">
-        <h3 className="font-extrabold text-white text-sm">Players & Bots</h3>
-        <p className="text-xs text-white/40">Name and avatar are locked in the room — change them from the main menu.</p>
+      {!hasGameState && (
+        <>
+          <div className="mt-6">
+            <h3 className="font-extrabold text-white text-sm">Players & Bots</h3>
+            <p className="text-xs text-white/40">Name and avatar are locked in the room — change them from the main menu.</p>
         <div className="mt-3 flex flex-wrap gap-4">
           {room.players.map(p => {
             const isMe = p.id === myId;
@@ -527,12 +531,33 @@ export default function Lobby({ spectate = false }) {
         {room.spectators?.length > 0 && <div className="mt-2 flex flex-wrap gap-2">{room.spectators.map(s=> <span key={s.id} className="px-2 py-1 rounded-full bg-white/10 border border-white/10 text-white text-xs">{s.name}</span>)}</div>}
         {!isPlayer && !isSpectator && <p className="text-xs text-white/40 mt-1">Watch without taking a slot — or Join to play</p>}
       </div>
+        </>
+      )}
         </div>
-        {/* Controls — private, host-only on desktop right, phone toggles */}
-        <div className={`${mobileTab === "board" ? "hidden lg:block" : "block"} space-y-5`}>
+        {/* Controls */}
+        <div className={`${hasGameState ? 'block w-full max-w-[760px]' : mobileTab === "board" ? "hidden lg:block" : "block"} space-y-5`}>
 
           {isQuestGame && hasGameState ? (
-            <QuestGame roomId={id} isHost={isHost} isSpectator={isSpectator} />
+            <>
+              <QuestGame roomId={id} isHost={isHost} isSpectator={isSpectator} hideTopAllegiance />
+              {/* Bottom centre Spectators - same width as quest top */}
+              <div className="rounded-2xl bg-white/[0.04] border border-white/10 p-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-white/60">Spectators • {room.spectatorCount || 0}</span>
+                  <div className="flex gap-2">
+                    {isSpectator ? (
+                      <span className="text-xs text-amber-300">You are spectating</span>
+                    ) : (
+                      <button onClick={()=>{
+                        if (isPlayer && room.players.length===1) { showToast("Cannot spectate as only player"); return; }
+                        socket.emit("room:spectate",{roomId:id},(res)=>{ if(!res?.ok) showToast(res.error||"Spectate failed"); });
+                      }} className="px-3 py-1 rounded-full bg-white/10 hover:bg-white/15 text-white text-xs">Spectate</button>
+                    )}
+                  </div>
+                </div>
+                {room.spectators?.length>0 && <div className="mt-2 flex flex-wrap gap-2 justify-center">{room.spectators.map(s=> <span key={s.id} className="px-2 py-1 rounded-full bg-white/10 border border-white/10 text-white text-xs">{s.name}</span>)}</div>}
+              </div>
+            </>
           ) : (
             <>
               {isQuestGame && (
