@@ -6,11 +6,16 @@
   "main": "src/index.js",
   "scripts": {
     "dev": "node --watch src/index.js",
+    "dev:worker": "wrangler dev --local --port 3001",
+    "deploy": "wrangler deploy",
     "start": "node src/index.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.19.2",
     "socket.io": "^4.7.5"
+  },
+  "devDependencies": {
+    "wrangler": "^3.60.0"
   }
 }

@@ -1,0 +1,24 @@
+# wrangler.toml — Cloudflare Workers (Option B: pure Cloudflare, no Render)
+# Deploys client + server 100% on Cloudflare free tier
+# Dashboard deploys via GitHub → no terminal needed (see AGENTS.md)
+
+name = "lucky-street-server"
+main = "src/worker.js"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Durable Object for lobby state (rooms + users + GC)
+[durable_objects]
+bindings = [{ name = "LOBBY_DO", class_name = "LuckyStreetDO" }]
+
+[[migrations]]
+tag = "v1"
+new_classes = ["LuckyStreetDO"]
+
+# Optional vars (override in dashboard → Settings → Variables)
+[vars]
+GC_MS = "300000" # 5 min, matches server/src/users.js:13
+CLIENT_ORIGIN = "https://lucky-street.pages.dev" # change after Pages deploy → Redeploy Worker
+
+# For local `npx wrangler dev` (still GitHub Desktop friendly, but dashboard Git connect needs no CLI)
+# npx wrangler dev --local
