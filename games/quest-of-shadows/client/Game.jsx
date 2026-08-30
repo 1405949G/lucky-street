@@ -498,12 +498,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
               if (!socket) return;
               socket.emit("game:reset", { roomId }, (res)=>{
                 if(!res?.ok) showToast(res?.error||'Reset failed');
-                else {
-                  showToast('Game reset — back to lobby');
-                  // Ensure UI clears even if broadcast missed
-                  setPub(null); setPriv(null);
-                  setTimeout(()=> window.location.reload(), 800);
-                }
+                else showToast('Game reset — back to lobby');
               });
             }} className="flex-1 py-3 rounded-full bg-amber-400 hover:bg-amber-300 text-[#0e2533] font-extrabold shadow-lg">Play Again / Back to Lobby</button> : <div className="flex-1 py-3 rounded-full bg-white/5 text-white/40 font-bold text-center">Waiting for host to reset…</div>}
           </div>
