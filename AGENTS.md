@@ -3,7 +3,7 @@
 > **This file is auto-read by AI in new sessions.** Keep it concise and actionable.
 
 ## Project Context
-- **Monorepo:** `lucky-street/` is the active Lucky Street lobby system (separate from `Avalon Game/` legacy).
+- **Monorepo:** `lucky-street/` is the active Lucky Street lobby system — **the full website**. `reference/Avalon Game/` is reference only (legacy static) for recreating Avalon later.
 - **Stack:** `client` = React 18 + Vite + Tailwind + Socket.io-client; `server` = Node 20 + Express 4 + Socket.io.
 - **Ephemeral stores:** `server/src/users.js:17` (global username Map + 5-min GC) and `server/src/rooms.js:14` (rooms Map). See `ARCHITECTURE.md:1` for full wire protocol.
 
@@ -88,7 +88,7 @@ cd lucky-street/client && npm run build     # vite build passes
 
 ### Do NOT
 
-- Do not add games inside `Avalon Game/` — that's legacy static Avalon.
+- Do not add games inside `reference/Avalon Game/` — that's reference only.
 - Do not create games as top-level `C:/.../Lucky StreeT/NewGame/` sibling — monorepo is `lucky-street/`.
 - Do not duplicate `GAMES` object in both server and client — import from `games/<id>/manifest.js`.
 
