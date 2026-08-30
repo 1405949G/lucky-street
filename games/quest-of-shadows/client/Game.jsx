@@ -18,16 +18,25 @@ export default function QuestGame({ roomId, isHost, isSpectator }) {
     if (!socket) return;
     function onUpdate(data) {
       if (!data) { setPub(null); setPriv(null); return; }
+      // Filter cross-room leak (defense-in-depth, server now room-scoped)
+      const incomingRoom = data.roomCode || data.roomId || data.id;
+      if (incomingRoom && String(incomingRoom).toUpperCase() !== String(roomId).toUpperCase()) return;
       setPub(data);
     }
     function onPrivate(data) {
+      if (!data) { setPriv(null); return; }
+      const incomingRoom = data.roomCode || data.roomId;
+      if (incomingRoom && String(incomingRoom).toUpperCase() !== String(roomId).toUpperCase()) return;
       setPriv(data);
     }
     socket.on("game:update", onUpdate);
     socket.on("game:private", onPrivate);
     socket.emit("game:requestState", { roomId }, (res) => {
       if (res?.ok) {
-        if (res.public) setPub(res.public);
+        if (res.public) {
+          const pubRoom = res.public.roomCode || res.public.roomId;
+          if (!pubRoom || String(pubRoom).toUpperCase() === String(roomId).toUpperCase()) setPub(res.public);
+        }
         if (res.private) setPriv(res.private);
       }
     });

@@ -111,12 +111,37 @@ export class LuckyStreetDO {
   }
 
   broadcast(msg, exceptWs = null) {
+    // Room-scoped events: only send to sockets in that room (fixes cross-lobby leak)
+    const roomScopedEvents = new Set(["lobby:update","lobby:playerLeft","lobby:playerJoined","lobby:gameChanged","lobby:optionsChanged","lobby:playerKicked","lobby:hostChanged","game:update","game:private","lobby:playerJoined","lobby:playerKicked"]);
+    if (roomScopedEvents.has(msg.event) && msg.data) {
+      let roomId = msg.data.id || msg.data.roomId || msg.data.roomCode || null;
+      // game:update pub has roomCode, lobby:update has id
+      if (roomId) {
+        return this.sendToRoom(roomId, msg);
+      }
+    }
     const data = JSON.stringify(msg);
     let wss = [];
     try { wss = this.state.getWebSockets(); } catch { wss = Array.from(this.sessions.keys()); }
     for (const ws of wss) {
       if (exceptWs && ws === exceptWs) continue;
       try { ws.send(data); } catch {}
+    }
+  }
+
+  sendToRoom(roomId, msg) {
+    const data = JSON.stringify(msg);
+    let wss = [];
+    try { wss = this.state.getWebSockets(); } catch { wss = Array.from(this.sessions.keys()); }
+    for (const ws of wss) {
+      const sess = this.sessions.get(ws);
+      let cur = sess?.currentRoom;
+      if (!cur) {
+        try { const att = ws.deserializeAttachment?.(); cur = att?.currentRoom; } catch {}
+      }
+      if (cur === roomId) {
+        try { ws.send(data); } catch {}
+      }
     }
   }
 
@@ -137,14 +162,14 @@ export class LuckyStreetDO {
     const room = this.roomManager.get(roomId);
     if (!room || !room.gameState) {
       const full = this.roomManager.getFull(roomId);
-      if (full) this.broadcast({ event: "lobby:update", data: full });
+      if (full) this.sendToRoom(roomId, { event: "lobby:update", data: full });
       return;
     }
     let pub = null;
     try { pub = questPublic(room.gameState); } catch { pub = null; }
     if (pub) {
-      this.broadcast({ event: "game:update", data: pub });
-      this.broadcast({ event: "lobby:update", data: this.roomManager.getFull(roomId) });
+      this.sendToRoom(roomId, { event: "game:update", data: pub });
+      this.sendToRoom(roomId, { event: "lobby:update", data: this.roomManager.getFull(roomId) });
       for (const p of room.gameState.players) {
         if (p.isBot) continue;
         const ws = this.socketIdToWs.get(p.id);
@@ -939,9 +964,9 @@ export class LuckyStreetDO {
           const id = String(data.roomId || sess.currentRoom || "").toUpperCase();
           const room = this.roomManager.resetQuest(id, socketId);
           okAck({ ok: true, room });
-          this.broadcast({ event: "game:update", data: null });
-          this.broadcast({ event: "game:private", data: null });
-          this.broadcast({ event: "lobby:update", data: room });
+          this.sendToRoom(id, { event: "game:update", data: null });
+          this.sendToRoom(id, { event: "game:private", data: null });
+          this.sendToRoom(id, { event: "lobby:update", data: room });
           this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic() });
           await this.persist();
           break;
