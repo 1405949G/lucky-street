@@ -405,9 +405,8 @@ export default function Lobby({ spectate = false }) {
 
       {hasGameState && isQuestGame && room.gameState && (
         <div className="mt-4 rounded-[24px] bg-[#0f2231] border border-white/10 shadow-xl p-6 text-center">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-center">
             <span className="text-xs tracking-widest font-bold text-[#7ec8e6]">QUEST {Math.min(room.gameState.currentQuest+1,5)} / 5</span>
-            <span className="text-xs font-bold text-white/60">Good {room.gameState.quests.filter(q=>q.status==='SUCCESS').length} - Evil {room.gameState.quests.filter(q=>q.status==='FAIL').length}</span>
           </div>
           <div className="mt-4 flex justify-between gap-2">
             {room.gameState.quests.map((q,i)=>{
@@ -415,10 +414,11 @@ export default function Lobby({ spectate = false }) {
               const bg = q.status==='SUCCESS' ? 'bg-emerald-500 border-emerald-400 text-black' : q.status==='FAIL' ? 'bg-rose-500 border-rose-400 text-white' : isCurrent ? 'bg-white/15 border-white/30 text-white ring-2 ring-amber-300/60' : 'bg-white/5 border-white/10 text-white/40';
               const needsTwo = q.failsRequired>1;
               return (
-                <div key={i} className={`flex-1 h-[68px] rounded-xl border flex flex-col items-center justify-center ${bg}`}>
+                <div key={i} className={`flex-1 h-[68px] rounded-xl border flex flex-col items-center justify-center ${bg} relative`}>
                   <span className="text-[10px] font-bold tracking-widest opacity-60">Q{i+1}</span>
-                  <span className="text-lg font-black leading-none">{q.size}{needsTwo ? <span className="text-[10px] align-super">•2</span> : ''}</span>
-                  <span className="text-[10px] font-bold mt-0.5">{q.status==='PENDING' ? '' : q.status==='SUCCESS' ? '✓' : '✕'}</span>
+                  <span className="text-lg font-black leading-none">{q.size}</span>
+                  {needsTwo && <span className="absolute -top-2 -right-2 px-1.5 py-0.5 rounded-full bg-amber-400 text-[#0e2533] text-[9px] font-black leading-none">2 fails</span>}
+                  <span className="text-[10px] font-bold mt-0.5">{q.status==='PENDING' ? (needsTwo ? 'needs 2' : '') : q.status==='SUCCESS' ? '✓' : '✕'}</span>
                 </div>
               );
             })}
