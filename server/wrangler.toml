@@ -13,7 +13,7 @@ bindings = [{ name = "LOBBY_DO", class_name = "LuckyStreetDO" }]
 
 [[migrations]]
 tag = "v1"
-new_classes = ["LuckyStreetDO"]
+new_sqlite_classes = ["LuckyStreetDO"]
 
 # Optional vars (override in dashboard → Settings → Variables)
 [vars]
