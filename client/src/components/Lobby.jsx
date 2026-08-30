@@ -82,6 +82,10 @@ export default function Lobby({ spectate = false }) {
         showToast(data.error);
         return;
       }
+      if (data?.error && /Room is full/i.test(data.error)) {
+        showToast(data.error);
+        return;
+      }
       setError(data.error);
       setTimeout(() => setError(null), 3000);
     }
@@ -576,6 +580,8 @@ export default function Lobby({ spectate = false }) {
                   <h4 className="font-bold text-white text-sm">Add Bots</h4>
                   {!supportsBots ? (
                     <p className="text-xs text-amber-300 mt-2">Bots not supported for {game.label}. Switch to Quest of Shadows to use bots, or play with humans only.</p>
+                  ) : totalPlayers >= room.maxPlayers ? (
+                    <p className="text-xs text-amber-300 mt-2">Room full ({totalPlayers}/{room.maxPlayers}) — remove a player/bot to add more.</p>
                   ) : (
                     <>
                       <div className="mt-2 flex gap-2 items-center">
