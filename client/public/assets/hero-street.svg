@@ -1,0 +1,153 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 520" width="1440" height="520" role="img" aria-hidden="true">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#070b14"/>
+      <stop offset="38%" stop-color="#0a1629"/>
+      <stop offset="78%" stop-color="#0f2231"/>
+      <stop offset="100%" stop-color="#132a3d"/>
+    </linearGradient>
+    <radialGradient id="lanternGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fde68a" stop-opacity="1"/>
+      <stop offset="35%" stop-color="#fbbf24" stop-opacity="0.9"/>
+      <stop offset="68%" stop-color="#f59e0b" stop-opacity="0.32"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="building" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1e3a4f"/>
+      <stop offset="100%" stop-color="#0f2231"/>
+    </linearGradient>
+    <filter id="blur8"><feGaussianBlur stdDeviation="8"/></filter>
+    <filter id="blur18"><feGaussianBlur stdDeviation="18"/></filter>
+  </defs>
+
+  <!-- sky -->
+  <rect width="1440" height="520" fill="url(#sky)"/>
+
+  <!-- distant fog band -->
+  <ellipse cx="720" cy="368" rx="720" ry="54" fill="#e2e8f0" opacity="0.07" filter="url(#blur18)"/>
+  <ellipse cx="320" cy="352" rx="380" ry="28" fill="#fde68a" opacity="0.05" filter="url(#blur18)"/>
+  <ellipse cx="1100" cy="358" rx="420" ry="26" fill="#fde68a" opacity="0.045" filter="url(#blur18)"/>
+
+  <!-- stars / bokeh -->
+  <g fill="#fff8e7" opacity="0.9">
+    <circle cx="212" cy="88" r="1.1"/><circle cx="428" cy="62" r="0.9"/><circle cx="612" cy="78" r="1.0"/><circle cx="788" cy="54" r="0.9"/><circle cx="948" cy="82" r="1.1"/><circle cx="1152" cy="66" r="0.85"/><circle cx="1272" cy="92" r="1.0"/><circle cx="348" cy="108" r="0.7"/><circle cx="888" cy="102" r="0.7"/>
+  </g>
+  <g fill="#fde68a" opacity="0.55">
+    <circle cx="268" cy="112" r="0.6"/><circle cx="548" cy="96" r="0.6"/><circle cx="1024" cy="108" r="0.6"/><circle cx="1320" cy="84" r="0.55"/>
+  </g>
+
+  <!-- building silhouettes - left row -->
+  <path d="M0 340 L0 220 L72 198 L72 240 L118 228 L118 188 L182 168 L182 242 L228 232 L228 176 L292 152 L292 245 L328 238 L328 360 L0 360 Z" fill="url(#building)" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+  <!-- windows left -->
+  <g fill="#fbbf24" opacity="0.95">
+    <rect x="36" y="248" width="10" height="14" rx="1" opacity="0.85"/><rect x="52" y="248" width="10" height="14" rx="1" opacity="0.75"/>
+    <rect x="36" y="268" width="10" height="14" rx="1" opacity="0.7"/><rect x="52" y="268" width="10" height="14" rx="1" opacity="0.6"/>
+    <rect x="142" y="218" width="9" height="13" rx="1" opacity="0.8"/><rect x="156" y="218" width="9" height="13" rx="1" opacity="0.7"/>
+    <rect x="248" y="212" width="10" height="15" rx="1" opacity="0.85"/><rect x="264" y="212" width="10" height="15" rx="1" opacity="0.78"/>
+  </g>
+  <!-- building silhouettes - right row -->
+  <path d="M1112 360 L1112 232 L1150 218 L1150 188 L1212 162 L1212 228 L1262 214 L1262 178 L1328 150 L1328 242 L1372 232 L1372 192 L1440 174 L1440 360 Z" fill="url(#building)" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+  <g fill="#fbbf24" opacity="0.95">
+    <rect x="1182" y="210" width="9" height="13" rx="1" opacity="0.8"/><rect x="1196" y="210" width="9" height="13" rx="1" opacity="0.72"/>
+    <rect x="1286" y="192" width="9" height="13" rx="1" opacity="0.82"/><rect x="1300" y="192" width="9" height="13" rx="1" opacity="0.7"/>
+    <rect x="1346" y="214" width="8" height="12" rx="1" opacity="0.75"/>
+  </g>
+
+  <!-- center street perspective -->
+  <path d="M328 360 L1112 360 L840 520 L600 520 Z" fill="#0e2438" opacity="0.95"/>
+  <path d="M430 360 L1010 360 L790 520 L650 520 Z" fill="#122e45" opacity="1"/>
+  <!-- cobblestones perspective lines -->
+  <g stroke="rgba(255,255,255,0.06)" stroke-width="0.9" fill="none" opacity="0.9">
+    <path d="M520 360 L640 520"/><path d="M640 360 L700 520"/><path d="M760 360 L760 520"/><path d="M800 360 L820 520"/><path d="M920 360 L880 520"/>
+    <path d="M480 420 H960"/><path d="M540 452 H900"/><path d="M590 482 H850"/>
+  </g>
+  <!-- center glow on street -->
+  <ellipse cx="720" cy="428" rx="220" ry="34" fill="#fbbf24" opacity="0.07" filter="url(#blur18)"/>
+
+  <!-- lanterns hanging - 5 lanterns across street -->
+  <!-- Lantern 1 left -->
+  <g>
+    <line x1="210" y1="168" x2="210" y2="212" stroke="#4a3a18" stroke-width="1.2" opacity="0.9"/>
+    <ellipse cx="210" cy="232" rx="42" ry="42" fill="url(#lanternGlow)" opacity="0.95"/>
+    <g transform="translate(210 232)">
+      <path d="M-13 -14 H13 L10 12 H-10 Z" fill="#1a2a3a" stroke="#fbbf24" stroke-width="1.1"/>
+      <rect x="-10" y="-14" width="20" height="3" rx="1" fill="#fbbf24"/>
+      <rect x="-9" y="12" width="18" height="2.2" rx="1" fill="#fbbf24"/>
+      <rect x="-8" y="-10" width="16" height="18" rx="1.2" fill="#fff7d6" opacity="0.96"/>
+      <rect x="-6" y="-7" width="12" height="12" rx="0.6" fill="#fde68a" opacity="0.9"/>
+      <!-- flame flicker hint -->
+      <ellipse cx="0" cy="-1" rx="3.2" ry="4.2" fill="#f59e0b" opacity="0.95"/>
+      <ellipse cx="0.6" cy="-1.4" rx="1.6" ry="2.2" fill="#fffbeb" opacity="1"/>
+    </g>
+  </g>
+  <!-- Lantern 2 -->
+  <g>
+    <line x1="430" y1="152" x2="430" y2="202" stroke="#4a3a18" stroke-width="1.2" opacity="0.9"/>
+    <ellipse cx="430" cy="224" rx="52" ry="52" fill="url(#lanternGlow)" opacity="1"/>
+    <g transform="translate(430 224)">
+      <path d="M-15 -16 H15 L12 14 H-12 Z" fill="#1a2a3a" stroke="#fbbf24" stroke-width="1.2"/>
+      <rect x="-12" y="-16" width="24" height="3.2" rx="1" fill="#fbbf24"/>
+      <rect x="-11" y="14" width="22" height="2.4" rx="1" fill="#fbbf24"/>
+      <rect x="-10" y="-12" width="20" height="21" rx="1.4" fill="#fff7d6" opacity="0.98"/>
+      <rect x="-7.5" y="-8.5" width="15" height="14" rx="0.8" fill="#fde68a" opacity="0.92"/>
+      <ellipse cx="0" cy="-1.5" rx="3.8" ry="4.8" fill="#f59e0b" opacity="0.98"/>
+      <ellipse cx="0.7" cy="-2" rx="1.8" ry="2.4" fill="#fffbeb" opacity="1"/>
+    </g>
+  </g>
+  <!-- Lantern 3 center large -->
+  <g>
+    <line x1="720" y1="118" x2="720" y2="188" stroke="#4a3a18" stroke-width="1.4" opacity="0.95"/>
+    <ellipse cx="720" cy="218" rx="68" ry="68" fill="url(#lanternGlow)" opacity="1"/>
+    <g transform="translate(720 218)">
+      <path d="M-18 -19 H18 L14 16 H-14 Z" fill="#132a3d" stroke="#fbbf24" stroke-width="1.35"/>
+      <rect x="-14" y="-19" width="28" height="3.8" rx="1.2" fill="url(#lanternGlow)" stroke="#fbbf24" stroke-width="0.6"/>
+      <!-- top cap -->
+      <path d="M-10 -19 L-6 -27 H6 L10 -19 Z" fill="#1e3a4f" stroke="#fbbf24" stroke-width="0.9"/>
+      <rect x="-7" y="-27" width="14" height="2" rx="1" fill="#fbbf24"/>
+      <rect x="-12" y="16" width="24" height="2.8" rx="1" fill="#fbbf24"/>
+      <rect x="-12" y="-14" width="24" height="24" rx="1.6" fill="#fff7d6" opacity="1"/>
+      <rect x="-9" y="-10" width="18" height="16" rx="1" fill="#fde68a" opacity="0.95"/>
+      <!-- inner papers -->
+      <line x1="0" y1="-14" x2="0" y2="10" stroke="#f59e0b" stroke-width="0.5" opacity="0.45"/>
+      <ellipse cx="0" cy="-2" rx="4.6" ry="5.8" fill="#f59e0b" opacity="1"/>
+      <ellipse cx="0.8" cy="-2.6" rx="2.2" ry="3" fill="#fffbeb" opacity="1"/>
+      <!-- sparkles -->
+      <g fill="#fde68a" opacity="0.95"><circle cx="-9" cy="-6" r="1.1"/><circle cx="9.5" cy="-4" r="0.9"/><circle cx="-8.5" cy="5" r="0.8"/></g>
+    </g>
+  </g>
+  <!-- Lantern 4 -->
+  <g>
+    <line x1="1010" y1="152" x2="1010" y2="202" stroke="#4a3a18" stroke-width="1.2" opacity="0.9"/>
+    <ellipse cx="1010" cy="224" rx="52" ry="52" fill="url(#lanternGlow)" opacity="1"/>
+    <g transform="translate(1010 224)">
+      <path d="M-15 -16 H15 L12 14 H-12 Z" fill="#1a2a3a" stroke="#fbbf24" stroke-width="1.2"/>
+      <rect x="-12" y="-16" width="24" height="3.2" rx="1" fill="#fbbf24"/>
+      <rect x="-11" y="14" width="22" height="2.4" rx="1" fill="#fbbf24"/>
+      <rect x="-10" y="-12" width="20" height="21" rx="1.4" fill="#fff7d6" opacity="0.98"/>
+      <rect x="-7.5" y="-8.5" width="15" height="14" rx="0.8" fill="#fde68a" opacity="0.92"/>
+      <ellipse cx="0" cy="-1.5" rx="3.8" ry="4.8" fill="#f59e0b" opacity="0.98"/>
+      <ellipse cx="0.7" cy="-2" rx="1.8" ry="2.4" fill="#fffbeb" opacity="1"/>
+    </g>
+  </g>
+  <!-- Lantern 5 right -->
+  <g>
+    <line x1="1230" y1="168" x2="1230" y2="212" stroke="#4a3a18" stroke-width="1.2" opacity="0.9"/>
+    <ellipse cx="1230" cy="232" rx="42" ry="42" fill="url(#lanternGlow)" opacity="0.95"/>
+    <g transform="translate(1230 232)">
+      <path d="M-13 -14 H13 L10 12 H-10 Z" fill="#1a2a3a" stroke="#fbbf24" stroke-width="1.1"/>
+      <rect x="-10" y="-14" width="20" height="3" rx="1" fill="#fbbf24"/>
+      <rect x="-9" y="12" width="18" height="2.2" rx="1" fill="#fbbf24"/>
+      <rect x="-8" y="-10" width="16" height="18" rx="1.2" fill="#fff7d6" opacity="0.96"/>
+      <rect x="-6" y="-7" width="12" height="12" rx="0.6" fill="#fde68a" opacity="0.9"/>
+      <ellipse cx="0" cy="-1" rx="3.2" ry="4.2" fill="#f59e0b" opacity="0.95"/>
+      <ellipse cx="0.6" cy="-1.4" rx="1.6" ry="2.2" fill="#fffbeb" opacity="1"/>
+    </g>
+  </g>
+
+  <!-- bottom vignette -->
+  <rect y="440" width="1440" height="80" fill="url(#sky)" opacity="0.0"/>
+  <path d="M0 520 L1440 520 L1440 462 C 980 476, 460 476, 0 462 Z" fill="#070b14" opacity="0.42"/>
+
+  <!-- subtle veil fog overlay at bottom -->
+  <ellipse cx="720" cy="492" rx="560" ry="48" fill="#e2e8f0" opacity="0.045" filter="url(#blur18)"/>
+</svg>

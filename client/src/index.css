@@ -2,12 +2,93 @@
 @tailwind components;
 @tailwind utilities;
 
-* { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+* { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.14) transparent; }
 ::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 999px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.14); border-radius: 999px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
+}
+@keyframes flicker {
+  0%, 100% { opacity: 1; filter: brightness(1); }
+  48% { opacity: 0.96; filter: brightness(1.04); }
+  52% { opacity: 0.92; filter: brightness(1.08); }
+}
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(8px, -5px); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+@keyframes lanternGlow {
+  0%, 100% { opacity: 0.9; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.04); }
+}
+
+/* Midnight Lantern — global atmosphere */
+html { scroll-behavior: smooth; }
+body {
+  background-color: #070b14;
+  background-image:
+    radial-gradient(ellipse 820px 520px at 18% -6%, rgba(251, 191, 36, 0.14), transparent 58%),
+    radial-gradient(ellipse 720px 420px at 88% 4%, rgba(245, 158, 11, 0.10), transparent 62%),
+    radial-gradient(ellipse 900px 700px at 50% 115%, rgba(14, 37, 51, 0.9), transparent 68%),
+    linear-gradient(180deg, #070b14 0%, #0a1629 22%, #0f2231 48%, #132a3d 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Subtle cobblestone / paper noise overlay — CSS only, no image */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.06;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Cg fill='none' stroke='rgba(255,255,255,0.5)' stroke-width='0.35' opacity='0.5'%3E%3Cpath d='M0 28h140M0 56h140M0 84h140M0 112h140M28 0v140M56 0v140M84 0v140M112 0v140'/%3E%3C/g%3E%3Cg fill='rgba(255,255,255,0.18)'%3E%3Ccircle cx='14' cy='14' r='0.9'/%3E%3Ccircle cx='70' cy='42' r='0.7'/%3E%3Ccircle cx='112' cy='98' r='0.8'/%3E%3C/g%3E%3C/svg%3E");
+  mix-blend-mode: soft-light;
+}
+
+/* Fog bokeh dots */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.18;
+  background:
+    radial-gradient(circle 1px at 22% 18%, rgba(255,248,231,0.9) 0, transparent 2px),
+    radial-gradient(circle 1.2px at 38% 28%, rgba(255,248,231,0.6) 0, transparent 2.2px),
+    radial-gradient(circle 0.9px at 68% 12%, rgba(255,248,231,0.7) 0, transparent 2px),
+    radial-gradient(circle 1px at 78% 32%, rgba(255,248,231,0.5) 0, transparent 2px),
+    radial-gradient(circle 0.8px at 52% 42%, rgba(255,248,231,0.4) 0, transparent 1.8px);
+  animation: drift 24s ease-in-out infinite;
+}
+
+/* Utility for lantern glass cards */
+.glass-lantern {
+  background: linear-gradient(180deg, rgba(19,42,61,0.92) 0%, rgba(15,34,49,0.88) 100%);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+.glass-lantern:hover {
+  border-color: rgba(251,191,36,0.18);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 24px rgba(251,191,36,0.08), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+.lantern-glow {
+  box-shadow: 0 0 28px rgba(251,191,36,0.35), 0 0 64px rgba(245,158,11,0.16);
+  animation: lanternGlow 3.2s ease-in-out infinite;
+}
+.text-glow {
+  text-shadow: 0 0 18px rgba(251,191,36,0.45);
 }
