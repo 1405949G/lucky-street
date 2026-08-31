@@ -62,7 +62,7 @@ export default function TvView({ roomId: propId, embedded = false }) {
     return (
       <div className={`${embedded ? "p-8" : "max-w-[760px] mx-auto px-4 py-16"} text-center`}>
         <div className="w-10 h-10 border-2 border-white/20 border-t-amber-400 rounded-full animate-spin mx-auto"></div>
-        <p className="text-sm text-white/50 mt-3">Loading {id}...</p>
+        <p className="text-sm text-white/50 mt-3">Loading {id}…</p>
       </div>
     );
   }
@@ -95,7 +95,7 @@ export default function TvView({ roomId: propId, embedded = false }) {
             const isImage = p.avatar && p.avatar.startsWith("data:");
             return (
               <div key={p.id} className="flex flex-col items-center gap-1.5 relative">
-                {isHost && <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 pointer-events-none text-[16px]"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f3ecd8" stroke-width="1.8"><path d="M3 8l4 4 4 -6 4 6 4 -4v8a1 1 0 0 1 -1 1h-14a1 1 0 0 1 -1 -1z"/></svg></div>}
+                {isHost && <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 pointer-events-none text-[16px]">??</div>}
                 <div className={`w-[72px] h-[72px] sm:w-[80px] sm:h-[80px] rounded-full border-2 flex items-center justify-center overflow-hidden shadow-md ${isHost ? "border-amber-400" : "border-white/15"}`} style={isImage ? {} : { background: p.avatar || "#475569" }}>
                   {isImage ? <img src={p.avatar} alt={p.name} className="w-full h-full object-cover" /> : <span className="font-black text-white text-xl">{p.name.slice(0,2).toUpperCase()}</span>}
                 </div>
@@ -105,11 +105,11 @@ export default function TvView({ roomId: propId, embedded = false }) {
           })}
           {room.bots.map(b => (
             <div key={b.id} className="flex flex-col items-center gap-1.5 opacity-90">
-              <div className="w-[72px] h-[72px] sm:w-[80px] sm:h-[80px] rounded-full border-2 border-white/10 flex items-center justify-center bg-[#1e2a3a]"><span className="text-[28px]"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f3ecd8" stroke-width="1.6"><rect x="6" y="8" width="12" height="10" rx="2"/><circle cx="9.5" cy="13" r="1" fill="#f3ecd8"/><circle cx="14.5" cy="13" r="1" fill="#f3ecd8"/></svg></span></div>
+              <div className="w-[72px] h-[72px] sm:w-[80px] sm:h-[80px] rounded-full border-2 border-white/10 flex items-center justify-center bg-[#1e2a3a]"><span className="text-[28px]">??</span></div>
               <span className="text-sm font-bold text-white/80 max-w-[80px] truncate text-center">{b.name}</span>
             </div>
           ))}
-          {room.players.length + room.bots.length === 0 && <p className="text-sm text-white/40">Waiting for players...</p>}
+          {room.players.length + room.bots.length === 0 && <p className="text-sm text-white/40">Waiting for players…</p>}
         </div>
       </div>
 
