@@ -18,6 +18,31 @@ function genSocketId() {
   try { return crypto.randomUUID(); } catch { return "s_" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); }
 }
 
+function migrateTriviaId(room, oldId, newId){
+  if(!room?.gameState) return;
+  const gs = room.gameState;
+  // trivia: players, scores, answers, answerAt, revealAcks
+  const pl = gs.players?.find(p=>p.id===oldId);
+  if(pl) pl.id = newId;
+  if(gs.scores && gs.scores[oldId]!==undefined){ gs.scores[newId]=gs.scores[oldId]; delete gs.scores[oldId]; }
+  if(gs.answers && gs.answers[oldId]!==undefined){ gs.answers[newId]=gs.answers[oldId]; delete gs.answers[oldId]; }
+  if(gs.answerAt && gs.answerAt[oldId]!==undefined){ gs.answerAt[newId]=gs.answerAt[oldId]; delete gs.answerAt[oldId]; }
+  if(gs.revealAcks && gs.revealAcks[oldId]!==undefined){ gs.revealAcks[newId]=gs.revealAcks[oldId]; delete gs.revealAcks[oldId]; }
+  // veil: also migrate proposal votes etc (defensive)
+  if(gs.proposal?.votes && gs.proposal.votes[oldId]!==undefined){ gs.proposal.votes[newId]=gs.proposal.votes[oldId]; delete gs.proposal.votes[oldId]; }
+  if(gs.questVotes && gs.questVotes[oldId]!==undefined){ gs.questVotes[newId]=gs.questVotes[oldId]; delete gs.questVotes[oldId]; }
+  if(gs.teamVoteRevealAcks && gs.teamVoteRevealAcks[oldId]!==undefined){ gs.teamVoteRevealAcks[newId]=gs.teamVoteRevealAcks[oldId]; delete gs.teamVoteRevealAcks[oldId]; }
+  if(gs.questRevealAcks && gs.questRevealAcks[oldId]!==undefined){ gs.questRevealAcks[newId]=gs.questRevealAcks[oldId]; delete gs.questRevealAcks[oldId]; }
+  if(gs.revealed && Array.isArray(gs.revealed)){
+    const oi = gs.players?.findIndex(p=>p.id===newId);
+    const oldIdx = -1; // not needed for trivia
+  }
+  if(gs.winners && Array.isArray(gs.winners)){
+    const wi = gs.winners.indexOf(oldId);
+    if(wi!==-1) gs.winners[wi]=newId;
+  }
+}
+
 const ROOM_GRACE_MS = 10000; // keep room slot 10s after disconnect/refresh (quick close when empty)
 
 export class LuckyStreetDO {
@@ -571,6 +596,7 @@ export class LuckyStreetDO {
                 if (pl) {
                   pl.id = socketId;
                   if (room.hostId === existing.socketId) { room.hostId = socketId; room.hostName = clean; }
+                  try{ migrateTriviaId(room, existing.socketId, socketId); }catch{}
                   console.log(`[DO] refresh reattach (pre) ${clean} ${existing.socketId} -> ${socketId} in ${room.id}`);
                   this.broadcast({ event: "lobby:update", data: this.roomManager.getFull(room.id) });
                 }
@@ -585,6 +611,7 @@ export class LuckyStreetDO {
                   if (pl) {
                     pl.id = socketId;
                     if (room.hostId === oldId) { room.hostId = socketId; room.hostName = clean; }
+                    try{ migrateTriviaId(room, oldId, socketId); }catch{}
                     sess.currentRoom = pend.roomId;
                     this.broadcast({ event: "lobby:update", data: this.roomManager.getFull(pend.roomId) });
                   }
@@ -607,6 +634,7 @@ export class LuckyStreetDO {
               if (pl) {
                 pl.id = socketId;
                 if (room.hostId === oldId) { room.hostId = socketId; room.hostName = clean; }
+                try{ migrateTriviaId(room, oldId, socketId); }catch{}
                 console.log(`[DO] reattach ${clean} ${oldId} -> ${socketId} in ${pend.roomId}`);
                 this.broadcast({ event: "lobby:update", data: this.roomManager.getFull(pend.roomId) });
                 this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic() });
@@ -753,11 +781,19 @@ export class LuckyStreetDO {
                     // Ensure rejoining kicked player never becomes host
                     ghost.isHost = false;
                   }
+                  try{ migrateTriviaId(existingRoom, oldId, socketId); }catch{}
                   existingRoom.updatedAt = Date.now();
                   sess.currentRoom = id;
                   this._syncAttachment(ws, sess);
                   this.broadcast({ event: "lobby:update", data: this.roomManager.getFull(id) });
                   this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic() });
+                  // also push updated game state if in game
+                  if(existingRoom.gameState){
+                    try{
+                      if(existingRoom.game==="street-trivia") this.broadcastTriviaState(id);
+                      else this.broadcastQuestState(id);
+                    }catch{}
+                  }
                   await this.persist();
                   okAck({ ok: true, room: this.roomManager.getFull(id) });
                   this.send(ws, { event: "room:joined", data: this.roomManager.getFull(id) });

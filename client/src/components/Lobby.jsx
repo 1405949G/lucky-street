@@ -88,6 +88,10 @@ export default function Lobby({ spectate = false }) {
         showToast(data.error);
         return;
       }
+      if (data?.error && /not in this trivia|Already answered|Not accepting|Spectators cannot|Unknown trivia/i.test(data.error)) {
+        showToast(data.error);
+        return;
+      }
       setError(data.error);
       setTimeout(() => setError(null), 3000);
     }

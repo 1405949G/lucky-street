@@ -136,7 +136,7 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
       <div className="rounded-2xl bg-[#0f2231]/70 border border-white/10 p-3">
         <div className="flex items-center justify-between">
           <span className="text-[11px] tracking-widest font-bold text-white/40">LIVE SCORES</span>
-          <span className="text-[11px] font-bold text-white/30">{idx+1}/{total} • {pub.category}/{pub.difficulty}</span>
+          <span className="text-[11px] font-bold text-white/30">Street Trivia • {total} Q • {pub.timerSeconds}s • {pub.category}/{pub.difficulty}</span>
         </div>
         <div className="mt-2 flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
           {sorted.length===0 ? <span className="text-xs text-white/30">No scores yet</span> : sorted.map((p,rank)=>{
@@ -182,7 +182,7 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
             <div className="p-5 sm:p-6">
               <div className="flex items-center justify-between">
                 <span className="px-2.5 py-1 rounded-full bg-amber-400 text-[#0e2533] text-xs font-black">Q {idx+1}/{total}</span>
-                <span className="text-xs text-white/40 capitalize">{q.category} • {q.difficulty} • {pub.timerSeconds}s</span>
+                <span className="text-xs text-white/40 capitalize">{q.category} • {q.difficulty}</span>
               </div>
 
               {q.imageUrl && (
@@ -200,8 +200,8 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
                 </div>
               )}
 
-              {/* Options A-D */}
-              <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Options A-D — enlarged vertically for 12p, better spacing */}
+              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 {q.options.map((opt, i)=>{
                   const letter = LETTERS[i];
                   const isMy = myAnswer===i;
@@ -215,7 +215,7 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
                       key={i}
                       onClick={()=>emitAnswer(i)}
                       disabled={phase!=="QUESTION" || hasAnswered || isSpectator}
-                      className={`group relative text-left rounded-2xl border-2 p-3 sm:p-4 flex items-center gap-3 transition-all
+                      className={`group relative text-left rounded-2xl border-2 p-4 sm:p-5 flex items-center gap-3.5 transition-all min-h-[64px]
                         ${isReveal && isCorrect ? "border-emerald-400 bg-emerald-500/20 ring-2 ring-emerald-300" : ""}
                         ${isReveal && isWrongPick ? "border-rose-400 bg-rose-500/15" : ""}
                         ${!isReveal && isMy ? "border-amber-300 bg-amber-400/20" : ""}
@@ -224,13 +224,13 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
                         ${isSpectator ? "opacity-70" : ""}
                       `}
                     >
-                      <span className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center font-black text-white border shadow ${OPTION_COLORS[i]}`}>{letter}</span>
-                      <span className="flex-1 text-sm font-bold text-white pr-2">{opt}</span>
+                      <span className={`shrink-0 w-11 h-11 rounded-xl flex items-center justify-center font-black text-white border shadow ${OPTION_COLORS[i]}`}>{letter}</span>
+                      <span className="flex-1 text-[15px] font-bold text-white pr-2 leading-tight">{opt}</span>
                       {isReveal && (
-                        <span className={`px-2 py-1 rounded-full text-xs font-black ${isCorrect?"bg-emerald-400 text-black":"bg-white/10 text-white/60"}`}>{count} • {pct}%</span>
+                        <span className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-black ${isCorrect?"bg-emerald-400 text-black":"bg-white/10 text-white/60"}`}>{count} • {pct}%</span>
                       )}
-                      {!isReveal && isMy && <span className="px-2 py-1 rounded-full bg-amber-400 text-[#0e2533] text-xs font-black">You</span>}
-                      {isReveal && <div className="absolute bottom-0 left-3 right-3 h-1 bg-white/10 rounded-full overflow-hidden">
+                      {!isReveal && isMy && <span className="shrink-0 px-2.5 py-1 rounded-full bg-amber-400 text-[#0e2533] text-xs font-black">You</span>}
+                      {isReveal && <div className="absolute bottom-0 left-4 right-4 h-1.5 bg-white/10 rounded-full overflow-hidden">
                         <div className={`h-full ${isCorrect?"bg-emerald-400":"bg-white/40"}`} style={{ width: `${barW}%` }} />
                       </div>}
                     </button>
@@ -245,33 +245,34 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
               )}
               {isSpectator && phase==="QUESTION" && <div className="mt-4 text-center py-3 rounded-full bg-white/5 text-white/40 font-bold text-sm">Spectating — answers hidden until reveal</div>}
 
-              {/* Reveal breakdown: who picked what */}
+              {/* Reveal breakdown: who picked what — enlarged for 12p */}
               {isReveal && (
-                <div className="mt-5 rounded-2xl bg-white/[0.04] border border-white/10 p-4">
+                <div className="mt-6 rounded-2xl bg-white/[0.04] border border-white/10 p-5">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-black text-white">Answer • <span className="text-emerald-300">{LETTERS[correctIndex]} is correct</span></h3>
                     <span className="text-xs text-white/40">{pub.revealAckCount}/{pub.totalPlayers} ready</span>
                   </div>
-                  <div className="mt-3 grid grid-cols-4 gap-2 text-center">
+                  <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
                     {LETTERS.map((L,i)=>(
-                      <div key={L} className={`rounded-xl p-2 border ${i===correctIndex?"bg-emerald-500/20 border-emerald-400/40":"bg-white/5 border-white/10"}`}>
+                      <div key={L} className={`rounded-xl p-3 border min-h-[96px] flex flex-col ${i===correctIndex?"bg-emerald-500/15 border-emerald-400/40":"bg-white/5 border-white/10"}`}>
                         <div className={`text-xs font-black ${i===correctIndex?"text-emerald-300":"text-white/60"}`}>{L} • {breakdown[i]||0}</div>
-                        <div className="mt-1 flex flex-wrap gap-1 justify-center">
+                        <div className="mt-2 flex flex-wrap gap-1.5 justify-center content-start flex-1">
                           {(Object.entries(picks).filter(([,ch])=> ch===i).map(([pid])=>{
                             const pl = pub.players.find(p=>p.id===pid);
                             const isMe = pid===myId;
-                            return <span key={pid} className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${isMe?"bg-amber-400 text-[#0e2533]": i===correctIndex?"bg-emerald-400/30 text-emerald-200 border border-emerald-400/30":"bg-white/10 text-white/60"}`}>{pl?.name || pid.slice(0,4)} {isMe?"★":""}</span>;
+                            return <span key={pid} className={`px-2 py-1 rounded-full text-[11px] font-bold leading-none ${isMe?"bg-amber-400 text-[#0e2533]": i===correctIndex?"bg-emerald-400/30 text-emerald-200 border border-emerald-400/30":"bg-white/10 text-white/70"}`}>{pl?.name || pid.slice(0,4)} {isMe?"★":""}</span>;
                           }))}
+                          {breakdown[i]===0 && <span className="text-[11px] text-white/20 italic">—</span>}
                         </div>
                       </div>
                     ))}
                   </div>
-                  <div className="mt-3 text-xs text-white/30 text-center">{Object.keys(picks).length} answered • {pub.totalPlayers - Object.keys(picks).length} missed</div>
+                  <div className="mt-4 text-xs text-white/30 text-center">{Object.keys(picks).length} answered • {pub.totalPlayers - Object.keys(picks).length} missed</div>
                   {isSpectator
-                    ? <div className="mt-3 py-2.5 rounded-full bg-white/5 text-white/40 font-bold text-center text-sm">Spectating… {pub.revealAckCount}/{pub.totalPlayers}</div>
+                    ? <div className="mt-4 py-3 rounded-full bg-white/5 text-white/40 font-bold text-center text-sm">Spectating… {pub.revealAckCount}/{pub.totalPlayers}</div>
                     : pub.revealAcks?.[myId]
-                      ? <div className="mt-3 py-2.5 rounded-full bg-white/10 border border-white/15 text-white/60 font-bold text-center text-sm">Waiting… {pub.revealAckCount}/{pub.totalPlayers}</div>
-                      : <button onClick={handleAck} className="mt-3 w-full py-2.5 rounded-full bg-[#f3ecd8] hover:bg-white text-[#0e2533] font-extrabold">Continue ({pub.revealAckCount}/{pub.totalPlayers})</button>
+                      ? <div className="mt-4 py-3 rounded-full bg-white/10 border border-white/15 text-white/60 font-bold text-center text-sm">Waiting… {pub.revealAckCount}/{pub.totalPlayers}</div>
+                      : <button onClick={handleAck} className="mt-4 w-full py-3 rounded-full bg-[#f3ecd8] hover:bg-white text-[#0e2533] font-extrabold text-[15px]">Continue ({pub.revealAckCount}/{pub.totalPlayers})</button>
                   }
                 </div>
               )}
@@ -342,23 +343,19 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
         </div>
       )}
 
-      {/* Game log — polished, always visible, Question + Reveal per Q */}
+      {/* Game log — uniform colour, always visible, organised for 12p */}
       {pub.log?.length>0 && (
         <details className="rounded-2xl bg-[#0f2231]/70 border border-white/10 shadow-xl" open={!isOver}>
-          <summary className="px-4 py-3 text-xs font-black tracking-wide text-white/70 cursor-pointer flex items-center justify-between">
-            <span>Game log • {pub.log.length} • {total}Q</span>
-            <span className="text-[11px] font-bold text-white/40">{isOver ? "Full history" : "Live history"}</span>
+          <summary className="px-4 py-3 text-xs font-black tracking-wide text-white/70 cursor-pointer flex items-center justify-between list-none">
+            <span>Game log • {pub.log.length}</span>
+            <span className="px-2.5 py-1 rounded-full bg-white/10 border border-white/10 text-[11px] font-bold text-white/60">Minimise</span>
           </summary>
-          <div className="px-3 pb-3 space-y-1 max-h-[360px] overflow-auto overscroll-contain">
+          <div className="px-3 pb-3 space-y-1.5 max-h-[420px] overflow-auto overscroll-contain pr-1">
             {[...pub.log].reverse().map(e=>{
-              const isQ = e.type==="QUESTION";
-              const isR = e.type==="REVEAL";
-              const isSetup = e.type==="SETUP";
-              const isOverLog = e.type==="GAME_OVER";
               return (
-                <div key={e.id} className={`flex gap-2 text-xs rounded-xl px-3 py-2 border ${isQ?"bg-white/[0.04] border-white/10": isR?"bg-emerald-500/10 border-emerald-400/20": isSetup?"bg-amber-500/10 border-amber-400/20": isOverLog?"bg-violet-500/10 border-violet-400/20":"bg-white/5 border-white/10"}`}>
-                  <span className={`font-black shrink-0 min-w-[74px] text-[11px] tracking-wide ${isQ?"text-sky-300": isR?"text-emerald-300": isSetup?"text-amber-300": isOverLog?"text-violet-300":"text-white/40"}`}>{e.type}</span>
-                  <span className="text-white/80 flex-1 leading-snug break-words">{e.text}</span>
+                <div key={e.id} className="flex gap-2.5 text-xs rounded-xl px-3 py-2.5 border bg-white/[0.03] border-white/10">
+                  <span className="font-bold shrink-0 min-w-[74px] text-[11px] tracking-wide text-white/40">{e.type}</span>
+                  <span className="text-white/70 flex-1 leading-snug break-words whitespace-pre-wrap">{e.text}</span>
                 </div>
               );
             })}

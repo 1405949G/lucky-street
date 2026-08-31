@@ -36,9 +36,9 @@ function appendLog(log, type, text){
   return Object.freeze([...log, entry]);
 }
 function fmtQuestion(q, idx, total){
-  if(!q) return `Question Q${idx+1}/${total}`;
+  if(!q) return `Question Q${idx+1}`;
   const opts = q.options.map((o,i)=> `${String.fromCharCode(65+i)} ${o}`).join(" • ");
-  return `Question Q${idx+1}/${total} [${q.category} • ${q.difficulty}] ${q.q} — ${opts}${q.imageUrl?" • [image]":""}`;
+  return `Question Q${idx+1} [${q.category} • ${q.difficulty}] ${q.q} — ${opts}${q.imageUrl?" • [image]":""}`;
 }
 function fmtReveal(curQ, answers, scoresBefore, scoresAfter, players, idx){
   const correctLetter = String.fromCharCode(65+curQ.correctIndex);
