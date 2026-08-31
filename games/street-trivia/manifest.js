@@ -1,12 +1,12 @@
 /**
- * games/street-trivia/manifest.js - Street Trivia (solo FFA, 1-12p)
- * No teams / no bots v1 — 2 people can share 1 phone, 1 player can practice solo.
+ * games/street-trivia/manifest.js - Street Trivia (1-12p)
+ * Simple trivia — play for the high score, teams can share a device, solo allowed.
  * See ../README.md + AGENTS.md for AI rule.
  */
 export default {
   id: "street-trivia",
   label: "Street Trivia",
-  description: "Solo trivia — A/B/C/D, live scores, categories",
+  description: "Simple trivia — chase the high score. Teams share a device, solo allowed",
   minPlayers: 1,
   maxPlayers: 12,
   defaultMaxPlayers: 12,

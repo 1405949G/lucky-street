@@ -579,14 +579,14 @@ export default function Lobby({ spectate = false }) {
               )}
               {isTriviaGame && (
                 <div className="rounded-2xl bg-gradient-to-br from-violet-600/20 to-amber-500/20 border border-white/10 p-4">
-                  <h4 className="font-bold text-white text-sm flex items-center gap-2"><span className="px-2 py-0.5 rounded-full bg-amber-400 text-[#0e2533] text-[10px] font-black">NEW</span> Street Trivia</h4>
+                  <h4 className="font-bold text-white text-sm flex items-center gap-2">Street Trivia</h4>
                   <p className="text-xs text-white/60 mt-1">{totalPlayers}/{room.maxPlayers} • {room.gameOptions.questionCount} Q • {room.gameOptions.timerSeconds}s • {room.gameOptions.category}/{room.gameOptions.difficulty}</p>
                   {isHost ? (
                     <>
                       <button onClick={handleStartGame} disabled={!canStart} className={`mt-3 w-full py-3 rounded-full font-extrabold ${canStart ? "bg-amber-400 hover:bg-amber-300 text-[#0e2533]" : "bg-white/10 text-white/30 cursor-not-allowed"}`}>
                         {canStart ? "▶ Start Trivia" : `Need ${room.minPlayers} players (have ${totalPlayers})`}
                       </button>
-                      {!canStart && <p className="text-xs text-white/40 mt-2">Need {room.minPlayers} players to start solo trivia.</p>}
+                      {!canStart && <p className="text-xs text-white/40 mt-2">Need {room.minPlayers} player{room.minPlayers>1?"s":""} to start.</p>}
                     </>
                   ) : (
                     <p className="text-xs text-white/40 mt-3">{canStart ? "Ready to start!" : `Need ${room.minPlayers - totalPlayers} more to start`}</p>

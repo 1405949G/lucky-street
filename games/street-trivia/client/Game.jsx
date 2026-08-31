@@ -151,10 +151,14 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
             );
           })}
         </div>
-        <div className="mt-2 text-[11px] text-white/40 flex justify-between">
-          <span>{pub.answersCount}/{pub.totalPlayers} answered</span>
-          {phase==="QUESTION" && timeLeft!==null && <span className={timeLeft<5?"text-rose-300 font-bold":""}>{Math.ceil(timeLeft)}s left</span>}
-        </div>
+        {!isOver ? (
+          <div className="mt-2 text-[11px] text-white/40 flex justify-between">
+            <span>{pub.answersCount}/{pub.totalPlayers} answered</span>
+            {phase==="QUESTION" && timeLeft!==null && <span className={timeLeft<5?"text-rose-300 font-bold":""}>{Math.ceil(timeLeft)}s left</span>}
+          </div>
+        ) : (
+          <div className="mt-2 text-[11px] font-bold text-amber-200">Finished • {total}Q • Top {sorted[0]?.score ?? 0} pts</div>
+        )}
       </div>
 
       {/* Question card */}
@@ -291,14 +295,15 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
               return order.map(i=>{
                 const p = top3[i];
                 const isMe = p.id===myId;
-                const heights = ["h-[96px]","h-[128px]","h-[84px]"];
+                const heights = ["h-[102px]","h-[138px]","h-[88px]"];
                 const idxOrdered = order.indexOf(i);
+                const isFirst = i===0;
                 return (
-                  <div key={p.id} className={`flex-1 max-w-[120px] rounded-2xl border-2 flex flex-col items-center justify-end p-3 ${i===0?"bg-amber-400 border-amber-300 text-[#0e2533]":"bg-white/5 border-white/15 text-white"} ${heights[idxOrdered]}`}>
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-xs border ${isMe?"border-amber-300 bg-[#f3ecd8] text-[#0a1e2e]":"bg-[#1e2a3a] text-white border-white/10"}`}>{p.name.slice(0,2).toUpperCase()}</div>
-                    <div className={`mt-2 text-xs font-black truncate max-w-full ${i===0?"text-[#0e2533]":"text-white"}`}>{p.name} {isMe?"★":""}</div>
-                    <div className={`text-lg font-black ${i===0?"text-[#0e2533]":"text-emerald-300"}`}>{p.score}</div>
-                    <div className="text-[10px] font-bold opacity-60">{i===0?"1st":i===1?"2nd":"3rd"}</div>
+                  <div key={p.id} className={`flex-1 max-w-[120px] rounded-2xl border-2 flex flex-col items-center justify-end p-3 shadow-lg ${isFirst?"bg-[#0a1e2e] border-amber-400 text-white ring-2 ring-amber-400/40":"bg-white/5 border-white/15 text-white"} ${heights[idxOrdered]}`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-xs border-2 ${isMe?"border-amber-300 bg-[#f3ecd8] text-[#0a1e2e]": isFirst?"bg-amber-400 text-[#0a1e2e] border-amber-300":"bg-[#1e2a3a] text-white border-white/20"}`}>{p.name.slice(0,2).toUpperCase()}</div>
+                    <div className={`mt-2 text-xs font-black truncate max-w-full ${isFirst?"text-amber-300":"text-white"}`}>{p.name} {isMe?"★":""}</div>
+                    <div className={`text-xl font-black ${isFirst?"text-amber-300":"text-emerald-300"}`}>{p.score} <span className="text-[11px] font-bold opacity-60">pts</span></div>
+                    <div className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ${isFirst?"bg-amber-400 text-[#0a1e2e]":"bg-white/10 text-white/60"}`}>{i===0?"1st":i===1?"2nd":"3rd"} {isFirst?"👑":""}</div>
                   </div>
                 );
               });
@@ -334,21 +339,31 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
               : <div className="flex-1 py-3 rounded-full bg-white/5 text-white/40 font-bold text-center">Waiting for host…</div>
             }
           </div>
-
-          {pub.log?.length>0 && (
-            <details className="mt-4 rounded-xl bg-white/[0.03] border border-white/10 text-left" open>
-              <summary className="px-4 py-2 text-xs font-bold text-white/50 cursor-pointer">Game log • {pub.log.length}</summary>
-              <div className="px-4 pb-3 space-y-1 max-h-[200px] overflow-auto">
-                {[...pub.log].reverse().map(e=>(
-                  <div key={e.id} className="flex gap-2 text-xs border-l-2 border-white/10 pl-2 py-1">
-                    <span className="font-bold text-white/40 shrink-0 min-w-[56px]">{e.type}</span>
-                    <span className="text-white/60 flex-1">{e.text}</span>
-                  </div>
-                ))}
-              </div>
-            </details>
-          )}
         </div>
+      )}
+
+      {/* Game log — polished, always visible, Question + Reveal per Q */}
+      {pub.log?.length>0 && (
+        <details className="rounded-2xl bg-[#0f2231]/70 border border-white/10 shadow-xl" open={!isOver}>
+          <summary className="px-4 py-3 text-xs font-black tracking-wide text-white/70 cursor-pointer flex items-center justify-between">
+            <span>Game log • {pub.log.length} • {total}Q</span>
+            <span className="text-[11px] font-bold text-white/40">{isOver ? "Full history" : "Live history"}</span>
+          </summary>
+          <div className="px-3 pb-3 space-y-1 max-h-[360px] overflow-auto overscroll-contain">
+            {[...pub.log].reverse().map(e=>{
+              const isQ = e.type==="QUESTION";
+              const isR = e.type==="REVEAL";
+              const isSetup = e.type==="SETUP";
+              const isOverLog = e.type==="GAME_OVER";
+              return (
+                <div key={e.id} className={`flex gap-2 text-xs rounded-xl px-3 py-2 border ${isQ?"bg-white/[0.04] border-white/10": isR?"bg-emerald-500/10 border-emerald-400/20": isSetup?"bg-amber-500/10 border-amber-400/20": isOverLog?"bg-violet-500/10 border-violet-400/20":"bg-white/5 border-white/10"}`}>
+                  <span className={`font-black shrink-0 min-w-[74px] text-[11px] tracking-wide ${isQ?"text-sky-300": isR?"text-emerald-300": isSetup?"text-amber-300": isOverLog?"text-violet-300":"text-white/40"}`}>{e.type}</span>
+                  <span className="text-white/80 flex-1 leading-snug break-words">{e.text}</span>
+                </div>
+              );
+            })}
+          </div>
+        </details>
       )}
 
       {toast && <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-amber-400 text-[#0e2533] text-sm font-bold px-4 py-2.5 rounded-full shadow-xl border border-white/20 z-50">{toast}</div>}
