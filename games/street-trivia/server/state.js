@@ -22,8 +22,7 @@ export function createInitialState() {
     reveal: Object.freeze(null), // {correctIndex, breakdown:{0:count,...}} when in REVEAL
     questionStartAt: null,
     timerSeconds: 20,
-    category: "mixed",
-    difficulty: "mixed",
+    category: "random",
     roomCode: null,
     winners: Object.freeze([]), // ids at GAME_OVER
     log: Object.freeze([]),
@@ -38,7 +37,7 @@ function appendLog(log, type, text){
 function fmtQuestion(q, idx, total){
   if(!q) return `Question Q${idx+1}`;
   const opts = q.options.map((o,i)=> `${String.fromCharCode(65+i)} ${o}`).join(" • ");
-  return `Question Q${idx+1} [${q.category} • ${q.difficulty}] ${q.q} — ${opts}${q.imageUrl?" • [image]":""}`;
+  return `Question Q${idx+1} [${q.category}] ${q.q} — ${opts}${q.imageUrl?" • [image]":""}`;
 }
 function fmtReveal(curQ, answers, players, idx){
   const correctLetter = String.fromCharCode(65+curQ.correctIndex);
@@ -57,7 +56,6 @@ export function getPublicState(state){
   const publicQ = currentQ ? {
     id: currentQ.id,
     category: currentQ.category,
-    difficulty: currentQ.difficulty,
     q: currentQ.q,
     options: currentQ.options,
     imageUrl: currentQ.imageUrl || null,
@@ -102,7 +100,6 @@ export function getPublicState(state){
     log: state.log,
     roomCode: state.roomCode,
     category: state.category,
-    difficulty: state.difficulty,
   });
 }
 
@@ -137,13 +134,12 @@ export function reducer(state, action){
       if (new Set(names.map(n=>n.toLowerCase())).size !== names.length) throw new Error("Duplicate names");
       const questionCount = Math.min(30, Math.max(5, Number(opts?.questionCount) || 10));
       const timerSeconds = Math.min(45, Math.max(10, Number(opts?.timerSeconds) || 20));
-      const category = (opts?.category || "mixed").toLowerCase();
-      const difficulty = (opts?.difficulty || "mixed").toLowerCase();
-      const questions = pickQuestions({ category, difficulty, count: questionCount });
+      const category = (opts?.category || "random").toLowerCase();
+      const questions = pickQuestions({ category, count: questionCount });
       const builtPlayers = players.map(p=> Object.freeze({ id: p.id, name: String(p.name).trim(), isBot: !!p.isBot, avatar: p.avatar||null }));
       const scores = {};
       for(const p of builtPlayers) scores[p.id]=0;
-      let log = appendLog([], "SETUP", `Street Trivia • ${questionCount} Q • ${timerSeconds}s • ${category}/${difficulty}`);
+      let log = appendLog([], "SETUP", `Street Trivia • ${questionCount} Q • ${timerSeconds}s • ${category}`);
       log = appendLog(log, "QUESTION", fmtQuestion(questions[0], 0, questionCount));
       const newState = {
         ...createInitialState(),
@@ -158,7 +154,6 @@ export function reducer(state, action){
         questionStartAt: Date.now(),
         timerSeconds,
         category,
-        difficulty,
         roomCode: roomCode || null,
         log,
         revealAcks: Object.freeze({}),

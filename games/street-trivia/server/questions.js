@@ -103,10 +103,10 @@ function shuffle(arr) {
   return a;
 }
 
-export function pickQuestions({ category = "mixed", difficulty = "mixed", count = 10, excludeIds = [] } = {}) {
-  const cat = (category || "mixed").toLowerCase();
-  const diff = (difficulty || "mixed").toLowerCase();
-  let strict = BANK.filter(q => (cat==="mixed" || q.category===cat) && (diff==="mixed" || q.difficulty===diff));
+export function pickQuestions({ category = "random", count = 10, excludeIds = [] } = {}) {
+  const cat = (category || "random").toLowerCase();
+  const isRandom = cat==="random" || cat==="mixed";
+  let strict = BANK.filter(q => isRandom || q.category===cat);
   if (excludeIds.length) {
     const ex = new Set(excludeIds);
     strict = strict.filter((_, i) => !ex.has(i));
@@ -122,7 +122,7 @@ export function pickQuestions({ category = "mixed", difficulty = "mixed", count 
       imageUrl: q.imageUrl || null,
     }));
   }
-  // Not enough strict — fill with priority: same category any diff, then same diff any cat, then mixed
+  // Not enough strict — fill from any remaining (random) — category already prioritized
   let result = shuffle(strict);
   const used = new Set(result);
   let remaining = count - result.length;
@@ -133,21 +133,13 @@ export function pickQuestions({ category = "mixed", difficulty = "mixed", count 
     result = result.concat(take);
     return need - take.length;
   };
-  if (cat!=="mixed" && remaining>0) {
-    const sameCat = BANK.filter(q => q.category===cat && !used.has(q));
-    remaining = addFrom(sameCat, remaining);
-  }
-  if (diff!=="mixed" && remaining>0) {
-    const sameDiff = BANK.filter(q => q.difficulty===diff && !used.has(q));
-    remaining = addFrom(sameDiff, remaining);
-  }
   if (remaining>0) {
     const mixed = BANK.filter(q => !used.has(q));
     remaining = addFrom(mixed, remaining);
   }
   // Still short (bank < count): allow duplicates from strict/category
   if (remaining>0) {
-    const dupPool = strict.length ? strict : (cat!=="mixed" ? BANK.filter(q=>q.category===cat) : BANK);
+    const dupPool = strict.length ? strict : (!isRandom ? BANK.filter(q=>q.category===cat) : BANK);
     const pool = dupPool.length ? dupPool : BANK;
     while (remaining>0) {
       const q = pool[Math.floor(Math.random()*pool.length)];
@@ -171,14 +163,14 @@ export function pickQuestions({ category = "mixed", difficulty = "mixed", count 
 export async function fetchQuestionsWithFallback(opts) {
   // Attempt OpenTDB if global fetch exists and category not image-dependent
   try {
-    if (typeof fetch !== "undefined" && opts.category !== "mixed") {
+    const catRaw = (opts.category || "random").toLowerCase();
+    const isRandom = catRaw==="random" || catRaw==="mixed";
+    if (typeof fetch !== "undefined" && !isRandom) {
       const catMap = { general:9, science:17, history:23, geography:22, pop:14, movies:11, music:12, sports:21, tech:18 };
-      const catId = catMap[opts.category];
-      const diffMap = { easy:"easy", medium:"medium", hard:"hard" };
-      const diffParam = opts.difficulty !== "mixed" ? `&difficulty=${diffMap[opts.difficulty]||"medium"}` : "";
+      const catId = catMap[catRaw];
       const catParam = catId ? `&category=${catId}` : "";
       const amount = Math.min(20, opts.count || 10);
-      const url = `https://opentdb.com/api.php?amount=${amount}${catParam}${diffParam}&type=multiple`;
+      const url = `https://opentdb.com/api.php?amount=${amount}${catParam}&type=multiple`;
       const res = await fetch(url);
       if (res.ok) {
         const json = await res.json();

@@ -389,7 +389,7 @@ export default function Lobby({ spectate = false }) {
 
   return (
     <div className="max-w-[820px] mx-auto px-4 pb-10">
-      {/* Header: Leave + title + ? rules */}
+      {/* Header: Leave + title + End Game + ? rules */}
       <div className="flex items-center justify-between pt-2">
         <button onClick={handleLeave} aria-label="Leave room" className="px-4 py-1.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-xs font-bold text-white/70 flex items-center gap-1.5">
           <span className="text-sm leading-none">←</span> Leave
@@ -398,7 +398,12 @@ export default function Lobby({ spectate = false }) {
           <h1 className="font-display font-extrabold text-[18px] tracking-wide text-[#f3ecd8]">Lucky Street</h1>
           <p className="text-xs text-white/50 -mt-1">Room <span className="font-mono font-bold text-white">{room.id}</span> • Host: {room.hostName}</p>
         </div>
-        <button onClick={()=>setShowRules(true)} aria-label="Rules" className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 flex items-center justify-center text-white font-bold text-sm">?</button>
+        <div className="flex items-center gap-2">
+          {hasGameState && (
+            <button onClick={handleResetQuest} aria-label="End current game and return to lobby" className="px-3 py-1.5 rounded-full bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-200 text-xs font-bold">End Game</button>
+          )}
+          <button onClick={()=>setShowRules(true)} aria-label="Rules" className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 flex items-center justify-center text-white font-bold text-sm">?</button>
+        </div>
       </div>
 
       {/* Mobile toggle - hide when in-game (single column) */}
@@ -584,7 +589,7 @@ export default function Lobby({ spectate = false }) {
               {isTriviaGame && (
                 <div className="rounded-2xl bg-gradient-to-br from-violet-600/20 to-amber-500/20 border border-white/10 p-4">
                   <h4 className="font-bold text-white text-sm flex items-center gap-2">Street Trivia</h4>
-                  <p className="text-xs text-white/60 mt-1">{totalPlayers}/{room.maxPlayers} • {room.gameOptions.questionCount} Q • {room.gameOptions.timerSeconds}s • {room.gameOptions.category}/{room.gameOptions.difficulty}</p>
+                  <p className="text-xs text-white/60 mt-1">{totalPlayers}/{room.maxPlayers} • {room.gameOptions.questionCount} Q • {room.gameOptions.timerSeconds}s • {room.gameOptions.category}</p>
                   {isHost ? (
                     <>
                       <button onClick={handleStartGame} disabled={!canStart} className={`mt-3 w-full py-3 rounded-full font-extrabold ${canStart ? "bg-amber-400 hover:bg-amber-300 text-[#0e2533]" : "bg-white/10 text-white/30 cursor-not-allowed"}`}>
@@ -747,7 +752,7 @@ export default function Lobby({ spectate = false }) {
                 </div>
                 <div className="rounded-xl bg-white/5 border border-white/10 p-3">
                   <p className="text-xs font-bold text-white">Options — set by host in lobby</p>
-                  <p className="text-xs text-white/60 mt-1.5 leading-snug">Questions (5–30), Timer (10–45s), Category and Difficulty. Defaults are 10 Q / 20s / Mixed. Change them before starting.</p>
+                  <p className="text-xs text-white/60 mt-1.5 leading-snug">Questions (5–30), Timer (10–45s), Category. Defaults are 10 Q / 20s / Random. Change them before starting.</p>
                 </div>
                 <div className="rounded-xl bg-white/5 border border-white/10 p-3">
                   <p className="text-xs font-bold text-white">Tips</p>

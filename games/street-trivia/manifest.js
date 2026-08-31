@@ -14,13 +14,11 @@ export default {
   defaultOptions: {
     questionCount: 10,
     timerSeconds: 20,
-    category: "mixed",
-    difficulty: "mixed",
+    category: "random",
   },
   optionSchema: [
     { key: "questionCount", label: "Questions", type: "slider", min: 5, max: 30, step: 1 },
     { key: "timerSeconds", label: "Timer (s)", type: "slider", min: 10, max: 45, step: 5 },
-    { key: "category", label: "Category", type: "select", options: ["mixed","general","science","history","geography","pop","movies","music","sports","tech"] },
-    { key: "difficulty", label: "Difficulty", type: "select", options: ["mixed","easy","medium","hard"] },
+    { key: "category", label: "Category", type: "select", options: ["random","general","science","history","geography","pop","movies","music","sports","tech"] },
   ],
 };

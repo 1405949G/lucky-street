@@ -15,8 +15,7 @@ export const ALLOWED_TRANSITIONS = Object.freeze({
   [PHASES.GAME_OVER]: ["RESET", "SETUP_GAME"],
 });
 
-export const CATEGORIES = ["general","science","history","geography","pop","movies","music","sports","tech","mixed"];
-export const DIFFICULTIES = ["mixed","easy","medium","hard"];
+export const CATEGORIES = ["general","science","history","geography","pop","movies","music","sports","tech","random"];
 
 export const REVEAL_MS = 4500; // public reveal duration before next Q
 export const STORAGE_VERSION = 1;

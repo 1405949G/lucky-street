@@ -29,7 +29,9 @@ export default function RoomCard({ room, onJoin, onSpectate }) {
           {onSpectate && <button onClick={() => onSpectate(room)} className="px-3 py-2 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-white text-xs font-bold">Spectate</button>}
           <button
             onClick={() => onJoin(room)}
-            className="px-4 py-2 rounded-full bg-[#f3ecd8] hover:bg-white text-[#0e2533] text-xs font-extrabold shadow-sm"
+            disabled={room.status === 'In Progress'}
+            title={room.status === 'In Progress' ? 'Game in progress — join as Spectate' : 'Join room'}
+            className={`px-4 py-2 rounded-full text-xs font-extrabold shadow-sm ${room.status === 'In Progress' ? 'bg-white/10 border border-white/10 text-white/30 cursor-not-allowed' : 'bg-[#f3ecd8] hover:bg-white text-[#0e2533]'}`}
           >Join</button>
         </div>
       </div>

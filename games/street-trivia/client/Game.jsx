@@ -137,7 +137,7 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
       <div className="rounded-2xl bg-[#0f2231]/70 border border-white/10 p-3">
         <div className="flex items-center justify-between">
           <span className="text-[11px] tracking-widest font-bold text-white/40">LIVE SCORES</span>
-          <span className="text-[11px] font-bold text-white/30">Street Trivia • {total} Q • {pub.timerSeconds}s • {pub.category}/{pub.difficulty}</span>
+          <span className="text-[11px] font-bold text-white/30">Street Trivia • {total} Q • {pub.timerSeconds}s • {pub.category}</span>
         </div>
         <div className="mt-2 flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
           {sorted.length===0 ? <span className="text-xs text-white/30">No scores yet</span> : sorted.map((p,rank)=>{
@@ -183,7 +183,7 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
             <div className="p-5 sm:p-6">
               <div className="flex items-center justify-between">
                 <span className="px-2.5 py-1 rounded-full bg-amber-400 text-[#0e2533] text-xs font-black">Q {idx+1}/{total}</span>
-                <span className="text-xs text-white/40 capitalize">{q.category} • {q.difficulty}</span>
+                <span className="text-xs text-white/40 capitalize">{q.category}</span>
               </div>
 
               {q.imageUrl && (
@@ -287,7 +287,7 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
         <div className="rounded-[24px] bg-[#0f2231] border border-white/10 shadow-xl p-6 text-center">
           <p className="text-xs tracking-widest font-bold text-amber-300">STREET TRIVIA • FINISHED</p>
           <h2 className="mt-1 text-2xl font-black text-white">Results</h2>
-          <p className="text-xs text-white/40">{pub.category}/{pub.difficulty} • {total} Q</p>
+          <p className="text-xs text-white/40">{pub.category} • {total} Q</p>
 
           <div className="mt-5 flex justify-center gap-2 items-end">
             {(() => {
