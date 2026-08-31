@@ -124,12 +124,12 @@ function MainPage() {
         </div>
       </header>
 
-      {/* Hero — board café — larger, no cut-off */}
+      {/* Hero — grey board (matches inside-room greys) */}
       <div className="relative overflow-hidden border-b border-white/[0.06] min-h-[380px] sm:min-h-[440px] flex items-center">
         <div className="absolute inset-0">
-          <img src="/assets/hero-cafe.svg" alt="" className="w-full h-full object-cover object-bottom opacity-[0.98] scale-[1.04]" />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#121416]/10 via-[#121416]/26 to-[#121416]/92" />
-          <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 820px 420px at 50% 72%, rgba(201,115,75,0.10), transparent 66%)" }} />
+          <img src="/assets/hero-grey.svg" alt="" className="w-full h-full object-cover object-bottom opacity-[0.98] scale-[1.04]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#121416]/08 via-[#121416]/28 to-[#121416]/94" />
+          <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 820px 420px at 50% 72%, rgba(156,163,175,0.09), transparent 66%)" }} />
         </div>
         <div className="relative max-w-[1020px] mx-auto px-4 py-10 sm:py-14 w-full">
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
@@ -141,22 +141,22 @@ function MainPage() {
               </div>
               <h2 className="mt-3 font-display font-[900] leading-[0.9] tracking-[-0.02em] text-white">
                 <span className="block text-[32px] sm:text-[42px]">Gather on</span>
-                <span className="block text-[38px] sm:text-[52px] bg-gradient-to-r from-[#fff8e7] via-[#f3ecd8] to-[#d88a63] bg-clip-text text-transparent" style={{ textShadow: "0 0 22px rgba(201,115,75,0.28)" }}>Lucky Street</span>
+                <span className="block text-[38px] sm:text-[52px] bg-gradient-to-r from-[#f9fafb] via-[#e5e7eb] to-[#9ca3af] bg-clip-text text-transparent" style={{ textShadow: "0 0 22px rgba(156,163,175,0.22)" }}>Lucky Street</span>
               </h2>
-              <p className="mt-3 text-[15px] sm:text-[16px] leading-relaxed text-white/78 max-w-[560px]">A cozy party lobby. Create a room, share the code, play <span className="font-bold text-[#f3ecd8]">Veil Street</span> — bluff, deduce, and hunt Merlin.</p>
+              <p className="mt-3 text-[15px] sm:text-[16px] leading-relaxed text-white/78 max-w-[560px]">A cozy party lobby. Create a room, share the code, play <span className="font-bold text-[#e5e7eb]">Veil Street</span> — bluff, deduce, and hunt Merlin.</p>
               <div className="mt-5 flex flex-wrap items-center gap-3">
                 <button
                   onClick={handleCreateClick}
-                  className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-gradient-to-br from-[#fff8e7] via-[#f3ecd8] to-[#d88a63] hover:from-white hover:to-[#f3ecd8] text-[#1a1d1f] font-[900] tracking-wide shadow-cafe border border-[#c9734b]/20 text-[15px]"
+                  className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-gradient-to-br from-[#fff8e7] via-[#f3ecd8] to-[#d88a63] hover:from-white hover:to-[#f3ecd8] text-[#1a1d1f] font-[900] tracking-wide shadow-cafe border border-[#c9734b]/18 text-[15px]"
                 >
                   <span className="w-7 h-7 rounded-full bg-[#1a1d1f] text-[#f3ecd8] flex items-center justify-center text-[16px]">+</span>
                   New Game
                 </button>
                 <div className="hidden sm:flex items-center gap-3 pl-3 ml-1 border-l border-white/10">
                   <div className="flex -space-x-1.5">
-                    <span className="w-7 h-7 rounded-full bg-[#8aa899] border-2 border-[#121416] flex items-center justify-center text-[10px]">🎲</span>
-                    <span className="w-7 h-7 rounded-full bg-[#c9734b] border-2 border-[#121416] flex items-center justify-center text-[10px]">🃏</span>
-                    <span className="w-7 h-7 rounded-full bg-[#f3ecd8] border-2 border-[#121416] flex items-center justify-center text-[10px] font-black text-[#1a1d1f]">5</span>
+                    <span className="w-7 h-7 rounded-full bg-[#6b7280] border-2 border-[#121416] flex items-center justify-center text-[10px]">🎲</span>
+                    <span className="w-7 h-7 rounded-full bg-[#9ca3af] border-2 border-[#121416] flex items-center justify-center text-[10px]">🃏</span>
+                    <span className="w-7 h-7 rounded-full bg-[#e5e7eb] border-2 border-[#121416] flex items-center justify-center text-[10px] font-black text-[#121416]">10</span>
                   </div>
                   <p className="text-xs leading-none"><span className="font-black text-white">{rooms.length} rooms open</span><br/><span className="text-white/50">Jump in — no password</span></p>
                 </div>

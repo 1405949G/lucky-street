@@ -59,12 +59,12 @@ export default function CreateRoomModal({ onClose, onCreated }) {
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-[#070b14]/78 backdrop-blur-md">
       <form onSubmit={submit} className="w-full max-w-[440px] rounded-[24px] glass-lantern shadow-2xl overflow-hidden">
         <div className="relative h-[92px] overflow-hidden">
-          <img src="/assets/hero-cafe.svg" alt="" className="w-full h-full object-cover object-center opacity-92" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0f2231] via-[#0f2231]/45 to-transparent" />
+          <img src="/assets/hero-grey.svg" alt="" className="w-full h-full object-cover object-bottom opacity-92" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#1a1d1f] via-[#1a1d1f]/50 to-transparent" />
           <div className="absolute inset-0 flex items-center justify-between px-6">
             <div>
-              <h2 className="font-display font-[900] text-white text-[18px] leading-none flex items-center gap-2"><span className="w-8 h-8 rounded-xl bg-amber-400/15 border border-amber-400/20 flex items-center justify-center text-sm">🏮</span> Create Room</h2>
-              <p className="text-xs text-amber-200/70 mt-1 font-bold tracking-wide">Pick a game to start</p>
+              <h2 className="font-display font-[900] text-white text-[18px] leading-none flex items-center gap-2"><span className="w-8 h-8 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center text-sm">🎲</span> Create Room</h2>
+              <p className="text-xs text-white/55 mt-1 font-bold tracking-wide">Pick a game to start</p>
             </div>
             <button type="button" onClick={onClose} className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 flex items-center justify-center text-white backdrop-blur">✕</button>
           </div>
@@ -80,14 +80,14 @@ export default function CreateRoomModal({ onClose, onCreated }) {
                   type="button"
                   key={g.id}
                   onClick={() => setGameId(g.id)}
-                  className={`text-left p-4 rounded-2xl border flex items-center gap-3 transition-all ${active ? 'bg-gradient-to-br from-amber-400/15 to-orange-500/10 border-amber-400/50 shadow-lg shadow-amber-500/10 scale-[1.01]' : 'bg-white/[0.03] border-white/10 hover:bg-white/[0.06] hover:border-white/15'}`}
+                  className={`text-left p-4 rounded-2xl border flex items-center gap-3 transition-all ${active ? 'bg-gradient-to-br from-[#9ca3af]/14 to-[#6b7280]/08 border-[#9ca3af]/40 shadow-lg shadow-[#9ca3af]/10 scale-[1.01]' : 'bg-white/[0.03] border-white/10 hover:bg-white/[0.06] hover:border-white/15'}`}
                 >
-                  <span className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0 ${active ? 'bg-amber-400 text-[#0e2533]' : 'bg-white/10 text-white/70'}`}>{icons[g.id] || '🎮'}</span>
+                  <span className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0 ${active ? 'bg-[#9ca3af] text-[#121416]' : 'bg-white/10 text-white/70'}`}>{icons[g.id] || '🎮'}</span>
                   <div className="min-w-0 flex-1">
                     <p className={`text-sm font-bold leading-none ${active ? 'text-white' : 'text-white/90'}`}>{g.label}</p>
                     <p className="text-xs text-white/50 mt-1 leading-snug line-clamp-2">{g.minPlayers}-{g.maxPlayers} • {g.description}</p>
                   </div>
-                  <span className={`ml-2 w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 text-xs font-bold transition-colors ${active ? 'bg-amber-400 border-amber-400 text-[#0e2533]' : 'border-white/15 text-transparent'}`}>✓</span>
+                  <span className={`ml-2 w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 text-xs font-bold transition-colors ${active ? 'bg-[#9ca3af] border-[#9ca3af] text-[#121416]' : 'border-white/15 text-transparent'}`}>✓</span>
                 </button>
               );
             })}
@@ -98,7 +98,7 @@ export default function CreateRoomModal({ onClose, onCreated }) {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full py-3.5 rounded-full bg-gradient-to-br from-[#fffbeb] via-[#fde68a] to-[#fbbf24] hover:from-white hover:to-[#fde68a] disabled:opacity-50 text-[#0e2533] font-[900] shadow-lantern border border-amber-400/20"
+            className="w-full py-3.5 rounded-full bg-gradient-to-br from-[#fff8e7] via-[#f3ecd8] to-[#d88a63] hover:from-white hover:to-[#f3ecd8] disabled:opacity-50 text-[#1a1d1f] font-[900] shadow-cafe border border-[#c9734b]/18"
           >{submitting ? "Creating…" : "Create Room"}</button>
           <p className="text-[11px] text-white/30 text-center">You’ll get a code to share • options in lobby</p>
         </div>
