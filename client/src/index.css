@@ -74,17 +74,27 @@ body::after {
   animation: drift 24s ease-in-out infinite;
 }
 
-/* Café glass — solid for visibility (0% transparency) */
+/* Café glass — cozy board café */
 .glass-lantern {
-  background: linear-gradient(180deg, #2e3336 0%, #1e2326 100%);
+  background: linear-gradient(180deg, rgba(35,39,42,0.92) 0%, rgba(26,29,31,0.92) 100%);
+  backdrop-filter: blur(14px);
   border: 1px solid rgba(255,255,255,0.08);
   box-shadow: 0 12px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06);
 }
-/* Library glass — solid */
+.glass-lantern:hover {
+  border-color: rgba(201,115,75,0.18);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 20px rgba(201,115,75,0.08), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+/* Library glass — midnight library (for Veil Street) */
 .glass-library {
-  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  background: linear-gradient(180deg, rgba(30,41,59,0.94) 0%, rgba(15,23,42,0.92) 100%);
+  backdrop-filter: blur(14px);
   border: 1px solid rgba(255,255,255,0.08);
   box-shadow: 0 12px 40px rgba(15,23,42,0.55), inset 0 1px 0 rgba(255,255,255,0.07);
+}
+.glass-library:hover {
+  border-color: rgba(245,158,11,0.18);
+  box-shadow: 0 16px 48px rgba(15,23,42,0.65), 0 0 20px rgba(245,158,11,0.08), inset 0 1px 0 rgba(255,255,255,0.08);
 }
 .lantern-glow {
   box-shadow: 0 0 28px rgba(201,115,75,0.28), 0 0 64px rgba(201,115,75,0.14);

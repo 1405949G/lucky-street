@@ -107,25 +107,22 @@ export default function IdentityModal({ blocking = false, onDone, title = "Welco
   return (
     <div className={`fixed inset-0 z-[80] flex items-center justify-center p-4 ${blocking ? "bg-[#121416]/88 backdrop-blur-md" : "bg-[#121416]/76 backdrop-blur-md"}`}>
       <form onSubmit={handleSubmit} className="w-full max-w-[420px] rounded-[24px] glass-lantern shadow-2xl overflow-hidden animate-[slideUp_0.35s_ease-out]">
-        <div className="relative h-[132px] overflow-hidden">
-          <div className="absolute inset-0 bg-[#1a1d1f]" />
-          <img src="/assets/hero-grey.svg" alt="" className="absolute inset-0 w-full h-full object-cover object-bottom opacity-[0.18]" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#1a1d1f] via-[#1a1d1f]/80 to-[#1a1d1f]/40" />
+        <div className="relative h-[112px] overflow-hidden">
+          <img src="/assets/hero-grey.svg" alt="" className="w-full h-full object-cover object-bottom opacity-88" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#1a1d1f] via-[#23272a]/55 to-transparent" />
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
-            <div className="bg-[#23272a] border border-white/10 rounded-2xl px-5 py-3 shadow-xl flex flex-col items-center">
-              <div className="w-16 h-16 rounded-2xl bg-[#1a1d1f] border border-white/12 flex items-center justify-center shadow-cafe">
-                <svg viewBox="0 0 42 26" className="w-[36px] h-[22px]">
-                  <rect x="2" y="3" width="16.5" height="16.5" rx="3.2" fill="#e5e7eb" stroke="rgba(0,0,0,0.12)" strokeWidth="0.8"/>
-                  <circle cx="6.2" cy="7.2" r="1.4" fill="#1a1d1f"/><circle cx="14.3" cy="7.2" r="1.4" fill="#1a1d1f"/>
-                  <circle cx="10.25" cy="11.25" r="1.5" fill="#6b7280"/><circle cx="6.2" cy="15.3" r="1.4" fill="#1a1d1f"/><circle cx="14.3" cy="15.3" r="1.4" fill="#1a1d1f"/>
-                  <rect x="23.5" y="3" width="16.5" height="16.5" rx="3.2" fill="#e5e7eb" stroke="rgba(0,0,0,0.12)" strokeWidth="0.8"/>
-                  <circle cx="27.7" cy="7.2" r="1.4" fill="#1a1d1f"/><circle cx="35.8" cy="7.2" r="1.4" fill="#1a1d1f"/>
-                  <circle cx="31.75" cy="11.25" r="1.5" fill="#6b7280"/><circle cx="27.7" cy="15.3" r="1.4" fill="#1a1d1f"/><circle cx="35.8" cy="15.3" r="1.4" fill="#1a1d1f"/>
-                </svg>
-              </div>
-              <h2 className="font-display font-[900] text-[18px] text-center text-white mt-2 leading-none">{title}</h2>
-              <p className="text-xs text-white/70 text-center mt-1 font-medium">Choose how you’ll appear to others.</p>
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#f9fafb] to-[#e5e7eb] border border-white/15 flex items-center justify-center shadow-cafe mx-auto">
+              <svg viewBox="0 0 42 26" className="w-[28px] h-[18px]">
+                <rect x="2" y="3" width="16.5" height="16.5" rx="3.2" fill="#f9fafb" stroke="rgba(0,0,0,0.08)" strokeWidth="0.7"/>
+                <circle cx="6.2" cy="7.2" r="1.3" fill="#23272a"/><circle cx="14.3" cy="7.2" r="1.3" fill="#23272a"/>
+                <circle cx="10.25" cy="11.25" r="1.4" fill="#6b7280"/><circle cx="6.2" cy="15.3" r="1.3" fill="#23272a"/><circle cx="14.3" cy="15.3" r="1.3" fill="#23272a"/>
+                <rect x="23.5" y="3" width="16.5" height="16.5" rx="3.2" fill="#f9fafb" stroke="rgba(0,0,0,0.08)" strokeWidth="0.7"/>
+                <circle cx="27.7" cy="7.2" r="1.3" fill="#23272a"/><circle cx="35.8" cy="7.2" r="1.3" fill="#23272a"/>
+                <circle cx="31.75" cy="11.25" r="1.4" fill="#6b7280"/><circle cx="27.7" cy="15.3" r="1.3" fill="#23272a"/><circle cx="35.8" cy="15.3" r="1.3" fill="#23272a"/>
+              </svg>
             </div>
+            <h2 className="font-display font-[900] text-[18px] text-center text-white mt-2 leading-none">{title}</h2>
+            <p className="text-xs text-white/60 text-center mt-1">Choose how you’ll appear to others.</p>
           </div>
         </div>
         <div className="px-6 pt-5 pb-2 text-center">

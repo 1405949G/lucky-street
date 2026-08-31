@@ -59,18 +59,18 @@
   </g>
 
   <g transform="translate(820 390) rotate(14)">
-    <rect x="-22" y="-22" width="56" height="56" rx="6" fill="#e5e7eb" stroke="rgba(0,0,0,0.06)" stroke-width="1"/>
-    <circle cx="-10" cy="-10" r="3.6" fill="#23272a"/><circle cx="10" cy="-10" r="3.6" fill="#23272a"/><circle cx="-10" cy="10" r="3.6" fill="#23272a"/><circle cx="10" cy="10" r="3.6" fill="#23272a"/><circle cx="0" cy="0" r="3" fill="#6b7280"/><circle cx="0" cy="0" r="1.2" fill="#e5e7eb" opacity="0.9"/>
+    <rect x="-22" y="-22" width="44" height="44" rx="6" fill="#e5e7eb" stroke="rgba(0,0,0,0.06)" stroke-width="1"/>
+    <circle cx="-10" cy="-10" r="3" fill="#23272a"/><circle cx="10" cy="-10" r="3" fill="#23272a"/><circle cx="-10" cy="10" r="3" fill="#23272a"/><circle cx="10" cy="10" r="3" fill="#23272a"/><circle cx="0" cy="0" r="3" fill="#6b7280"/><circle cx="0" cy="0" r="1.2" fill="#e5e7eb" opacity="0.9"/>
     <ellipse cx="4" cy="26" rx="18" ry="4" fill="black" opacity="0.15" filter="url(#blur6)"/>
   </g>
   <g transform="translate(880 412) rotate(-12)">
-    <rect x="-18" y="-18" width="46" height="46" rx="5" fill="#e5e7eb" stroke="rgba(0,0,0,0.06)" stroke-width="1"/>
-    <circle cx="0" cy="-8" r="3.2" fill="#23272a"/><circle cx="-8" cy="8" r="3.2" fill="#23272a"/><circle cx="8" cy="8" r="3.2" fill="#23272a"/>
+    <rect x="-18" y="-18" width="36" height="36" rx="5" fill="#e5e7eb" stroke="rgba(0,0,0,0.06)" stroke-width="1"/>
+    <circle cx="0" cy="-8" r="2.6" fill="#23272a"/><circle cx="-8" cy="8" r="2.6" fill="#23272a"/><circle cx="8" cy="8" r="2.6" fill="#23272a"/>
     <ellipse cx="3" cy="22" rx="14" ry="3.5" fill="black" opacity="0.13" filter="url(#blur6)"/>
   </g>
   <g transform="translate(780 432) rotate(6)">
-    <rect x="-16" y="-16" width="42" height="42" rx="5" fill="#d1d5db" stroke="rgba(0,0,0,0.06)" stroke-width="1"/>
-    <circle cx="-7" cy="-7" r="3" fill="#23272a"/><circle cx="7" cy="-7" r="3" fill="#23272a"/><circle cx="0" cy="0" r="3" fill="#23272a"/><circle cx="-7" cy="7" r="3" fill="#23272a"/><circle cx="7" cy="7" r="3" fill="#23272a"/>
+    <rect x="-16" y="-16" width="32" height="32" rx="5" fill="#d1d5db" stroke="rgba(0,0,0,0.06)" stroke-width="1"/>
+    <circle cx="-7" cy="-7" r="2.4" fill="#23272a"/><circle cx="7" cy="-7" r="2.4" fill="#23272a"/><circle cx="0" cy="0" r="2.4" fill="#23272a"/><circle cx="-7" cy="7" r="2.4" fill="#23272a"/><circle cx="7" cy="7" r="2.4" fill="#23272a"/>
     <ellipse cx="3" cy="20" rx="12" ry="3" fill="black" opacity="0.12" filter="url(#blur6)"/>
   </g>
 
