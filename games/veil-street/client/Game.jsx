@@ -540,7 +540,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
                 if(!res?.ok) showToast(res?.error||'Could not restart');
                 else showToast('Back to lobby!');
               });
-            }} className="flex-1 py-3 rounded-full bg-amber-400 hover:bg-amber-300 text-[#0e2533] font-extrabold shadow-lg">Play Again</button> : <div className="flex-1 py-3 rounded-full bg-white/5 text-white/40 font-bold text-center">Waiting for host…</div>}
+            }} className="flex-1 py-3 rounded-full bg-amber-400 hover:bg-amber-300 text-[#0e2533] font-extrabold shadow-lg">Back to Lobby</button> : <div className="flex-1 py-3 rounded-full bg-white/5 text-white/40 font-bold text-center">Waiting for host…</div>}
           </div>
         </div>
       )}

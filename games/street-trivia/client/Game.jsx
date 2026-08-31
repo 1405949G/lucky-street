@@ -337,7 +337,7 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
                     if(!res?.ok) showToast(res?.error||"Could not restart");
                     else showToast("Back to lobby!");
                   });
-                }} className="flex-1 py-3 rounded-full bg-amber-400 hover:bg-amber-300 text-[#0e2533] font-extrabold">Play Again</button>
+                }} className="flex-1 py-3 rounded-full bg-amber-400 hover:bg-amber-300 text-[#0e2533] font-extrabold">Back to Lobby</button>
               : <div className="flex-1 py-3 rounded-full bg-white/5 text-white/40 font-bold text-center">Waiting for host…</div>
             }
           </div>
