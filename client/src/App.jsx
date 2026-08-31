@@ -83,15 +83,19 @@ function MainPage() {
               <h1 className="font-display font-[900] tracking-[0.14em] text-white leading-none text-[15px] sm:text-[16px]">LUCKY STREET</h1>
               <div className="flex items-center gap-1.5 -mt-0.5">
                 <span className="hidden sm:inline w-[18px] h-[1px] bg-amber-400/50" />
-                <p className="text-[10px] tracking-[0.22em] text-amber-200/70 font-[700]">PARTY LOBBY</p>
+                <p className="text-[10px] tracking-[0.22em] text-amber-200/70 font-[700]">LANTERN LOBBY</p>
                 <span className="hidden sm:inline w-[18px] h-[1px] bg-amber-400/50" />
               </div>
+            </div>
+            <div className="hidden md:flex items-center gap-2 ml-4 pl-4 border-l border-white/10">
+              <span className="text-[11px] font-bold tracking-widest text-white/35">VEIL STREET</span>
+              <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/20 text-[10px] font-black text-emerald-300 tracking-widest">LIVE</span>
             </div>
           </div>
           <div className="flex items-center gap-2.5">
             <div className={`hidden sm:flex items-center gap-2 pl-2 pr-2.5 py-1.5 rounded-full border text-xs font-bold ${connected ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-300" : "bg-amber-500/10 border-amber-500/20 text-amber-300 animate-pulse"}`}>
               <span className={`w-2 h-2 rounded-full ${connected ? "bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.7)]" : "bg-amber-400"}`} style={connected ? { animation: "flicker 2.4s ease-in-out infinite" } : {}} />
-              {connected ? "Live" : "Connecting…"}
+              {connected ? `${rooms.length} streets open` : "Lighting lanterns…"}
             </div>
             {hasProfile ? (
               <div className="flex items-center gap-2.5 ml-1 pl-2.5 border-l border-white/10">
@@ -110,11 +114,14 @@ function MainPage() {
                   )}
                   <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#070b14] shadow" />
                 </div>
-                <span className="text-sm font-bold text-white hidden sm:inline max-w-[100px] truncate">{profile.username}</span>
-                <button onClick={() => setShowOnboarding(true)} className="px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-xs font-bold text-white/70">Edit</button>
+                <div className="hidden sm:block text-left leading-none">
+                  <p className="text-[13px] font-black text-white max-w-[108px] truncate">{profile.username}</p>
+                  <p className="text-[10px] tracking-[0.14em] font-bold text-amber-200/60">LANTERN KEEPER</p>
+                </div>
+                <button onClick={() => setShowOnboarding(true)} className="hidden sm:inline-flex px-3 py-1.5 rounded-full bg-white/[0.08] hover:bg-white/[0.12] border border-white/10 text-xs font-bold text-white/70 backdrop-blur">Edit</button>
               </div>
             ) : (
-              <button onClick={() => setShowOnboarding(true)} className="ml-1 px-3 py-1.5 rounded-full bg-[#f3ecd8] text-[#0e2533] text-xs font-extrabold">Set Profile</button>
+              <button onClick={() => setShowOnboarding(true)} className="ml-1 px-4 py-2 rounded-full bg-gradient-to-br from-[#fde68a] to-[#fbbf24] hover:from-white hover:to-[#fde68a] text-[#0e2533] text-xs font-[900] tracking-wide shadow-lantern-soft border border-amber-400/20">Light your lantern →</button>
             )}
           </div>
         </div>
@@ -139,14 +146,14 @@ function MainPage() {
                 <span className="block text-[28px] sm:text-[38px]">Gather on</span>
                 <span className="block text-[34px] sm:text-[44px] bg-gradient-to-r from-[#fffbeb] via-[#fde68a] to-[#fbbf24] bg-clip-text text-transparent text-glow">Lucky Street</span>
               </h2>
-              <p className="mt-2.5 text-[14px] sm:text-[15px] leading-relaxed text-white/72 max-w-[560px]">A party lobby for friends. Create a room, share the code, play <span className="font-bold text-amber-200">Veil Street</span> — bluff, deduce, and hunt Merlin.</p>
+              <p className="mt-2.5 text-[14px] sm:text-[15px] leading-relaxed text-white/72 max-w-[560px]">A lantern-lit party lobby. Open a street, share the code, play <span className="font-bold text-amber-200">Veil Street</span> — bluff, deduce, and hunt Merlin under the fog.</p>
               <div className="mt-4 flex flex-wrap items-center gap-2.5">
                 <button
                   onClick={handleCreateClick}
                   className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-gradient-to-br from-[#fffbeb] via-[#fde68a] to-[#fbbf24] hover:from-white hover:to-[#fde68a] text-[#0e2533] font-[900] tracking-wide shadow-lantern border border-amber-400/30"
                 >
                   <span className="w-6 h-6 rounded-full bg-[#0e2533] text-amber-300 flex items-center justify-center text-sm">+</span>
-                  New Game
+                  Open a Street
                 </button>
                 <div className="hidden sm:flex items-center gap-3 pl-3 ml-1 border-l border-white/10">
                   <div className="flex -space-x-1.5">
@@ -154,13 +161,13 @@ function MainPage() {
                     <span className="w-7 h-7 rounded-full bg-[#1a2a3a] border-2 border-[#070b14] flex items-center justify-center text-[10px]">🕵️</span>
                     <span className="w-7 h-7 rounded-full bg-[#f3ecd8] border-2 border-[#070b14] flex items-center justify-center text-[10px] font-black text-[#0e2533]">5</span>
                   </div>
-                  <p className="text-xs leading-none"><span className="font-black text-white">{rooms.length} rooms open</span><br/><span className="text-white/50">Jump in — no password</span></p>
+                  <p className="text-xs leading-none"><span className="font-black text-white">{rooms.length} streets glowing</span><br/><span className="text-white/50">Join any — no password</span></p>
                 </div>
               </div>
             </div>
             <div className="hidden lg:flex flex-col items-end gap-2 text-right">
               <div className="px-3 py-2 rounded-2xl bg-white/[0.06] border border-white/10 backdrop-blur">
-                <p className="text-[10px] tracking-[0.16em] font-black text-white/45">FEATURED GAME</p>
+                <p className="text-[10px] tracking-[0.16em] font-black text-white/45">TONIGHT ON THE STREET</p>
                 <p className="text-sm font-black text-white mt-1">Veil Street <span className="font-normal text-white/60">— hidden roles</span></p>
                 <p className="text-xs text-amber-200/70 mt-0.5">Merlin • Percival • Morgana • Mordred • Oberon</p>
               </div>

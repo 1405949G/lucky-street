@@ -17,9 +17,9 @@ export default function JoinByIdBox({ onJoin }) {
       <div className="absolute -top-10 -right-10 w-24 h-24 bg-amber-400/10 blur-xl rounded-full pointer-events-none" />
       <div className="flex items-center gap-2">
         <span className="w-7 h-7 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center text-xs">🔑</span>
-        <h3 className="font-[900] text-white text-sm tracking-wide">Join by Room ID</h3>
+        <h3 className="font-[900] text-white text-sm tracking-wide">Step in with code</h3>
       </div>
-      <p className="text-xs text-white/50 mt-1.5 leading-relaxed">Enter the 4-character code from your friend’s invite link.</p>
+      <p className="text-xs text-white/50 mt-1.5 leading-relaxed">Got a 4-letter street code? Enter it — the lanterns will guide you.</p>
       <form onSubmit={submit} className="mt-3 flex gap-2">
         <input
           value={code}
