@@ -1,4 +1,4 @@
-﻿import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { SocketContext } from "../context/SocketContext.jsx";
 
@@ -53,7 +53,7 @@ export default function TvView({ roomId: propId, embedded = false }) {
         <div className="rounded-2xl bg-rose-500/10 border border-rose-500/20 p-6">
           <p className="font-bold text-rose-300">{error}</p>
           <p className="text-sm text-white/50 mt-1">{isTransient ? "Retrying automatically - refresh if needed." : "Check the code and try again."}</p>
-          {isTransient && <button onClick={() => { setError(null); window.location.reload(); }} className="mt-3 px-4 py-1.5 rounded-full bg-white/10 border border-white/10 text-white text-xs">Retry</button>}
+          {isTransient && <button onClick={() => { setError(null); window.location.reload(); }} className="mt-3 px-4 py-1.5 rounded-full bg-[#23272a] border border-white/10 text-white text-xs">Retry</button>}
         </div>
       </div>
     );
@@ -62,7 +62,7 @@ export default function TvView({ roomId: propId, embedded = false }) {
     return (
       <div className={`${embedded ? "p-8" : "max-w-[760px] mx-auto px-4 py-16"} text-center`}>
         <div className="w-10 h-10 border-2 border-white/20 border-t-amber-400 rounded-full animate-spin mx-auto"></div>
-        <p className="text-sm text-white/50 mt-3">Loading {id}…</p>
+        <p className="text-sm text-white/50 mt-3">Loading {id}�</p>
       </div>
     );
   }
@@ -78,10 +78,10 @@ export default function TvView({ roomId: propId, embedded = false }) {
           <p className="text-xs tracking-widest font-bold text-white/50">JOIN CODE</p>
           <div className="font-display font-black text-[48px] sm:text-[56px] tracking-[0.18em] text-[#f3ecd8]" style={{ textShadow: "0 2px 0 rgba(0,0,0,0.25)" }}>{room.id}</div>
           <p className="text-sm text-white/70 mt-1">Go to <span className="font-bold text-white">{window.location.host}</span> -> Enter code</p>
-          <p className="font-mono text-xs bg-white/10 px-2 py-1 rounded inline-block mt-2 break-all">{window.location.origin}/room/{room.id}</p>
+          <p className="font-mono text-xs bg-[#23272a] px-2 py-1 rounded inline-block mt-2 break-all">{window.location.origin}/room/{room.id}</p>
           <div className="mt-3 flex justify-center gap-2">
-            <span className="px-3 py-1.5 rounded-full bg-white/10 border border-white/10 text-xs font-bold text-white/70">{room.slotsText}</span>
-            <span className="px-3 py-1.5 rounded-full bg-white/10 border border-white/10 text-xs font-bold text-white/70">{game.label}</span>
+            <span className="px-3 py-1.5 rounded-full bg-[#23272a] border border-white/10 text-xs font-bold text-white/70">{room.slotsText}</span>
+            <span className="px-3 py-1.5 rounded-full bg-[#23272a] border border-white/10 text-xs font-bold text-white/70">{game.label}</span>
           </div>
         </div>
       </div>
@@ -95,7 +95,7 @@ export default function TvView({ roomId: propId, embedded = false }) {
             const isImage = p.avatar && p.avatar.startsWith("data:");
             return (
               <div key={p.id} className="flex flex-col items-center gap-1.5 relative">
-                {isHost && <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 pointer-events-none text-[16px]">👑</div>}
+                {isHost && <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 pointer-events-none text-[16px]">??</div>}
                 <div className={`w-[72px] h-[72px] sm:w-[80px] sm:h-[80px] rounded-full border-2 flex items-center justify-center overflow-hidden shadow-md ${isHost ? "border-amber-400" : "border-white/15"}`} style={isImage ? {} : { background: p.avatar || "#475569" }}>
                   {isImage ? <img src={p.avatar} alt={p.name} className="w-full h-full object-cover" /> : <span className="font-black text-white text-xl">{p.name.slice(0,2).toUpperCase()}</span>}
                 </div>
@@ -105,11 +105,11 @@ export default function TvView({ roomId: propId, embedded = false }) {
           })}
           {room.bots.map(b => (
             <div key={b.id} className="flex flex-col items-center gap-1.5 opacity-90">
-              <div className="w-[72px] h-[72px] sm:w-[80px] sm:h-[80px] rounded-full border-2 border-white/10 flex items-center justify-center bg-[#1e2a3a]"><span className="text-[28px]">🤖</span></div>
+              <div className="w-[72px] h-[72px] sm:w-[80px] sm:h-[80px] rounded-full border-2 border-white/10 flex items-center justify-center bg-[#1e2a3a]"><span className="text-[28px]">??</span></div>
               <span className="text-sm font-bold text-white/80 max-w-[80px] truncate text-center">{b.name}</span>
             </div>
           ))}
-          {room.players.length + room.bots.length === 0 && <p className="text-sm text-white/40">Waiting for players…</p>}
+          {room.players.length + room.bots.length === 0 && <p className="text-sm text-white/40">Waiting for players�</p>}
         </div>
       </div>
 

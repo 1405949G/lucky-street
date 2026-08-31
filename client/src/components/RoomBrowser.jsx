@@ -1,4 +1,4 @@
-Ôªøimport React, { useContext, useMemo, useState } from "react";
+import React, { useContext, useMemo, useState } from "react";
 import { SocketContext } from "../context/SocketContext.jsx";
 import RoomCard from "./RoomCard.jsx";
 import JoinByIdBox from "./JoinByIdBox.jsx";
@@ -19,7 +19,7 @@ export default function RoomBrowser({ onJoinRoom, onSpectate, onCreateClick }) {
 
   return (
     <div className="max-w-[1020px] mx-auto">
-      {/* section header ‚Äî lantern divider */}
+      {/* section header ó lantern divider */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
@@ -45,15 +45,15 @@ export default function RoomBrowser({ onJoinRoom, onSpectate, onCreateClick }) {
         <div className="space-y-3">
           <div className="flex gap-2">
             <div className="relative flex-1">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/35 text-sm">‚åï</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/35 text-sm">?</span>
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                placeholder="Search rooms‚Ä¶"
-                className="w-full pl-9 pr-4 py-3 rounded-2xl bg-white/[0.06] border border-white/10 text-white placeholder:text-white/30 text-sm outline-none focus:border-[#c9734b]/30 focus:bg-white/[0.09] backdrop-blur"
+                placeholder="Search roomsÖ"
+                className="w-full pl-9 pr-4 py-3 rounded-2xl bg-[#1e2326] border border-white/10 text-white placeholder:text-white/30 text-sm outline-none focus:border-[#c9734b]/30 focus:bg-[#23272a] "
               />
             </div>
-            <span className="hidden sm:inline-flex px-3.5 py-2 rounded-2xl bg-white/[0.06] border border-white/10 text-xs font-black tracking-widest text-[#f3ecd8]/70 items-center">{filtered.length} rooms</span>
+            <span className="hidden sm:inline-flex px-3.5 py-2 rounded-2xl bg-[#1e2326] border border-white/10 text-xs font-black tracking-widest text-[#f3ecd8]/70 items-center">{filtered.length} rooms</span>
           </div>
 
           {filtered.length === 0 ? (
@@ -72,7 +72,7 @@ export default function RoomBrowser({ onJoinRoom, onSpectate, onCreateClick }) {
                   </svg>
                 </div>
                 <p className="text-white font-[900] mt-4 text-[17px]">No games right now</p>
-                <p className="text-sm text-white/55 mt-1 max-w-[360px] mx-auto">Start a new one ‚Äî it‚Äôll show up instantly for friends.</p>
+                <p className="text-sm text-white/55 mt-1 max-w-[360px] mx-auto">Start a new one ó itíll show up instantly for friends.</p>
                 <button onClick={onCreateClick} className="mt-5 px-7 py-3.5 rounded-full bg-gradient-to-br from-[#fff8e7] via-[#f3ecd8] to-[#d88a63] text-[#1a1d1f] text-[15px] font-black shadow-cafe border border-[#c9734b]/18">New Game</button>
               </div>
             </div>
@@ -90,23 +90,23 @@ export default function RoomBrowser({ onJoinRoom, onSpectate, onCreateClick }) {
           <div className="rounded-[22px] glass-lantern p-5 relative overflow-hidden">
             <div className="absolute -top-8 -right-8 w-28 h-28 bg-[#c9734b]/10 blur-2xl rounded-full pointer-events-none" />
             <div className="flex items-center gap-2">
-              <span className="w-8 h-8 rounded-xl bg-[#c9734b]/12 border border-[#c9734b]/18 flex items-center justify-center text-sm">üí°</span>
+              <span className="w-8 h-8 rounded-xl bg-[#c9734b]/12 border border-[#c9734b]/18 flex items-center justify-center text-sm">??</span>
               <h3 className="font-[900] text-[#f3ecd8] tracking-wide">Quick tips</h3>
             </div>
             <ul className="text-sm text-white/68 mt-3 space-y-2.5">
-              <li className="flex gap-2"><span className="text-[#c9734b] mt-0.5">‚Ä¢</span><span>Your name stays saved for next time.</span></li>
-              <li className="flex gap-2"><span className="text-[#c9734b] mt-0.5">‚Ä¢</span><span>Pick a unique name ‚Äî try another if taken.</span></li>
-              <li className="flex gap-2"><span className="text-[#c9734b] mt-0.5">‚Ä¢</span><span>Share your invite link to play together.</span></li>
+              <li className="flex gap-2"><span className="text-[#c9734b] mt-0.5">ï</span><span>Your name stays saved for next time.</span></li>
+              <li className="flex gap-2"><span className="text-[#c9734b] mt-0.5">ï</span><span>Pick a unique name ó try another if taken.</span></li>
+              <li className="flex gap-2"><span className="text-[#c9734b] mt-0.5">ï</span><span>Share your invite link to play together.</span></li>
             </ul>
             <a href="/admin" className="hidden">Admin</a>
           </div>
 
           <div className="rounded-[22px] bg-gradient-to-br from-[#2e3336] to-[#1a1d1f] border border-white/10 p-4 flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-[#c9734b]/12 border border-[#c9734b]/18 flex items-center justify-center text-lg">üÉè</div>
+            <div className="w-12 h-12 rounded-xl bg-[#c9734b]/12 border border-[#c9734b]/18 flex items-center justify-center text-lg">??</div>
             <div>
               <p className="text-xs font-black tracking-[0.14em] text-[#f3ecd8]/60">FEATURED</p>
-              <p className="text-sm font-black text-white leading-none mt-0.5">Veil Street ‚Äî 5-10 players</p>
-              <p className="text-xs text-white/55 mt-1">Hidden roles ‚Ä¢ Bluff ‚Ä¢ Find Merlin</p>
+              <p className="text-sm font-black text-white leading-none mt-0.5">Veil Street ó 5-10 players</p>
+              <p className="text-xs text-white/55 mt-1">Hidden roles ï Bluff ï Find Merlin</p>
             </div>
           </div>
         </div>

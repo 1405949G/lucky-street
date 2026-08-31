@@ -1,4 +1,4 @@
-﻿/**
+/**
  * IdentityModal - onboarding
  * Shows once, remembers you next time. Blocking variant for direct room links.
  */
@@ -105,7 +105,7 @@ export default function IdentityModal({ blocking = false, onDone, title = "Welco
   const blockingNote = blocking ? "Choose a name to join" : null;
 
   return (
-    <div className={`fixed inset-0 z-[80] flex items-center justify-center p-4 ${blocking ? "bg-[#121416]/88 backdrop-blur-md" : "bg-[#121416]/76 backdrop-blur-md"}`}>
+    <div className={`fixed inset-0 z-[80] flex items-center justify-center p-4 ${blocking ? "bg-[#121416]/88 " : "bg-[#121416]/76 "}`}>
       <form onSubmit={handleSubmit} className="w-full max-w-[420px] rounded-[24px] glass-lantern shadow-2xl overflow-hidden animate-[slideUp_0.35s_ease-out]">
         <div className="relative h-[132px] overflow-hidden">
           <div className="absolute inset-0 bg-[#1a1d1f]" />
@@ -124,12 +124,12 @@ export default function IdentityModal({ blocking = false, onDone, title = "Welco
                 </svg>
               </div>
               <h2 className="font-display font-[900] text-[18px] text-center text-white mt-2 leading-none">{title}</h2>
-              <p className="text-xs text-white/70 text-center mt-1 font-medium">Choose how you’ll appear to others.</p>
+              <p className="text-xs text-white/70 text-center mt-1 font-medium">Choose how you�ll appear to others.</p>
             </div>
           </div>
         </div>
         <div className="px-6 pt-5 pb-2 text-center">
-          {blockingNote && <p className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-white/70 text-xs font-bold">🔒 {blockingNote}</p>}
+          {blockingNote && <p className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#23272a] border border-white/15 text-white/70 text-xs font-bold">?? {blockingNote}</p>}
         </div>
 
         <div className="px-6 pb-6 space-y-4">
@@ -140,7 +140,7 @@ export default function IdentityModal({ blocking = false, onDone, title = "Welco
               onChange={e => setUsername(e.target.value)}
               placeholder="e.g., Alex"
               maxLength={20}
-              className="mt-1.5 w-full px-4 py-3 rounded-xl bg-white/10 border border-white/15 text-white placeholder:text-white/30 text-sm font-semibold outline-none focus:border-[#9ca3af]/45 focus:bg-white/15"
+              className="mt-1.5 w-full px-4 py-3 rounded-xl bg-[#23272a] border border-white/15 text-white placeholder:text-white/30 text-sm font-semibold outline-none focus:border-[#9ca3af]/45 focus:bg-[#1e2326]"
               autoFocus
             />
             <p className="text-[11px] text-white/30 mt-1">Others will see this.</p>
@@ -159,7 +159,7 @@ export default function IdentityModal({ blocking = false, onDone, title = "Welco
             disabled={submitting}
             className="w-full py-3.5 rounded-full bg-gradient-to-br from-[#fff8e7] via-[#f3ecd8] to-[#d88a63] hover:from-white hover:to-[#f3ecd8] disabled:opacity-50 text-[#1a1d1f] font-[900] tracking-wide shadow-cafe border border-[#c9734b]/18 transition-colors"
           >
-            {submitting ? "Checking…" : blocking ? "Enter Lobby" : "Save & Continue"}
+            {submitting ? "Checking�" : blocking ? "Enter Lobby" : "Save & Continue"}
           </button>
 
           {!blocking && profile?.username && (
