@@ -134,15 +134,18 @@ export function reducer(state, action){
       const names = players.map(p=> String(p.name||"").trim());
       if (names.some(n=>!n)) throw new Error("All players need names");
       if (new Set(names.map(n=>n.toLowerCase())).size !== names.length) throw new Error("Duplicate names");
-      const questionCount = Math.min(50, Math.max(5, Number(opts?.questionCount) || 10));
-      const timerSeconds = Math.min(45, Math.max(10, Number(opts?.timerSeconds) || 20));
-      const category = (opts?.category || "Random").toString();
+      const rawCount = Number(opts?.questionCount);
+      const questionCount = Number.isFinite(rawCount) ? Math.min(50, Math.max(5, Math.round(rawCount/5)*5)) : 10;
+      const rawTimer = Number(opts?.timerSeconds);
+      const timerSeconds = Number.isFinite(rawTimer) ? Math.min(60, Math.max(0, Math.round(rawTimer/5)*5)) : 20;
+      const category = "Random";
       const questionType = (opts?.questionType || opts?.type || "Random").toString();
       const questions = Array.isArray(preFetchedQuestions) && preFetchedQuestions.length ? preFetchedQuestions.slice(0, questionCount) : pickQuestions({ category, questionType, count: questionCount });
       const builtPlayers = players.map(p=> Object.freeze({ id: p.id, name: String(p.name).trim(), isBot: !!p.isBot, avatar: p.avatar||null }));
       const scores = {};
       for(const p of builtPlayers) scores[p.id]=0;
-      let log = appendLog([], "SETUP", `Street Trivia • ${questionCount} Q • ${timerSeconds}s • ${category} • ${questionType}`);
+      const timerLabel = timerSeconds===0 ? "No limit" : `${timerSeconds}s`;
+      let log = appendLog([], "SETUP", `Street Trivia • ${questionCount} Q • ${timerLabel} • ${questionType}`);
       log = appendLog(log, "QUESTION", fmtQuestion(questions[0], 0, questionCount));
       const newState = {
         ...createInitialState(),

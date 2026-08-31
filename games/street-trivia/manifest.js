@@ -14,13 +14,11 @@ export default {
   defaultOptions: {
     questionCount: 10,
     timerSeconds: 20,
-    category: "Random",
     questionType: "Random", // Random, Multiple Choice, True / False
   },
   optionSchema: [
-    { key: "questionCount", label: "Questions", type: "slider", min: 5, max: 50, step: 1 },
-    { key: "timerSeconds", label: "Timer (s)", type: "slider", min: 10, max: 45, step: 5 },
-    { key: "category", label: "Category", type: "select", options: ["Random","General Knowledge","Entertainment: Books","Entertainment: Film","Entertainment: Music","Entertainment: Musicals & Theatres","Entertainment: Television","Entertainment: Video Games","Entertainment: Board Games","Science & Nature","Science: Computers","Science: Mathematics","Mythology","Sports","Geography","History","Politics","Art","Celebrities","Animals","Vehicles","Entertainment: Comics","Science: Gadgets","Entertainment: Japanese Anime & Manga","Entertainment: Cartoon & Animations"] },
+    { key: "questionCount", label: "Questions", type: "slider", min: 5, max: 50, step: 5 },
+    { key: "timerSeconds", label: "Timer", type: "slider", min: 0, max: 60, step: 5 },
     { key: "questionType", label: "Type", type: "select", options: ["Random","Multiple Choice","True / False"] },
   ],
 };

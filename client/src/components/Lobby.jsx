@@ -590,7 +590,7 @@ export default function Lobby({ spectate = false }) {
               {isTriviaGame && (
                 <div className="rounded-2xl bg-gradient-to-br from-violet-600/20 to-amber-500/20 border border-white/10 p-4">
                   <h4 className="font-bold text-white text-sm flex items-center gap-2">Street Trivia</h4>
-                  <p className="text-xs text-white/60 mt-1">{totalPlayers}/{room.maxPlayers} • {room.gameOptions.questionCount} Q • {room.gameOptions.timerSeconds}s • {room.gameOptions.category} • {room.gameOptions.questionType}</p>
+                  <p className="text-xs text-white/60 mt-1">{totalPlayers}/{room.maxPlayers} • {room.gameOptions.questionCount} Q • {room.gameOptions.timerSeconds===0 ? "No limit" : `${room.gameOptions.timerSeconds}s`} • {room.gameOptions.questionType}</p>
                   {isHost ? (
                     <>
                       <button onClick={handleStartGame} disabled={!canStart} className={`mt-3 w-full py-3 rounded-full font-extrabold ${canStart ? "bg-amber-400 hover:bg-amber-300 text-[#0e2533]" : "bg-white/10 text-white/30 cursor-not-allowed"}`}>
@@ -661,12 +661,16 @@ export default function Lobby({ spectate = false }) {
                         )
                       ) : opt.type === "slider" ? (
                         isHost ? (
-                          <div className="flex-1 flex items-center gap-2">
-                            <input type="range" min={opt.min} max={opt.max} step={opt.step} value={room.gameOptions[opt.key]} onChange={e => handleOptionChange(opt.key, Number(e.target.value))} disabled={isGameLocked} className={`flex-1 accent-amber-400 ${isGameLocked ? "opacity-40" : ""}`} />
-                            <span className="text-xs font-bold text-white w-12 text-right">{room.gameOptions[opt.key]}{opt.unit || ""}</span>
+                          <div className="flex-1 flex flex-col gap-1">
+                            <div className="flex items-center gap-2">
+                              <input type="range" min={opt.min} max={opt.max} step={opt.step} value={room.gameOptions[opt.key]} onChange={e => handleOptionChange(opt.key, Number(e.target.value))} disabled={isGameLocked} className={`flex-1 accent-amber-400 ${isGameLocked ? "opacity-40" : ""}`} />
+                              <span className="text-xs font-bold text-white w-16 text-right">{opt.key==="timerSeconds" && room.gameOptions[opt.key]===0 ? "No limit" : `${room.gameOptions[opt.key]}${opt.key==="timerSeconds" ? "s" : opt.unit || ""}`}</span>
+                            </div>
+                            {opt.key==="timerSeconds" && <span className="text-[10px] text-white/30 ml-1">← No timer (unlimited) • 60s max</span>}
+                            {opt.key==="questionCount" && <span className="text-[10px] text-white/30 ml-1">5 to 50, steps of 5</span>}
                           </div>
                         ) : (
-                          <span className="text-sm font-bold text-white">{room.gameOptions[opt.key]}{opt.unit || ""}</span>
+                          <span className="text-sm font-bold text-white">{opt.key==="timerSeconds" && room.gameOptions[opt.key]===0 ? "No limit" : `${room.gameOptions[opt.key]}${opt.key==="timerSeconds" ? "s" : opt.unit || ""}`}</span>
                         )
                       ) : opt.type === "select" ? (
                         isTriviaGame && opt.key === "category" ? (
@@ -775,7 +779,7 @@ export default function Lobby({ spectate = false }) {
                 </div>
                 <div className="rounded-xl bg-white/5 border border-white/10 p-3">
                   <p className="text-xs font-bold text-white">Options — set by host in lobby</p>
-                  <p className="text-xs text-white/60 mt-1.5 leading-snug">Questions (5–50), Timer (10–45s), Category, Type (Multiple / True-False). Defaults are 10 Q • 20s • Random • Random. Change them before starting.</p>
+                  <p className="text-xs text-white/60 mt-1.5 leading-snug">Questions (5–50 step 5), Timer (No limit – 60s step 5, leftmost is unlimited), Type (Random / Multiple / True-False). Defaults are 10 Q • 20s • Random. Change them before starting.</p>
                 </div>
                 <div className="rounded-xl bg-white/5 border border-white/10 p-3">
                   <p className="text-xs font-bold text-white">Tips</p>

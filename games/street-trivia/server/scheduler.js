@@ -10,7 +10,9 @@ export function handleTriviaEffects({ roomManager, roomId, effects, broadcast, d
         const room = roomManager.get(roomId);
         if (!room || !room.gameState) break;
         const gs = room.gameState;
-        const timerMs = (gs.timerSeconds || 20) * 1000;
+        const timerSec = Number(gs.timerSeconds);
+        if (!timerSec || timerSec===0) break; // 0 = No limit — no auto-reveal, wait for all answered
+        const timerMs = timerSec * 1000;
         const idxAtEntry = gs.currentIndex;
         // schedule auto-reveal if not all answered
         setTimeout(() => {
