@@ -119,13 +119,18 @@ Local test: `npx wrangler dev --local --port 3001` (if you have terminal) or kee
 - **Render free:** single region, sleeps after 15m -> 5-15s cold start, single `Map` lost on restart.
 - **Workers DO:** edge (300 PoPs), no sleep, DO `alarm()` survives hibernation, shards by `roomId` -> global ~10-30ms vs 40-120ms for Render. For test lobby difference negligible; scale to many regions favors Workers (see `ARCHITECTURE.md:9`).
 
-## UI Visual-Only Layer (for safe re-theming)
+## UI Visual-Only Layer (for safe re-theming — keeps finished games from regressing)
 
-- **Copy (locked):** `client/src/content/copy.js:1` + `client/src/content/README.md:1`
-- **Theme (free to edit):** `client/src/ui/theme.js:1` (colours, radii, Tailwind class maps), `client/src/ui/primitives.jsx:1` (Card/Button/Input/Badge + Icon), `client/src/index.css:1`, `tailwind.config.js:1`
-- **Assets (free):** `client/public/assets/*` — add hero/icons here, reference via `theme.js:18` icons
-- **Workflow for visuals:** Prompt `visual only: update theme` → AI edits only `client/src/ui/*`, `index.css`, `tailwind.config.js`, `public/assets/*`. Text stays in `copy.js`.
-- **Workflow for text:** Prompt `change text: ...` → AI may edit `copy.js:1` and the one component that imports that key. Keep diff small, one section at a time (main menu `App.jsx:1`/`RoomBrowser.jsx:1`, then lobby `Lobby.jsx:1`, then game `games/veil-street/client/Game.jsx:1`).
+**Goal:** Main menu `client/src/App.jsx:1` + `client/src/components/RoomBrowser.jsx:1` sets the global tone; each game keeps its own look inside `games/<id>/client/` so a lobby revamp never forces you to retest every game.
+
+- **Copy (locked):** `client/src/content/copy.js:1` + `client/src/content/README.md:1` — AI visual passes MUST NOT touch. One section at a time if you do change text.
+- **Global shell (main menu + lobby chrome):** `client/src/ui/theme.js:1` (palette, radii, `classes.card/buttonPrimary`), `client/src/ui/primitives.jsx:1` (optional helpers), `client/src/index.css:1`, `tailwind.config.js:1`, `client/public/assets/*` — edit here for the site-wide tone.
+- **Per-game look (isolated):** `games/<id>/client/Game.jsx:1` (+ optional `games/<id>/client/theme.js` if you want) owns that game's colours/icons/hero. Do NOT import `client/src/ui/theme.js:1` inside games — keep them decoupled so global edits can't leak.
+- **Scope AI to one surface per run (critical to avoid retesting all games):**
+  - `visual only — global shell: edit client/src/ui/*, App.jsx:1, RoomBrowser.jsx:1, Lobby.jsx:1 chrome only` → games untouched
+  - `visual only — veil-street: edit games/veil-street/client/* only` → lobby/other games untouched
+- **Workflow for visuals:** Prompt must name the scope as above. AI edits only the listed files, only `className`/`style`/SVG.
+- **Workflow for text:** Prompt `change text: "old" -> "new"` → AI may edit `copy.js:1` and the one component that imports that key.
 
 ## References
 
