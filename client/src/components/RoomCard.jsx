@@ -4,9 +4,9 @@ export default function RoomCard({ room, onJoin, onSpectate }) {
   const isLive = room.status === 'In Progress';
   const isEnded = room.status === 'Ended';
   return (
-    <div className="group relative rounded-[20px] glass-lantern p-[1px] overflow-hidden transition-all hover:shadow-lantern-soft">
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" style={{ background: "radial-gradient(ellipse 420px 120px at 28% 0%, rgba(251,191,36,0.14), transparent 68%)" }} />
-      <div className="relative rounded-[19px] bg-gradient-to-br from-[#23272a]/95 via-[#2e3336]/92 to-[#1a1d1f]/96 p-4 flex flex-col gap-3.5 overflow-hidden">
+    <div className="group relative rounded-[20px] bg-[#1e2326] border border-white/10 p-[1px] overflow-hidden transition-all duration-300 hover:border-[#c9734b]/20 hover:shadow-xl hover:shadow-black/20 hover:-translate-y-1">
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" style={{ background: "radial-gradient(ellipse 420px 120px at 28% 0%, rgba(201,115,75,0.12), transparent 68%)" }} />
+      <div className="relative rounded-[19px] bg-gradient-to-br from-[#23272a] via-[#2e3336] to-[#1a1d1f] p-4 flex flex-col gap-3.5 overflow-hidden">
         {/* subtle top line */}
         <div className="absolute top-0 left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-[#c9734b]/20 to-transparent opacity-60" />
         {/* soft glow dot */}
@@ -47,10 +47,10 @@ export default function RoomCard({ room, onJoin, onSpectate }) {
             {room.spectatorCount ? <span className="hidden sm:inline text-white/30">• {room.spectatorCount} watching</span> : null}
           </div>
           <div className="flex gap-2">
-            {onSpectate && <button onClick={() => onSpectate(room)} className="px-3.5 py-2 rounded-full bg-[#1e2326] hover:bg-[#1e2326] border border-white/10 text-white text-xs font-bold  transition-colors">Spectate</button>}
+            {onSpectate && <button onClick={() => onSpectate(room)} className="px-3.5 py-2 rounded-full bg-[#1e2326] hover:bg-[#252a2e] border border-white/10 hover:border-white/15 text-white text-xs font-bold transition-all duration-200 hover:scale-105 active:scale-95">Spectate</button>}
             <button
               onClick={() => onJoin(room)}
-              className="px-5 py-2 rounded-full bg-gradient-to-br from-[#fff8e7] via-[#f3ecd8] to-[#d88a63] hover:from-white hover:to-[#f3ecd8] text-[#1a1d1f] text-xs font-[900] shadow-cafe border border-[#c9734b]/18"
+              className="px-5 py-2 rounded-full bg-gradient-to-br from-[#fff8e7] via-[#f3ecd8] to-[#d88a63] hover:from-white hover:to-[#f3ecd8] text-[#1a1d1f] text-xs font-[900] shadow-cafe border border-[#c9734b]/18 transition-all duration-200 hover:shadow-lg hover:scale-105 active:scale-95"
             >Join</button>
           </div>
         </div>

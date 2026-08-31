@@ -228,7 +228,7 @@ export default function Lobby({ spectate = false }) {
         <div className="w-full max-w-[380px] rounded-[24px] bg-[#142a3d] border border-white/10 p-6 text-center shadow-2xl">
           <div className="w-12 h-12 rounded-full bg-rose-500/20 border border-rose-500/30 flex items-center justify-center mx-auto text-xl">?</div>
           <h2 className="font-extrabold text-white text-lg mt-3">You were removed</h2>
-          <p className="text-sm text-white/60 mt-1">You’re no longer in this game.</p>
+          <p className="text-sm text-white/60 mt-1">You're no longer in this game.</p>
           <button onClick={() => { setKickedPopup(false); navigate("/"); }} className="mt-5 w-full py-3 rounded-full bg-[#f3ecd8] hover:bg-white text-[#0e2533] font-extrabold">Back to games</button>
         </div>
       </div>
@@ -256,7 +256,7 @@ export default function Lobby({ spectate = false }) {
     return (
       <div className="max-w-[520px] mx-auto px-4 py-16 text-center">
         <div className="w-10 h-10 border-2 border-white/20 border-t-amber-400 rounded-full animate-spin mx-auto"></div>
-        <p className="text-sm text-white/50 mt-3">Joining {id}…</p>
+        <p className="text-sm text-white/50 mt-3">Joining {id}...</p>
       </div>
     );
   }
@@ -388,9 +388,9 @@ export default function Lobby({ spectate = false }) {
         </button>
         <div className="text-center flex-1 px-3">
           <div className="inline-flex items-center gap-2">
-            <span className="hidden sm:flex w-7 h-7 rounded-xl bg-[#c9734b]/12 border border-[#c9734b]/18 items-center justify-center text-xs">??</span>
+            <span className="hidden sm:flex w-7 h-7 rounded-xl bg-[#c9734b]/12 border border-[#c9734b]/18 items-center justify-center text-xs"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f3ecd8" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.4" fill="#f3ecd8"/><circle cx="15.5" cy="8.5" r="1.4" fill="#f3ecd8"/><circle cx="12" cy="12" r="1.4" fill="#c9734b"/><circle cx="8.5" cy="15.5" r="1.4" fill="#f3ecd8"/><circle cx="15.5" cy="15.5" r="1.4" fill="#f3ecd8"/></svg></span>
             <h1 className="font-display font-[900] text-[18px] tracking-[0.14em] text-white">LUCKY STREET</h1>
-            <span className="hidden sm:flex w-7 h-7 rounded-xl bg-[#8aa899]/12 border border-[#8aa899]/18 items-center justify-center text-xs">??</span>
+            <span className="hidden sm:flex w-7 h-7 rounded-xl bg-[#8aa899]/12 border border-[#8aa899]/18 items-center justify-center text-xs"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f3ecd8" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.4" fill="#f3ecd8"/><circle cx="15.5" cy="8.5" r="1.4" fill="#f3ecd8"/><circle cx="12" cy="12" r="1.4" fill="#c9734b"/><circle cx="8.5" cy="15.5" r="1.4" fill="#f3ecd8"/><circle cx="15.5" cy="15.5" r="1.4" fill="#f3ecd8"/></svg></span>
           </div>
           <p className="text-xs text-white/55 -mt-0.5 flex items-center justify-center gap-1.5 flex-wrap">
             <span className="font-mono font-black tracking-[0.14em] text-[#f3ecd8]">{room.id}</span>
@@ -421,7 +421,7 @@ export default function Lobby({ spectate = false }) {
           <div className="relative">
             <div className="flex items-center justify-center gap-2">
               <span className="w-6 h-[1px] bg-amber-400/30 hidden sm:block" />
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/12 border border-amber-400/20 text-amber-200 text-[11px] font-black tracking-[0.18em]">?? QUEST {Math.min(room.gameState.currentQuest+1,5)} / 5 • VEIL STREET</span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/12 border border-amber-400/20 text-amber-200 text-[11px] font-black tracking-[0.18em]"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="inline mr-1"><path d="M4 15l8 -10 8 10 -8 5z"/><path d="M12 5v14"/></svg> QUEST {Math.min(room.gameState.currentQuest+1,5)} / 5 â€¢ VEIL STREET</span>
               <span className="w-6 h-[1px] bg-amber-400/30 hidden sm:block" />
             </div>
             <div className="mt-4 flex justify-between gap-2">
@@ -436,21 +436,21 @@ export default function Lobby({ spectate = false }) {
                     <span className="text-[10px] font-black tracking-[0.18em] opacity-70">Q{i+1}</span>
                     <span className="text-[20px] font-[900] leading-none mt-0.5">{q.size}</span>
                     {needsTwo && <span className="absolute -top-2 -right-2 px-2 py-1 rounded-full bg-gradient-to-br from-amber-300 to-orange-500 text-[#0e2533] text-[9px] font-black leading-none shadow-md border border-amber-400/30">2</span>}
-                    <span className={`text-[10px] font-black mt-1 leading-none h-[12px] ${isSuccess ? 'text-white' : isFail ? 'text-white' : 'text-white/60'}`}>{q.status==='PENDING' ? (needsTwo ? 'needs 2' : '—') : q.status==='SUCCESS' ? '? held' : '? fell'}</span>
+                    <span className={`text-[10px] font-black mt-1 leading-none h-[12px] ${isSuccess ? 'text-white' : isFail ? 'text-white' : 'text-white/60'}`}>{q.status==='PENDING' ? (needsTwo ? 'needs 2' : 'â€¢') : q.status==='SUCCESS' ? 'âœ“ held' : 'âœ— fell'}</span>
                     {isCurrent && !isSuccess && !isFail && <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.7)] animate-pulse" />}
                   </div>
                 );
               })}
             </div>
             <div className="mt-5 rounded-2xl bg-[#1e2326] border border-white/10 p-3.5">
-              <p className="text-[10px] tracking-[0.18em] font-black text-white/45">VEIL THICKENS — REJECTED</p>
+              <p className="text-[10px] tracking-[0.18em] font-black text-white/45">VEIL THICKENS â€¢ REJECTED</p>
               <div className="mt-2.5 flex justify-center gap-2.5">
                 {Array.from({length:5}).map((_,i)=>(
-                  <div key={i} className={`w-10 h-10 rounded-full border-2 flex items-center justify-center text-sm font-black transition-all ${i < room.gameState.proposalTracker ? 'bg-gradient-to-br from-rose-500 to-rose-600 border-rose-400 text-white shadow-[0_0_12px_rgba(244,63,94,0.35)]' : 'bg-[#1e2326] border-white/15 text-white/25'}`}>{i < room.gameState.proposalTracker ? '?' : ''}</div>
+                  <div key={i} className={`w-10 h-10 rounded-full border-2 flex items-center justify-center text-sm font-black transition-all ${i < room.gameState.proposalTracker ? 'bg-gradient-to-br from-rose-500 to-rose-600 border-rose-400 text-white shadow-[0_0_12px_rgba(244,63,94,0.35)]' : 'bg-[#1e2326] border-white/15 text-white/25'}`}>{i < room.gameState.proposalTracker ? 'âœ—' : ''}</div>
                 ))}
                 <span className="ml-2 text-[15px] font-black text-white/60 self-center tracking-wide">{room.gameState.proposalTracker} / 5</span>
               </div>
-              <p className="text-[11px] text-white/32 mt-2.5 leading-relaxed">5 rejects ? Evil wins • Good needs 3 quests ? Assassin hunts Merlin {room.gameState.quests[3]?.failsRequired>1 ? '• Q4 needs 2 fails (7+)' : ''}</p>
+              <p className="text-[11px] text-white/32 mt-2.5 leading-relaxed">5 rejects â€¢ Evil wins â€¢ Good needs 3 quests â€¢ Assassin hunts Merlin {room.gameState.quests[3]?.failsRequired>1 ? 'â€¢ Q4 needs 2 fails (7+)' : ''}</p>
             </div>
           </div>
         </div>
@@ -485,7 +485,7 @@ export default function Lobby({ spectate = false }) {
               </div>
               <div className="h-[1px] bg-gradient-to-r from-transparent via-[#c9734b]/14 to-transparent" />
               <div className="bg-[#1e2326] px-4 py-2.5 flex items-center justify-center gap-2 text-[11px] text-white/45">
-                <span className="w-5 h-5 rounded-full bg-[#c9734b]/12 border border-[#c9734b]/16 flex items-center justify-center text-[10px]">??</span>
+                <span className="w-5 h-5 rounded-full bg-[#c9734b]/12 border border-[#c9734b]/16 flex items-center justify-center text-[10px]"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f3ecd8" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.4" fill="#f3ecd8"/><circle cx="15.5" cy="8.5" r="1.4" fill="#f3ecd8"/><circle cx="12" cy="12" r="1.4" fill="#c9734b"/><circle cx="8.5" cy="15.5" r="1.4" fill="#f3ecd8"/><circle cx="15.5" cy="15.5" r="1.4" fill="#f3ecd8"/></svg></span>
                 Share this code with friends
               </div>
             </div>
@@ -496,7 +496,7 @@ export default function Lobby({ spectate = false }) {
       <div className="mt-6 rounded-[20px] glass-lantern p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 className="font-[900] text-white text-sm flex items-center gap-2"><span className="w-7 h-7 rounded-xl bg-amber-400/15 border border-amber-400/20 flex items-center justify-center text-xs">??</span> Who’s here</h3>
+            <h3 className="font-[900] text-white text-sm flex items-center gap-2"><span className="w-7 h-7 rounded-xl bg-amber-400/15 border border-amber-400/20 flex items-center justify-center text-xs"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f3ecd8" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.4" fill="#f3ecd8"/><circle cx="15.5" cy="8.5" r="1.4" fill="#f3ecd8"/><circle cx="12" cy="12" r="1.4" fill="#c9734b"/><circle cx="8.5" cy="15.5" r="1.4" fill="#f3ecd8"/><circle cx="15.5" cy="15.5" r="1.4" fill="#f3ecd8"/></svg></span> Who's here</h3>
             <p className="text-xs text-white/45 mt-1">Change your name and picture from the main screen.</p>
           </div>
           <span className="hidden sm:inline-flex px-2.5 py-1 rounded-full bg-[#1e2326] border border-white/10 text-[11px] font-black tracking-widest text-white/55">{room.players.length + room.bots.length} / {room.maxPlayers}</span>
@@ -512,7 +512,7 @@ export default function Lobby({ spectate = false }) {
               <div key={p.id} className="flex flex-col items-center gap-1.5 relative">
                 {isHostPlayer && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
-                    <span className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-300 to-orange-500 border border-amber-400/30 flex items-center justify-center text-[11px] shadow-md">??</span>
+                    <span className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-300 to-orange-500 border border-amber-400/30 flex items-center justify-center text-[11px] shadow-md"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f3ecd8" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.4" fill="#f3ecd8"/><circle cx="15.5" cy="8.5" r="1.4" fill="#f3ecd8"/><circle cx="12" cy="12" r="1.4" fill="#c9734b"/><circle cx="8.5" cy="15.5" r="1.4" fill="#f3ecd8"/><circle cx="15.5" cy="15.5" r="1.4" fill="#f3ecd8"/></svg></span>
                   </div>
                 )}
                 <div className="relative">
@@ -549,7 +549,7 @@ export default function Lobby({ spectate = false }) {
               >
                 <div className="w-[68px] h-[68px] rounded-full border-2 border-amber-400/15 flex items-center justify-center shadow-md bg-gradient-to-br from-[#1e2a3a] to-[#0f2231] relative overflow-hidden">
                   <div className="absolute inset-0 opacity-[0.08]" style={{ background: "radial-gradient(circle at 50% 30%, #fde68a, transparent 62%)" }} />
-                  <span className="text-[24px] relative">??</span>
+                  <span className="text-[24px] relative"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f3ecd8" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.4" fill="#f3ecd8"/><circle cx="15.5" cy="8.5" r="1.4" fill="#f3ecd8"/><circle cx="12" cy="12" r="1.4" fill="#c9734b"/><circle cx="8.5" cy="15.5" r="1.4" fill="#f3ecd8"/><circle cx="15.5" cy="15.5" r="1.4" fill="#f3ecd8"/></svg></span>
                   <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.7)]" />
                 </div>
               </button>
@@ -572,28 +572,28 @@ export default function Lobby({ spectate = false }) {
       <div className="mt-4 rounded-2xl glass-lantern p-3.5 relative overflow-hidden">
         <div className="absolute -top-6 -right-6 w-20 h-20 bg-amber-400/10 blur-xl rounded-full pointer-events-none" />
         <div className="flex items-center justify-between gap-2">
-          <span className="inline-flex items-center gap-2 text-xs font-black tracking-wide text-white/70"><span className="w-7 h-7 rounded-xl bg-[#1e2326] border border-white/10 flex items-center justify-center text-xs">???</span> Watching • {room.spectatorCount || 0}</span>
+          <span className="inline-flex items-center gap-2 text-xs font-black tracking-wide text-white/70"><span className="w-7 h-7 rounded-xl bg-[#1e2326] border border-white/10 flex items-center justify-center text-xs"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f3ecd8" stroke-width="1.7"><path d="M1 12s4 -8 11 -8s11 8 11 8s-4 8 -11 8s-11 -8 -11 -8z"/><circle cx="12" cy="12" r="3"/></svg></span> Watching â€¢ {room.spectatorCount || 0}</span>
           <div className="flex gap-2">
-            {isPlayer && <button disabled={room.players.length === 1} onClick={handleSpectate} title={room.players.length === 1 ? "You’re the only one here" : ""} className={`px-3.5 py-1.5 rounded-full text-xs font-bold border ${room.players.length === 1 ? "bg-[#1e2326] border-white/10 text-white/30 cursor-not-allowed" : "bg-[#1e2326] hover:bg-[#1e2326] border-white/15 text-white "}`}>Watch</button>}
+            {isPlayer && <button disabled={room.players.length === 1} onClick={handleSpectate} title={room.players.length === 1 ? "You're the only one here" : ""} className={`px-3.5 py-1.5 rounded-full text-xs font-bold border ${room.players.length === 1 ? "bg-[#1e2326] border-white/10 text-white/30 cursor-not-allowed" : "bg-[#1e2326] hover:bg-[#1e2326] border-white/15 text-white "}`}>Watch</button>}
             {isSpectator && <button onClick={handleJoinAsPlayer} className="px-4 py-1.5 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 hover:from-emerald-300 hover:to-emerald-500 text-white text-xs font-black shadow-md border border-emerald-400/30">Join to play</button>}
             {!isPlayer && !isSpectator && <><button onClick={handleSpectate} className="px-3.5 py-1.5 rounded-full bg-[#1e2326] hover:bg-[#1e2326] border border-white/15 text-white text-xs font-bold ">Watch</button><button onClick={handleJoinAsPlayer} className="px-4 py-1.5 rounded-full bg-gradient-to-br from-[#fffbeb] to-[#fde68a] hover:to-white text-[#0e2533] text-xs font-black shadow border border-amber-400/20">Join</button></>}
           </div>
         </div>
-        {isSpectator && <p className="text-xs text-amber-300 mt-2">You’re watching - tap Join to play</p>}
+        {isSpectator && <p className="text-xs text-amber-300 mt-2">You're watching - tap Join to play</p>}
         {room.spectators?.length > 0 && <div className="mt-2.5 flex flex-wrap gap-2">{room.spectators.map(s=> <span key={s.id} className="px-2.5 py-1 rounded-full bg-[#1e2326] border border-white/10 text-white text-xs font-bold ">{s.name}</span>)}</div>}
         {!isPlayer && !isSpectator && <p className="text-xs text-white/40 mt-1.5">Watch or join the game</p>}
       </div>
         </>
       )}
         </div>
-        {/* Controls — lantern street */}
+        {/* Controls â€¢ lantern street */}
         <div className={`${hasGameState ? 'block w-full max-w-[820px]' : mobileTab === "board" ? "hidden lg:block" : "block"} space-y-4`}>
 
           {isQuestGame && hasGameState ? (
             <>
               <QuestGame roomId={id} isHost={isHost} isSpectator={isSpectator} hideTopAllegiance />
               <div className="rounded-2xl glass-library p-3.5 flex flex-col items-center gap-2">
-                <span className="inline-flex items-center gap-2 text-xs font-black tracking-widest text-white/60"><span className="w-7 h-7 rounded-xl bg-[#1e2326] border border-white/10 flex items-center justify-center">???</span> Watching • {room.spectatorCount || 0}</span>
+                <span className="inline-flex items-center gap-2 text-xs font-black tracking-widest text-white/60"><span className="w-7 h-7 rounded-xl bg-[#1e2326] border border-white/10 flex items-center justify-center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f3ecd8" stroke-width="1.7"><path d="M1 12s4 -8 11 -8s11 8 11 8s-4 8 -11 8s-11 -8 -11 -8z"/><circle cx="12" cy="12" r="3"/></svg></span> Watching â€¢ {room.spectatorCount || 0}</span>
                 {room.spectators?.length>0 && <div className="flex flex-wrap gap-2 justify-center">{room.spectators.map(s=> <span key={s.id} className="px-2.5 py-1 rounded-full bg-[#1e2326] border border-white/10 text-white text-xs font-bold ">{s.name}</span>)}</div>}
               </div>
             </>
@@ -605,10 +605,10 @@ export default function Lobby({ spectate = false }) {
                   <div className="absolute inset-0 pointer-events-none opacity-[0.14]"><img src="/assets/hero-library.svg" alt="" className="w-full h-full object-cover object-top opacity-[0.18]" /></div>
                   <div className="flex items-start justify-between gap-3 relative">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 border border-amber-500/20 flex items-center justify-center text-lg">???</div>
+                      <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 border border-amber-500/20 flex items-center justify-center text-lg"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f3ecd8" stroke-width="1.6"><path d="M2 12a10 10 0 0 0 20 0c0 -3 -2 -5 -4 -6c-2 1 -5 2 -6 6c-1 -4 -4 -5 -6 -6c-2 1 -4 3 -4 6z"/><circle cx="9" cy="11" r="1.5" fill="#f3ecd8"/><circle cx="15" cy="11" r="1.5" fill="#f3ecd8"/></svg></div>
                       <div>
                         <h4 className="font-[900] text-white text-[15px] leading-none">Veil Street</h4>
-                        <p className="text-xs text-white/40 mt-0.5">{totalPlayers} / {room.maxPlayers} — need {room.minPlayers} to start</p>
+                        <p className="text-xs text-white/40 mt-0.5">{totalPlayers} / {room.maxPlayers} â€¢ need {room.minPlayers} to start</p>
                       </div>
                     </div>
                     <span className={`px-2.5 py-1 rounded-full border text-[10px] font-black tracking-widest ${canStart ? 'bg-emerald-500/15 border-emerald-500/25 text-emerald-300' : 'bg-amber-500/12 border-amber-500/20 text-amber-200'}`}>{canStart ? 'Ready' : 'Need more'}</span>
@@ -616,7 +616,7 @@ export default function Lobby({ spectate = false }) {
                   <div className="mt-3 h-1.5 rounded-full bg-[#23272a] overflow-hidden p-0.5">
                     <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all" style={{ width: `${Math.min(100, (totalPlayers / room.minPlayers)*100)}%` }} />
                   </div>
-                  <p className="text-xs text-white/45 mt-1.5">{totalPlayers} / {room.maxPlayers} players • {canStart ? 'Ready to start!' : `Need ${room.minPlayers - totalPlayers} more`}</p>
+                  <p className="text-xs text-white/45 mt-1.5">{totalPlayers} / {room.maxPlayers} players â€¢ {canStart ? 'Ready to start!' : `Need ${room.minPlayers - totalPlayers} more`}</p>
                   {isHost ? (
                     <>
                       <button onClick={handleStartQuest} disabled={!canStart} className={`mt-4 w-full py-3.5 rounded-full font-[900] tracking-wide flex items-center justify-center gap-2 border transition-all ${canStart ? "bg-gradient-to-br from-[#fffbeb] via-[#fde68a] to-[#fbbf24] hover:from-white hover:to-[#fde68a] text-[#0e2533] shadow-lantern border-amber-400/20" : "bg-[#23272a] text-white/30 cursor-not-allowed border-white/10"}`}>
@@ -633,18 +633,18 @@ export default function Lobby({ spectate = false }) {
               {isHost ? (
                 <div className={`rounded-[20px] border p-4 sm:p-5 relative overflow-hidden ${supportsBots ? "glass-lantern" : "bg-[#1e2326] border-white/10 opacity-60"}`}>
                   <div className="absolute -top-6 -right-6 w-24 h-24 bg-amber-400/8 blur-xl rounded-full pointer-events-none" />
-                  <h4 className="font-[900] text-white text-sm flex items-center gap-2"><span className="w-7 h-7 rounded-xl bg-[#1e2326] border border-white/10 flex items-center justify-center text-xs">??</span> Add Bots</h4>
+                  <h4 className="font-[900] text-white text-sm flex items-center gap-2"><span className="w-7 h-7 rounded-xl bg-[#1e2326] border border-white/10 flex items-center justify-center text-xs"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f3ecd8" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.4" fill="#f3ecd8"/><circle cx="15.5" cy="8.5" r="1.4" fill="#f3ecd8"/><circle cx="12" cy="12" r="1.4" fill="#c9734b"/><circle cx="8.5" cy="15.5" r="1.4" fill="#f3ecd8"/><circle cx="15.5" cy="15.5" r="1.4" fill="#f3ecd8"/></svg></span> Add Bots</h4>
                   {!supportsBots ? (
                     <p className="text-xs text-amber-300 mt-2">Bots not supported for {game.label}. Switch to Veil Street to use bots, or play with humans only.</p>
                   ) : totalPlayers >= room.maxPlayers ? (
-                    <p className="text-xs text-amber-300 mt-2">Room full ({totalPlayers}/{room.maxPlayers}) — remove a player/bot to add more.</p>
+                    <p className="text-xs text-amber-300 mt-2">Room full ({totalPlayers}/{room.maxPlayers}) â€¢ remove a player/bot to add more.</p>
                   ) : (
                     <>
                       <div className="mt-3 flex gap-2 items-center">
                         <input value={botName} onChange={e => setBotName(e.target.value)} placeholder="Leave empty for random name" maxLength={20} className="flex-1 px-3.5 py-3 rounded-2xl bg-[#1e2326] border border-white/15 text-white placeholder:text-white/30 text-sm outline-none focus:border-amber-400/30 focus:bg-[#23272a]" />
                         <button onClick={handleAddBot} className="px-5 py-3 rounded-2xl bg-gradient-to-br from-[#fffbeb] to-[#fde68a] hover:to-white text-[#0e2533] text-sm font-[900] shadow border border-amber-400/20">Add</button>
                       </div>
-                      <p className="text-xs text-white/30 mt-2">{totalPlayers} / {room.maxPlayers} players — bots take a spot</p>
+                      <p className="text-xs text-white/30 mt-2">{totalPlayers} / {room.maxPlayers} players â€¢ bots take a spot</p>
                     </>
                   )}
                 </div>
@@ -652,10 +652,10 @@ export default function Lobby({ spectate = false }) {
 
               <div className={`rounded-[20px] border p-4 sm:p-5 ${isGameLocked ? "bg-[#1e2326] border-white/10 opacity-60" : "glass-lantern"}`}>
                 <div className="flex items-center justify-between gap-3">
-                  <span className="font-[900] text-white text-sm flex items-center gap-2"><span className="w-7 h-7 rounded-xl bg-amber-400/12 border border-amber-400/20 flex items-center justify-center text-xs">???</span> Game</span>
+                  <span className="font-[900] text-white text-sm flex items-center gap-2"><span className="w-7 h-7 rounded-xl bg-amber-400/12 border border-amber-400/20 flex items-center justify-center text-xs"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f3ecd8" stroke-width="1.7"><path d="M1 12s4 -8 11 -8s11 8 11 8s-4 8 -11 8s-11 -8 -11 -8z"/><circle cx="12" cy="12" r="3"/></svg></span> Game</span>
                   {isHost ? (
                     <select value={room.game} onChange={handleChangeGame} disabled={isGameLocked} className={`px-3 py-1.5 rounded-full border text-xs font-black tracking-wide ${isGameLocked ? "bg-[#1e2326] border-white/10 text-white/30 cursor-not-allowed" : "bg-[#1e2326] border-white/15 text-white hover:bg-[#252a2e]"}`}>
-                      {games.map(g => <option key={g.id} value={g.id} className="bg-[#0f2231]">{g.label}{g.supportsBots===false ? " • no bots" : " • bots"}</option>)}
+                      {games.map(g => <option key={g.id} value={g.id} className="bg-[#0f2231]">{g.label}{g.supportsBots===false ? " â€¢ no bots" : " â€¢ bots"}</option>)}
                     </select>
                   ) : (
                     <span className="px-3 py-1.5 rounded-full bg-[#1e2326] border border-white/15 text-white text-xs font-black">{game.label}</span>
@@ -708,7 +708,7 @@ export default function Lobby({ spectate = false }) {
                     );
                   })}
                 </div>
-                {isGameLocked ? <p className="text-xs text-white/30 mt-4 flex items-center gap-1.5"><span className="w-5 h-5 rounded-full bg-amber-400/15 flex items-center justify-center text-[10px]">??</span> Reset game to change settings.</p> : !isHost ? <p className="text-xs text-white/30 mt-4">Only the host can change these settings.</p> : null}
+                {isGameLocked ? <p className="text-xs text-white/30 mt-4 flex items-center gap-1.5"><span className="w-5 h-5 rounded-full bg-amber-400/15 flex items-center justify-center text-[10px]"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f3ecd8" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.4" fill="#f3ecd8"/><circle cx="15.5" cy="8.5" r="1.4" fill="#f3ecd8"/><circle cx="12" cy="12" r="1.4" fill="#c9734b"/><circle cx="8.5" cy="15.5" r="1.4" fill="#f3ecd8"/><circle cx="15.5" cy="15.5" r="1.4" fill="#f3ecd8"/></svg></span> Reset game to change settings.</p> : !isHost ? <p className="text-xs text-white/30 mt-4">Only the host can change these settings.</p> : null}
               </div>
             </>
           )}
@@ -718,11 +718,11 @@ export default function Lobby({ spectate = false }) {
       {hostActionTarget && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#070b14]/70 " onClick={() => setHostActionTarget(null)}>
           <div onClick={e => e.stopPropagation()} className="w-full max-w-[340px] rounded-[22px] glass-lantern p-6 text-center shadow-2xl">
-            <div className="w-12 h-12 rounded-2xl bg-amber-400/14 border border-amber-400/20 flex items-center justify-center mx-auto text-xl">??</div>
+            <div className="w-12 h-12 rounded-2xl bg-amber-400/14 border border-amber-400/20 flex items-center justify-center mx-auto text-xl"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f3ecd8" stroke-width="1.7"><path d="M12 13a4 4 0 1 0 0 -8 4 4 0 0 0 0 8z"/><path d="M6 19a6 6 0 0 1 12 0"/></svg></div>
             <p className="text-sm text-white/55 mt-3">What to do with</p>
             <p className="font-[900] text-white text-lg leading-none mt-1">{hostActionTarget.name}</p>
             <div className="mt-5 grid gap-2.5">
-              <button onClick={() => handleTransferHost(hostActionTarget.id, hostActionTarget.name)} className="w-full py-3 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-[#0e2533] font-[900] flex items-center justify-center gap-2 shadow-lantern-soft border border-amber-400/20">?? Make host</button>
+              <button onClick={() => handleTransferHost(hostActionTarget.id, hostActionTarget.name)} className="w-full py-3 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-[#0e2533] font-[900] flex items-center justify-center gap-2 shadow-lantern-soft border border-amber-400/20"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0e2533" stroke-width="2" class="mr-1"><path d="M12 3l2 4 4 1 -3 3 .5 4 -3.5 -2 -3.5 2 .5 -4 -3 -3 4 -1z"/></svg> Make host</button>
               <button onClick={() => { handleKick(hostActionTarget.id, hostActionTarget.name); setHostActionTarget(null); }} className="w-full py-3 rounded-full bg-[#1e2326] hover:bg-rose-500/15 border border-white/10 hover:border-rose-500/20 text-white font-bold">Remove</button>
               <button onClick={() => setHostActionTarget(null)} className="w-full py-2.5 rounded-full bg-transparent hover:bg-[#1e2326] text-white/60 font-bold">Close</button>
             </div>
@@ -733,7 +733,7 @@ export default function Lobby({ spectate = false }) {
       {botConfirm && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#070b14]/70 " onClick={() => setBotConfirm(null)}>
           <div onClick={e => e.stopPropagation()} className="w-full max-w-[340px] rounded-[22px] glass-lantern p-6 text-center shadow-2xl">
-            <div className="w-12 h-12 rounded-2xl bg-[#1e2326] border border-white/10 flex items-center justify-center mx-auto text-xl">??</div>
+            <div className="w-12 h-12 rounded-2xl bg-[#1e2326] border border-white/10 flex items-center justify-center mx-auto text-xl"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f3ecd8" stroke-width="1.7"><path d="M12 13a4 4 0 1 0 0 -8 4 4 0 0 0 0 8z"/><path d="M6 19a6 6 0 0 1 12 0"/></svg></div>
             <p className="text-sm text-white/55 mt-3">Remove</p>
             <p className="font-[900] text-white text-lg leading-none mt-1">{botConfirm.name}</p>
             <div className="mt-5 grid gap-2.5">
@@ -745,7 +745,7 @@ export default function Lobby({ spectate = false }) {
       )}
 
 
-      {toast && <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-[#0f2231] text-white text-sm font-bold px-5 py-3 rounded-full shadow-2xl border border-amber-400/20  flex items-center gap-2 z-50"><span className="w-6 h-6 rounded-full bg-amber-400 text-[#0e2533] flex items-center justify-center text-xs font-black">??</span>{toast}</div>}
+      {toast && <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-[#0f2231] text-white text-sm font-bold px-5 py-3 rounded-full shadow-2xl border border-amber-400/20  flex items-center gap-2 z-50"><span className="w-6 h-6 rounded-full bg-amber-400 text-[#0e2533] flex items-center justify-center text-xs font-black"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f3ecd8" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.4" fill="#f3ecd8"/><circle cx="15.5" cy="8.5" r="1.4" fill="#f3ecd8"/><circle cx="12" cy="12" r="1.4" fill="#c9734b"/><circle cx="8.5" cy="15.5" r="1.4" fill="#f3ecd8"/><circle cx="15.5" cy="15.5" r="1.4" fill="#f3ecd8"/></svg></span>{toast}</div>}
 
       {showRules && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-[#070b14]/70 " onClick={()=>setShowRules(false)}>
@@ -754,7 +754,7 @@ export default function Lobby({ spectate = false }) {
               <img src="/assets/hero-street.svg" alt="" className="w-full h-full object-cover object-top opacity-85" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0f2231] via-[#0f2231]/40 to-transparent" />
               <div className="absolute inset-0 flex items-center justify-between px-6">
-                <h3 className="font-display font-[900] text-white text-[18px] flex items-center gap-2"><span className="w-8 h-8 rounded-xl bg-amber-400/15 border border-amber-400/20 flex items-center justify-center text-sm">??</span> How to Play — {game.label}</h3>
+                <h3 className="font-display font-[900] text-white text-[18px] flex items-center gap-2"><span className="w-8 h-8 rounded-xl bg-amber-400/15 border border-amber-400/20 flex items-center justify-center text-sm"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f3ecd8" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.4" fill="#f3ecd8"/><circle cx="15.5" cy="8.5" r="1.4" fill="#f3ecd8"/><circle cx="12" cy="12" r="1.4" fill="#c9734b"/><circle cx="8.5" cy="15.5" r="1.4" fill="#f3ecd8"/><circle cx="15.5" cy="15.5" r="1.4" fill="#f3ecd8"/></svg></span> How to Play â€¢ {game.label}</h3>
                 <button onClick={()=>setShowRules(false)} className="w-9 h-9 rounded-full bg-[#23272a] hover:bg-[#1e2326] border border-white/10 flex items-center justify-center text-white ">?</button>
               </div>
             </div>
@@ -765,28 +765,28 @@ export default function Lobby({ spectate = false }) {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3">
                     <p className="text-xs font-bold tracking-widest text-emerald-300">GOOD TEAM</p>
-                    <p className="text-xs mt-1.5 text-white/70 leading-snug">• Loyal - no power<br/>• Merlin - knows Evil (except Mordred hides)<br/>• Percival - knows Merlin (but Morgana pretends)</p>
+                    <p className="text-xs mt-1.5 text-white/70 leading-snug">â€¢ Loyal - no power<br/>â€¢ Merlin - knows Evil (except Mordred hides)<br/>â€¢ Percival - knows Merlin (but Morgana pretends)</p>
                   </div>
                   <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 p-3">
                     <p className="text-xs font-bold tracking-widest text-rose-300">EVIL TEAM</p>
-                    <p className="text-xs mt-1.5 text-white/70 leading-snug">• Minion - with Evil<br/>• Assassin - hunts Merlin<br/>• Morgana - pretends to be Merlin<br/>• Mordred - hidden from Merlin<br/>• Oberon - works alone</p>
+                    <p className="text-xs mt-1.5 text-white/70 leading-snug">â€¢ Minion - with Evil<br/>â€¢ Assassin - hunts Merlin<br/>â€¢ Morgana - pretends to be Merlin<br/>â€¢ Mordred - hidden from Merlin<br/>â€¢ Oberon - works alone</p>
                   </div>
                 </div>
                 <div className="rounded-xl bg-[#1e2326] border border-white/10 p-3">
                   <p className="text-xs font-bold text-white">How a round works</p>
                   <p className="text-xs text-white/60 mt-1.5 leading-snug">1. Leader picks a team ? 2. Everyone votes ? 3. If most say yes, that team secretly picks Success or Fail. Good must pick Success. One Fail usually fails the quest - the 4th quest needs 2 fails when you have 7+ players.</p>
                 </div>
-                <p className="text-xs text-white/40">Now: {totalPlayers} players • {['morgana','mordred','oberon'].filter(k=> !!room.gameOptions[k]).length}/{totalPlayers<=6?1:totalPlayers<=8?2:3} extra Evil • Merlin + Assassin always in</p>
+                <p className="text-xs text-white/40">Now: {totalPlayers} players â€¢ {['morgana','mordred','oberon'].filter(k=> !!room.gameOptions[k]).length}/{totalPlayers<=6?1:totalPlayers<=8?2:3} extra Evil â€¢ Merlin + Assassin always in</p>
               </div>
             ) : (
               <div className="mt-4 space-y-3 text-sm text-white/60">
                 <p>{game.description}</p>
-                <p>Players: {game.minPlayers}-{game.maxPlayers} {supportsBots ? "(bots supported)" : "(no bots)"} • Default max {game.defaultMaxPlayers}</p>
+                <p>Players: {game.minPlayers}-{game.maxPlayers} {supportsBots ? "(bots supported)" : "(no bots)"} â€¢ Default max {game.defaultMaxPlayers}</p>
                 {game.optionSchema?.length>0 && (
                   <div className="rounded-xl bg-[#1e2326] border border-white/10 p-3">
                     <p className="text-xs font-bold text-white/50">Options</p>
                     <ul className="mt-1 space-y-1 text-xs">
-                      {game.optionSchema.map(o=> <li key={o.key}>• <span className="text-white font-bold">{o.label}</span> - {o.type}</li>)}
+                      {game.optionSchema.map(o=> <li key={o.key}>â€¢ <span className="text-white font-bold">{o.label}</span> - {o.type}</li>)}
                     </ul>
                   </div>
                 )}
