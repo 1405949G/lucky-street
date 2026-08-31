@@ -9,7 +9,7 @@ export default {
   description: "Solo trivia — A/B/C/D, live scores, categories",
   minPlayers: 1,
   maxPlayers: 12,
-  defaultMaxPlayers: 4,
+  defaultMaxPlayers: 12,
   supportsBots: false,
   defaultOptions: {
     questionCount: 10,
