@@ -29,7 +29,7 @@ export default function JoinByIdBox({ onJoin }) {
     <div className="rounded-[22px] glass-lantern p-4 relative overflow-hidden">
       <div className="absolute -top-10 -right-10 w-24 h-24 bg-[#c9734b]/10 blur-xl rounded-full pointer-events-none" />
       <div className="flex items-center gap-2">
-        <span className="w-8 h-8 rounded-xl bg-[#23272a] border border-white/10 flex items-center justify-center text-sm">🔑</span>
+        <span className="w-8 h-8 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center text-sm">🔑</span>
         <h3 className="font-[900] text-white text-sm tracking-wide">Join by Room ID</h3>
       </div>
       <p className="text-xs text-white/50 mt-1.5 leading-relaxed">Enter the 4-character code from your friend’s invite link.</p>
