@@ -65,22 +65,15 @@ function MainPage() {
         <div className="absolute inset-0 pointer-events-none opacity-[0.28]" style={{ background: "radial-gradient(ellipse 520px 120px at 22% 0%, rgba(201,115,75,0.14), transparent 68%), radial-gradient(ellipse 520px 120px at 88% 0%, rgba(138,168,153,0.10), transparent 68%)" }} />
         <div className="relative max-w-[1020px] mx-auto px-4 flex items-center justify-between h-[68px]">
           <div className="flex items-center gap-3.5">
-            {/* Café logo — two dice of 5 = 10 */}
+            {/* Café logo — dice */}
             <div className="relative">
               <div className="absolute -inset-2 bg-[#c9734b]/14 blur-xl rounded-full" />
-              <div className="relative w-[46px] h-[42px] rounded-[13px] bg-gradient-to-br from-[#2e3336] to-[#1a1d1f] border border-[#c9734b]/22 flex items-center justify-center shadow-cafe overflow-hidden">
+              <div className="relative w-[42px] h-[42px] rounded-[13px] bg-gradient-to-br from-[#2e3336] to-[#1a1d1f] border border-[#c9734b]/22 flex items-center justify-center shadow-cafe overflow-hidden">
                 <div className="absolute inset-0 opacity-[0.08]" style={{ background: "radial-gradient(circle at 50% 28%, #f3ecd8, transparent 62%)" }} />
-                <svg viewBox="0 0 42 26" className="w-[32px] h-[20px] drop-shadow-[0_1px_6px_rgba(201,115,75,0.28)]" aria-hidden="true">
-                  {/* left die — 5 */}
-                  <rect x="2" y="3" width="16.5" height="16.5" rx="3.2" fill="#fff8e7" stroke="rgba(0,0,0,0.08)" strokeWidth="0.7"/>
-                  <circle cx="6.2" cy="7.2" r="1.35" fill="#23272a"/><circle cx="14.3" cy="7.2" r="1.35" fill="#23272a"/>
-                  <circle cx="10.25" cy="11.25" r="1.45" fill="#c9734b"/><circle cx="6.2" cy="15.3" r="1.35" fill="#23272a"/><circle cx="14.3" cy="15.3" r="1.35" fill="#23272a"/>
-                  {/* right die — 5, slightly offset for depth */}
-                  <rect x="23.5" y="3" width="16.5" height="16.5" rx="3.2" fill="#fff8e7" stroke="rgba(0,0,0,0.08)" strokeWidth="0.7"/>
-                  <circle cx="27.7" cy="7.2" r="1.35" fill="#23272a"/><circle cx="35.8" cy="7.2" r="1.35" fill="#23272a"/>
-                  <circle cx="31.75" cy="11.25" r="1.45" fill="#c9734b"/><circle cx="27.7" cy="15.3" r="1.35" fill="#23272a"/><circle cx="35.8" cy="15.3" r="1.35" fill="#23272a"/>
-                  {/* subtle 10 hint — tiny + between */}
-                  <circle cx="21" cy="11.2" r="0.9" fill="#c9734b" opacity="0.0"/>
+                <svg viewBox="0 0 32 32" className="w-[22px] h-[22px] drop-shadow-[0_1px_6px_rgba(201,115,75,0.28)]">
+                  <rect x="3" y="3" width="26" height="26" rx="6" fill="#fff8e7" stroke="rgba(0,0,0,0.08)" strokeWidth="0.8"/>
+                  <circle cx="10.2" cy="10.2" r="2.1" fill="#23272a"/><circle cx="21.8" cy="10.2" r="2.1" fill="#23272a"/>
+                  <circle cx="16" cy="16" r="2.1" fill="#c9734b"/><circle cx="10.2" cy="21.8" r="2.1" fill="#23272a"/><circle cx="21.8" cy="21.8" r="2.1" fill="#23272a"/>
                 </svg>
               </div>
             </div>
@@ -113,6 +106,7 @@ function MainPage() {
                   ) : (
                     <span className="text-[11px] font-black text-white tracking-widest">{profile.username.slice(0,2).toUpperCase()}</span>
                   )}
+                  <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#121416] shadow" />
                 </div>
                 <span className="text-sm font-bold text-white hidden sm:inline max-w-[100px] truncate">{profile.username}</span>
                 <button onClick={() => setShowOnboarding(true)} className="px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-xs font-bold text-white/70">Edit</button>
@@ -124,14 +118,14 @@ function MainPage() {
         </div>
       </header>
 
-      {/* Hero — board café — larger, no cut-off */}
-      <div className="relative overflow-hidden border-b border-white/[0.06] min-h-[380px] sm:min-h-[440px] flex items-center">
+      {/* Hero — board café */}
+      <div className="relative overflow-hidden border-b border-white/[0.06]">
         <div className="absolute inset-0">
-          <img src="/assets/hero-cafe.svg" alt="" className="w-full h-full object-cover object-bottom opacity-[0.98] scale-[1.04]" />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#121416]/10 via-[#121416]/26 to-[#121416]/92" />
-          <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 820px 420px at 50% 72%, rgba(201,115,75,0.10), transparent 66%)" }} />
+          <img src="/assets/hero-cafe.svg" alt="" className="w-full h-full object-cover object-center opacity-[0.96]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#121416]/18 to-[#121416]/88" />
+          <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 720px 360px at 50% 68%, rgba(201,115,75,0.08), transparent 66%)" }} />
         </div>
-        <div className="relative max-w-[1020px] mx-auto px-4 py-10 sm:py-14 w-full">
+        <div className="relative max-w-[1020px] mx-auto px-4 pt-7 sm:pt-10 pb-6 sm:pb-7">
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
             <div className="max-w-[640px]">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.08] border border-white/10 backdrop-blur-md">
@@ -140,16 +134,16 @@ function MainPage() {
                 <span className="hidden sm:inline-flex ml-1 px-1.5 py-0.5 rounded-full bg-[#c9734b] text-white text-[10px] font-black">NEW</span>
               </div>
               <h2 className="mt-3 font-display font-[900] leading-[0.9] tracking-[-0.02em] text-white">
-                <span className="block text-[32px] sm:text-[42px]">Gather on</span>
-                <span className="block text-[38px] sm:text-[52px] bg-gradient-to-r from-[#fff8e7] via-[#f3ecd8] to-[#d88a63] bg-clip-text text-transparent" style={{ textShadow: "0 0 22px rgba(201,115,75,0.28)" }}>Lucky Street</span>
+                <span className="block text-[28px] sm:text-[38px]">Gather on</span>
+                <span className="block text-[34px] sm:text-[44px] bg-gradient-to-r from-[#fff8e7] via-[#f3ecd8] to-[#d88a63] bg-clip-text text-transparent" style={{ textShadow: "0 0 18px rgba(201,115,75,0.22)" }}>Lucky Street</span>
               </h2>
-              <p className="mt-3 text-[15px] sm:text-[16px] leading-relaxed text-white/78 max-w-[560px]">A cozy party lobby. Create a room, share the code, play <span className="font-bold text-[#f3ecd8]">Veil Street</span> — bluff, deduce, and hunt Merlin.</p>
-              <div className="mt-5 flex flex-wrap items-center gap-3">
+              <p className="mt-2.5 text-[14px] sm:text-[15px] leading-relaxed text-white/72 max-w-[560px]">A cozy party lobby. Create a room, share the code, play <span className="font-bold text-[#f3ecd8]">Veil Street</span> — bluff, deduce, and hunt Merlin.</p>
+              <div className="mt-4 flex flex-wrap items-center gap-2.5">
                 <button
                   onClick={handleCreateClick}
-                  className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-gradient-to-br from-[#fff8e7] via-[#f3ecd8] to-[#d88a63] hover:from-white hover:to-[#f3ecd8] text-[#1a1d1f] font-[900] tracking-wide shadow-cafe border border-[#c9734b]/20 text-[15px]"
+                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-gradient-to-br from-[#fff8e7] via-[#f3ecd8] to-[#d88a63] hover:from-white hover:to-[#f3ecd8] text-[#1a1d1f] font-[900] tracking-wide shadow-cafe border border-[#c9734b]/20"
                 >
-                  <span className="w-7 h-7 rounded-full bg-[#1a1d1f] text-[#f3ecd8] flex items-center justify-center text-[16px]">+</span>
+                  <span className="w-6 h-6 rounded-full bg-[#1a1d1f] text-[#f3ecd8] flex items-center justify-center text-sm">+</span>
                   New Game
                 </button>
                 <div className="hidden sm:flex items-center gap-3 pl-3 ml-1 border-l border-white/10">
@@ -168,22 +162,21 @@ function MainPage() {
                 <p className="text-sm font-black text-white mt-1">Veil Street <span className="font-normal text-white/60">— hidden roles</span></p>
                 <p className="text-xs text-[#f3ecd8]/70 mt-0.5">Merlin • Percival • Morgana • Mordred • Oberon</p>
               </div>
+              <p className="text-[11px] text-white/35">Tip: open on TV, friends join on phones</p>
             </div>
           </div>
         </div>
       </div>
 
-      <main className="relative px-4 py-8 sm:py-10 min-h-[52vh]">
-        <div className="absolute inset-0 pointer-events-none opacity-[0.04]" style={{ background: "radial-gradient(ellipse 680px 380px at 22% 12%, rgba(201,115,75,0.18), transparent 68%), radial-gradient(ellipse 520px 320px at 88% 28%, rgba(138,168,153,0.14), transparent 68%)" }} />
-        <div className="relative">
-          <RoomBrowser onJoinRoom={handleJoinRoom} onSpectate={handleSpectate} onCreateClick={handleCreateClick} />
-        </div>
+      <main className="relative px-4 py-6 sm:py-8">
+        <RoomBrowser onJoinRoom={handleJoinRoom} onSpectate={handleSpectate} onCreateClick={handleCreateClick} />
         {error && <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-rose-600 text-white px-4 py-2.5 rounded-full shadow-xl text-sm font-bold z-50">{error}</div>}
       </main>
 
-      <footer className="border-t border-white/[0.06] bg-[#121416]/40 backdrop-blur">
-        <div className="max-w-[1020px] mx-auto px-4 py-4 flex items-center justify-center text-xs">
-          <p className="text-white/35 tracking-wide">© Lucky Street</p>
+      <footer className="border-t border-white/[0.06] bg-[#070b14]/40 backdrop-blur">
+        <div className="max-w-[1020px] mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs">
+          <p className="text-white/35 tracking-wide">© Lucky Street — built for kitchen tables &amp; living rooms. <span className="text-amber-200/50">Stay lucky.</span></p>
+          <p className="text-white/25">Pure Cloudflare • No sleep • Instant join</p>
         </div>
       </footer>
 

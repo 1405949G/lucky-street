@@ -57,23 +57,13 @@ export default function RoomBrowser({ onJoinRoom, onSpectate, onCreateClick }) {
           </div>
 
           {filtered.length === 0 ? (
-            <div className="rounded-[24px] glass-lantern p-10 sm:p-12 text-center overflow-hidden relative">
-              <div className="absolute inset-0 opacity-[0.10]" style={{ background: "radial-gradient(ellipse 520px 220px at 50% 0%, #c9734b, transparent 70%)" }} />
-              <div className="absolute -bottom-8 -right-8 w-40 h-40 bg-[#8aa899]/08 blur-2xl rounded-full pointer-events-none" />
+            <div className="rounded-[24px] glass-lantern p-8 text-center overflow-hidden relative">
+              <div className="absolute inset-0 opacity-[0.08]" style={{ background: "radial-gradient(ellipse 420px 180px at 50% 0%, #c9734b, transparent 70%)" }} />
               <div className="relative">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#c9734b]/18 to-[#8aa899]/14 border border-[#c9734b]/18 flex items-center justify-center mx-auto shadow-cafe">
-                  <svg viewBox="0 0 42 26" className="w-[36px] h-[22px] opacity-90">
-                    <rect x="2" y="3" width="16.5" height="16.5" rx="3.2" fill="#fff8e7" stroke="rgba(0,0,0,0.08)" strokeWidth="0.7"/>
-                    <circle cx="6.2" cy="7.2" r="1.35" fill="#23272a"/><circle cx="14.3" cy="7.2" r="1.35" fill="#23272a"/>
-                    <circle cx="10.25" cy="11.25" r="1.45" fill="#c9734b"/><circle cx="6.2" cy="15.3" r="1.35" fill="#23272a"/><circle cx="14.3" cy="15.3" r="1.35" fill="#23272a"/>
-                    <rect x="23.5" y="3" width="16.5" height="16.5" rx="3.2" fill="#fff8e7" stroke="rgba(0,0,0,0.08)" strokeWidth="0.7"/>
-                    <circle cx="27.7" cy="7.2" r="1.35" fill="#23272a"/><circle cx="35.8" cy="7.2" r="1.35" fill="#23272a"/>
-                    <circle cx="31.75" cy="11.25" r="1.45" fill="#c9734b"/><circle cx="27.7" cy="15.3" r="1.35" fill="#23272a"/><circle cx="35.8" cy="15.3" r="1.35" fill="#23272a"/>
-                  </svg>
-                </div>
-                <p className="text-white font-[900] mt-4 text-[17px]">No games right now</p>
-                <p className="text-sm text-white/55 mt-1 max-w-[360px] mx-auto">Start a new one — it’ll show up instantly for friends.</p>
-                <button onClick={onCreateClick} className="mt-5 px-7 py-3.5 rounded-full bg-gradient-to-br from-[#fff8e7] via-[#f3ecd8] to-[#d88a63] text-[#1a1d1f] text-[15px] font-black shadow-cafe border border-[#c9734b]/18">New Game</button>
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#c9734b]/18 to-[#8aa899]/12 border border-[#c9734b]/18 flex items-center justify-center mx-auto text-2xl">🎲</div>
+                <p className="text-white font-[900] mt-3">No games right now</p>
+                <p className="text-sm text-white/50 mt-1">Start a new one — it’ll show up instantly.</p>
+                <button onClick={onCreateClick} className="mt-4 px-5 py-2.5 rounded-full bg-gradient-to-br from-[#fff8e7] via-[#f3ecd8] to-[#d88a63] text-[#1a1d1f] text-sm font-black">New Game</button>
               </div>
             </div>
           ) : (
@@ -98,6 +88,10 @@ export default function RoomBrowser({ onJoinRoom, onSpectate, onCreateClick }) {
               <li className="flex gap-2"><span className="text-[#c9734b] mt-0.5">•</span><span>Pick a unique name — try another if taken.</span></li>
               <li className="flex gap-2"><span className="text-[#c9734b] mt-0.5">•</span><span>Share your invite link to play together.</span></li>
             </ul>
+            <div className="mt-4 px-3 py-2.5 rounded-xl bg-[#c9734b]/10 border border-[#c9734b]/14 flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-[#c9734b] text-white flex items-center justify-center text-xs font-black">!</span>
+              <p className="text-xs font-bold text-[#f3ecd8]/90">Tip: open on TV, friends join on phones</p>
+            </div>
             <a href="/admin" className="hidden">Admin</a>
           </div>
 
