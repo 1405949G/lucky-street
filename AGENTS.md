@@ -1,15 +1,17 @@
 ﻿# AGENTS - Lucky Street Project Instructions
 
-> **Auto-read by AI in new sessions. This is the full website. Read this + `games/README.md:1` before creating games.**
+> **Auto-read by AI in new sessions. This is the full website. Read this + `games/README.md:1` before creating games. TEXT LOCK above applies to every normal prompt — treat "revamp/redesign/style" as visual-only.**
 
-## TEXT LOCK — UI Text Must Never Change Without Explicit User Prompt (AI: obey strictly)
+## TEXT LOCK — UI Text Must Never Change Without Explicit User Prompt (AI: obey strictly — even on normal prompts)
 
-**Rule: AI may change colours, shapes, spacing, shadows, hover animations, and add icons — but MUST NOT change any user-facing text.**
+**Default for ANY prompt like "revamp UI / make it pretty / redesign" is visual-only. Do NOT change text unless user explicitly says `change text:`.**
+
+**Rule: AI may change colours, shapes, spacing, shadows, hover animations, and add icons — but MUST NOT change any user-facing text, even when prompted normally.**
 
 - **Single source of truth:** `client/src/content/copy.js:1` holds every string the player reads (brand, buttons, modals, toasts, tips, lobby, game rules).
-- **Visual-only allowlist:** `client/src/ui/theme.js:1`, `client/src/ui/primitives.jsx:1`, `client/src/index.css:1`, `tailwind.config.js:1`, `client/public/assets/*` — edit these for visuals.
-- **Blocked without `change text:` prompt:** Do NOT edit `client/src/content/copy.js:1`, do NOT alter string literals in `client/src/components/*`, `games/*/client/*`, or `games/*/manifest.js` labels/descriptions.
-- **If you need new text:** Ask the user. Do not invent copy. Wait for explicit `change text: "old" -> "new"` or user approval to add a key to `copy.js`.
+- **Visual-only allowlist (even on normal prompts):** `client/src/ui/theme.js:1`, `client/src/ui/primitives.jsx:1`, `client/src/index.css:1`, `tailwind.config.js:1`, `client/public/assets/*` — edit only these for visuals. Only `className`, `style`, SVG, `theme.js` values.
+- **Blocked WITHOUT explicit `change text: "old" -> "new"`:** Do NOT edit `client/src/content/copy.js:1`, do NOT alter string literals / JSX text nodes / `placeholder` / toast messages in `client/src/components/*`, `games/*/client/*`, or `games/*/manifest.js` labels/descriptions.
+- **If you need new text:** Stop and ask the user. Do not invent copy. Wait for explicit `change text:` or user approval to add a key to `copy.js`.
 - **Icons:** Add icons/symbols via `client/src/ui/theme.js:18` `icons` registry or inline SVG — never by replacing words.
 - **This protects playability:** Text was locked after revert `930f746` because mass UI revamps kept breaking wording. Visuals go in `client/src/ui/` so a visuals-only AI never touches game logic `server/src/durable/LuckyStreetDO.js:1` or `client/src/context/SocketContext.jsx:1`.
 
