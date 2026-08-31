@@ -133,13 +133,8 @@ function MainPage() {
         </div>
         <div className="relative max-w-[1020px] mx-auto px-4 py-10 sm:py-14 w-full">
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
-            <div className="max-w-[640px]">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.08] border border-white/10 backdrop-blur-md">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.7)]" />
-                <span className="text-[11px] font-black tracking-[0.18em] text-white/85">PARTY LOBBY • 5-10 FRIENDS • 1 TV + PHONES</span>
-                <span className="hidden sm:inline-flex ml-1 px-1.5 py-0.5 rounded-full bg-[#c9734b] text-white text-[10px] font-black">NEW</span>
-              </div>
-              <h2 className="mt-3 font-display font-[900] leading-[0.9] tracking-[-0.02em] text-white">
+            <div className="max-w-[640px] bg-[#1e2326] border border-white/10 rounded-[20px] p-6 sm:p-7 shadow-xl">
+              <h2 className="font-display font-[900] leading-[0.9] tracking-[-0.02em] text-white">
                 <span className="block text-[32px] sm:text-[42px]">Gather on</span>
                 <span className="block text-[38px] sm:text-[52px] bg-gradient-to-r from-[#f9fafb] via-[#e5e7eb] to-[#9ca3af] bg-clip-text text-transparent" style={{ textShadow: "0 0 22px rgba(156,163,175,0.22)" }}>Lucky Street</span>
               </h2>
@@ -154,16 +149,16 @@ function MainPage() {
                 </button>
                 <div className="hidden sm:flex items-center gap-3 pl-3 ml-1 border-l border-white/10">
                   <div className="flex -space-x-1.5">
-                    <span className="w-7 h-7 rounded-full bg-[#6b7280] border-2 border-[#121416] flex items-center justify-center text-[10px]">🎲</span>
-                    <span className="w-7 h-7 rounded-full bg-[#9ca3af] border-2 border-[#121416] flex items-center justify-center text-[10px]">🃏</span>
-                    <span className="w-7 h-7 rounded-full bg-[#e5e7eb] border-2 border-[#121416] flex items-center justify-center text-[10px] font-black text-[#121416]">10</span>
+                    <span className="w-9 h-9 rounded-full bg-[#6b7280] border-2 border-[#121416] flex items-center justify-center text-[12px]">🎲</span>
+                    <span className="w-9 h-9 rounded-full bg-[#9ca3af] border-2 border-[#121416] flex items-center justify-center text-[12px]">🃏</span>
+                    <span className="w-9 h-9 rounded-full bg-[#e5e7eb] border-2 border-[#121416] flex items-center justify-center text-[12px] font-black text-[#121416]">10</span>
                   </div>
                   <p className="text-xs leading-none"><span className="font-black text-white">{rooms.length} rooms open</span><br/><span className="text-white/50">Jump in — no password</span></p>
                 </div>
               </div>
             </div>
             <div className="hidden lg:flex flex-col items-end gap-2 text-right">
-              <div className="px-3 py-2 rounded-2xl bg-white/[0.06] border border-white/10 backdrop-blur">
+              <div className="px-4 py-3 rounded-2xl bg-[#1e2326] border border-white/10 shadow-xl">
                 <p className="text-[10px] tracking-[0.16em] font-black text-white/45">FEATURED GAME</p>
                 <p className="text-sm font-black text-white mt-1">Veil Street <span className="font-normal text-white/60">— hidden roles</span></p>
                 <p className="text-xs text-[#f3ecd8]/70 mt-0.5">Merlin • Percival • Morgana • Mordred • Oberon</p>

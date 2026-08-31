@@ -57,16 +57,20 @@ export default function CreateRoomModal({ onClose, onCreated }) {
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-[#070b14]/78 backdrop-blur-md">
-      <form onSubmit={submit} className="w-full max-w-[440px] rounded-[24px] glass-lantern shadow-2xl overflow-hidden">
-        <div className="relative h-[92px] overflow-hidden">
-          <img src="/assets/hero-grey.svg" alt="" className="w-full h-full object-cover object-bottom opacity-92" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#1a1d1f] via-[#1a1d1f]/50 to-transparent" />
+      <form onSubmit={submit} className="w-full max-w-[440px] rounded-[24px] bg-[#23272a] border border-white/10 shadow-2xl overflow-hidden">
+        <div className="relative h-[108px] overflow-hidden">
+          <div className="absolute inset-0 bg-[#1a1d1f]" />
+          <img src="/assets/hero-grey.svg" alt="" className="absolute inset-0 w-full h-full object-cover object-bottom opacity-[0.20]" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#1a1d1f] via-[#1a1d1f]/85 to-[#1a1d1f]/45" />
           <div className="absolute inset-0 flex items-center justify-between px-6">
-            <div>
-              <h2 className="font-display font-[900] text-white text-[18px] leading-none flex items-center gap-2"><span className="w-8 h-8 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center text-sm">🎲</span> Create Room</h2>
-              <p className="text-xs text-white/55 mt-1 font-bold tracking-wide">Pick a game to start</p>
+            <div className="bg-[#23272a] border border-white/10 rounded-2xl px-4 py-2.5 shadow-xl flex items-center gap-3">
+              <span className="w-10 h-10 rounded-xl bg-[#1a1d1f] border border-white/10 flex items-center justify-center text-lg shadow">🎲</span>
+              <div>
+                <h2 className="font-display font-[900] text-white text-[16px] leading-none">Create Room</h2>
+                <p className="text-xs text-white/65 mt-0.5 font-bold tracking-wide">Pick a game to start</p>
+              </div>
             </div>
-            <button type="button" onClick={onClose} className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 flex items-center justify-center text-white backdrop-blur">✕</button>
+            <button type="button" onClick={onClose} className="w-9 h-9 rounded-full bg-[#1a1d1f] hover:bg-[#23272a] border border-white/15 flex items-center justify-center text-white shadow">✕</button>
           </div>
         </div>
 
@@ -80,9 +84,9 @@ export default function CreateRoomModal({ onClose, onCreated }) {
                   type="button"
                   key={g.id}
                   onClick={() => setGameId(g.id)}
-                  className={`text-left p-4 rounded-2xl border flex items-center gap-3 transition-all ${active ? 'bg-gradient-to-br from-[#9ca3af]/14 to-[#6b7280]/08 border-[#9ca3af]/40 shadow-lg shadow-[#9ca3af]/10 scale-[1.01]' : 'bg-white/[0.03] border-white/10 hover:bg-white/[0.06] hover:border-white/15'}`}
+                  className={`text-left p-4 rounded-2xl border flex items-center gap-3 transition-all ${active ? 'bg-[#2a2e32] border-[#9ca3af]/45 shadow-lg shadow-black/20 scale-[1.01]' : 'bg-[#1e2326] border-white/10 hover:bg-[#252a2e] hover:border-white/15'}`}
                 >
-                  <span className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0 ${active ? 'bg-[#9ca3af] text-[#121416]' : 'bg-white/10 text-white/70'}`}>{icons[g.id] || '🎮'}</span>
+                  <span className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0 border ${active ? 'bg-[#e5e7eb] text-[#1a1d1f] border-white/15 shadow' : 'bg-[#1a1d1f] text-white/80 border-white/10'}`}>{icons[g.id] || '🎮'}</span>
                   <div className="min-w-0 flex-1">
                     <p className={`text-sm font-bold leading-none ${active ? 'text-white' : 'text-white/90'}`}>{g.label}</p>
                     <p className="text-xs text-white/50 mt-1 leading-snug line-clamp-2">{g.minPlayers}-{g.maxPlayers} • {g.description}</p>
