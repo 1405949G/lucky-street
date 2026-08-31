@@ -11,6 +11,8 @@ import { listGames } from "../games.js";
 import { isValidRoomId, sanitizeName } from "../utils.js";
 import { handleQuestEffects } from "../questScheduler.js";
 import { getPublicState as questPublic, getPrivateState as questPrivate } from "../../../games/veil-street/server/state.js";
+import { handleTriviaEffects } from "../../../games/street-trivia/server/scheduler.js";
+import { getPublicState as triviaPublic, getPrivateState as triviaPrivate } from "../../../games/street-trivia/server/state.js";
 
 function genSocketId() {
   try { return crypto.randomUUID(); } catch { return "s_" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); }
@@ -187,6 +189,44 @@ export class LuckyStreetDO {
     const res = this.roomManager.dispatchQuestInternal(roomId, action);
     if (res) this.broadcastQuestState(roomId);
     return res;
+  }
+
+  broadcastTriviaState(roomId) {
+    const room = this.roomManager.get(roomId);
+    if (!room || !room.gameState) {
+      const full = this.roomManager.getFull(roomId);
+      if (full) this.sendToRoom(roomId, { event: "lobby:update", data: full });
+      return;
+    }
+    let pub = null;
+    try { pub = triviaPublic(room.gameState); } catch { pub = null; }
+    if (pub) {
+      this.sendToRoom(roomId, { event: "game:update", data: pub });
+      this.sendToRoom(roomId, { event: "lobby:update", data: this.roomManager.getFull(roomId) });
+      for (const p of room.gameState.players) {
+        if (p.isBot) continue;
+        const ws = this.socketIdToWs.get(p.id);
+        if (ws) {
+          try {
+            const priv = triviaPrivate(room.gameState, p.id);
+            this.send(ws, { event: "game:private", data: priv });
+          } catch {}
+        }
+      }
+    }
+  }
+
+  triviaDispatchInternal(roomId, action) {
+    const res = this.roomManager.dispatchTriviaInternal(roomId, action);
+    if (res) this.broadcastTriviaState(roomId);
+    return res;
+  }
+
+  broadcastGameState(roomId){
+    const room = this.roomManager.get(roomId);
+    if(!room || !room.gameState) return this.broadcastQuestState(roomId);
+    if(room.game==="street-trivia") return this.broadcastTriviaState(roomId);
+    return this.broadcastQuestState(roomId);
   }
 
   async fetch(request) {
@@ -937,11 +977,9 @@ export class LuckyStreetDO {
             const room = this.roomManager.get(id);
             if (room && room.gameState) {
               try {
-                const pub = questPublic(room.gameState);
+                const pub = room.game==="street-trivia" ? triviaPublic(room.gameState) : questPublic(room.gameState);
                 this.send(ws, { event: "game:update", data: pub });
-              } catch {}
-              try {
-                const priv = questPrivate(room.gameState, socketId);
+                const priv = room.game==="street-trivia" ? triviaPrivate(room.gameState, socketId) : questPrivate(room.gameState, socketId);
                 this.send(ws, { event: "game:private", data: priv });
               } catch {}
             }
@@ -952,17 +990,28 @@ export class LuckyStreetDO {
         }
         case "game:start": {
           const id = String(data.roomId || sess.currentRoom || "").toUpperCase();
-          const { room, effects } = this.roomManager.startQuest(id, socketId);
-          okAck({ ok: true, room });
-          this.broadcastQuestState(id);
-          handleQuestEffects({ roomManager: this.roomManager, roomId: id, effects, broadcast: (rid) => this.broadcastQuestState(rid), dispatchInternal: (rid, act) => this.questDispatchInternal(rid, act) });
+          const rm = this.roomManager.get(id);
+          if (rm && rm.game==="street-trivia") {
+            const { room, effects } = this.roomManager.startTrivia(id, socketId);
+            okAck({ ok: true, room });
+            this.broadcastTriviaState(id);
+            handleTriviaEffects({ roomManager: this.roomManager, roomId: id, effects, broadcast: (rid) => this.broadcastTriviaState(rid), dispatchInternal: (rid, act) => this.triviaDispatchInternal(rid, act) });
+          } else {
+            const { room, effects } = this.roomManager.startQuest(id, socketId);
+            okAck({ ok: true, room });
+            this.broadcastQuestState(id);
+            handleQuestEffects({ roomManager: this.roomManager, roomId: id, effects, broadcast: (rid) => this.broadcastQuestState(rid), dispatchInternal: (rid, act) => this.questDispatchInternal(rid, act) });
+          }
           this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic() });
           await this.persist();
           break;
         }
         case "game:reset": {
           const id = String(data.roomId || sess.currentRoom || "").toUpperCase();
-          const room = this.roomManager.resetQuest(id, socketId);
+          const rm = this.roomManager.get(id);
+          let room;
+          if (rm && rm.game==="street-trivia") room = this.roomManager.resetTrivia(id, socketId);
+          else room = this.roomManager.resetQuest(id, socketId);
           okAck({ ok: true, room });
           this.sendToRoom(id, { event: "game:update", data: null });
           this.sendToRoom(id, { event: "game:private", data: null });
@@ -973,10 +1022,18 @@ export class LuckyStreetDO {
         }
         case "game:action": {
           const id = String(data.roomId || sess.currentRoom || "").toUpperCase();
-          const result = this.roomManager.handleQuestAction({ roomId: id, socketId, actionType: data.type, payload: data.payload });
-          okAck({ ok: true, public: questPublic(result.state) });
-          this.broadcastQuestState(id);
-          handleQuestEffects({ roomManager: this.roomManager, roomId: id, effects: result.effects, broadcast: (rid) => this.broadcastQuestState(rid), dispatchInternal: (rid, act) => this.questDispatchInternal(rid, act) });
+          const rm = this.roomManager.get(id);
+          if (rm && rm.game==="street-trivia") {
+            const result = this.roomManager.handleTriviaAction({ roomId: id, socketId, actionType: data.type, payload: data.payload });
+            okAck({ ok: true, public: triviaPublic(result.state) });
+            this.broadcastTriviaState(id);
+            handleTriviaEffects({ roomManager: this.roomManager, roomId: id, effects: result.effects, broadcast: (rid) => this.broadcastTriviaState(rid), dispatchInternal: (rid, act) => this.triviaDispatchInternal(rid, act) });
+          } else {
+            const result = this.roomManager.handleQuestAction({ roomId: id, socketId, actionType: data.type, payload: data.payload });
+            okAck({ ok: true, public: questPublic(result.state) });
+            this.broadcastQuestState(id);
+            handleQuestEffects({ roomManager: this.roomManager, roomId: id, effects: result.effects, broadcast: (rid) => this.broadcastQuestState(rid), dispatchInternal: (rid, act) => this.questDispatchInternal(rid, act) });
+          }
           await this.persist();
           break;
         }
@@ -986,9 +1043,10 @@ export class LuckyStreetDO {
           if (!room || !room.gameState) {
             okAck({ ok: true, public: null, private: null });
           } else {
-            const pub = questPublic(room.gameState);
+            const isTrivia = room.game==="street-trivia";
+            const pub = isTrivia ? triviaPublic(room.gameState) : questPublic(room.gameState);
             let priv = null;
-            try { priv = questPrivate(room.gameState, socketId); } catch { priv = null; }
+            try { priv = isTrivia ? triviaPrivate(room.gameState, socketId) : questPrivate(room.gameState, socketId); } catch { priv = null; }
             okAck({ ok: true, public: pub, private: priv });
             this.send(ws, { event: "game:update", data: pub });
             if (priv) this.send(ws, { event: "game:private", data: priv });

@@ -10,6 +10,7 @@ import veilStreet from "../../games/veil-street/manifest.js";
 import luckyRoulette from "../../games/lucky-roulette/manifest.js";
 import streetRally from "../../games/street-rally/manifest.js";
 import checkpointChaos from "../../games/checkpoint-chaos/manifest.js";
+import streetTrivia from "../../games/street-trivia/manifest.js";
 
 // When you add a game, import its manifest here and add to GAMES below:
 // import myNewGame from "../../games/my-new-game/manifest.js";
@@ -19,6 +20,7 @@ export const GAMES = {
   "lucky-roulette": luckyRoulette,
   "street-rally": streetRally,
   "checkpoint-chaos": checkpointChaos,
+  "street-trivia": streetTrivia,
   // "my-new-game": myNewGame,
 };
 

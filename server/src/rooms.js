@@ -24,6 +24,8 @@ import { getGame, defaultMaxFor } from "./games.js";
 import { createInitialState as createQuestState, reducer as questReducer, getPublicState as questPublic, getPrivateState as questPrivate, getAIView as questAIView } from "../../games/veil-street/server/state.js";
 import { PHASES as QuestPhases } from "../../games/veil-street/server/config.js";
 import * as questAI from "../../games/veil-street/server/ai.js";
+import { reducer as triviaReducer, getPublicState as triviaPublic, getPrivateState as triviaPrivate } from "../../games/street-trivia/server/state.js";
+import { PHASES as TriviaPhases } from "../../games/street-trivia/server/config.js";
 
 const BOT_NAMES = [
   "Ava", "Milo", "Zoe", "Finn", "Luna", "Kai", "Nova", "Rex",
@@ -115,10 +117,13 @@ export class RoomManager {
     const r = this.get(roomId);
     if (!r) return null;
     const game = getGame(r.game);
-    // Sanitize gameState: public only for lobby sync (prevents role leak)
+    // Sanitize gameState: public only for lobby sync (prevents leak)
     let gamePublic = null;
     if (r.gameState) {
-      try { gamePublic = questPublic(r.gameState); } catch { gamePublic = null; }
+      try {
+        if (r.game === "street-trivia") gamePublic = triviaPublic(r.gameState);
+        else gamePublic = questPublic(r.gameState);
+      } catch { gamePublic = null; }
     }
     return {
       id: r.id,
@@ -217,11 +222,27 @@ export class RoomManager {
       this._notify();
       return this.getFull(room.id);
     }
-    // If a player leaves during active quest, abort it
     const wasActiveGame = !!(room.gameState && room.gameState.phase !== QuestPhases.LOBBY && room.gameState.phase !== QuestPhases.GAME_OVER);
     if (wasActiveGame) {
-      room.gameState = null;
-      room.gameStartedAt = null;
+      if (room.game === "street-trivia") {
+        // trivia: keep game, just remove player from gameState
+        try {
+          const res = triviaReducer(room.gameState, { type: "REMOVE_PLAYER", payload: { playerId: socketId } });
+          room.gameState = res.state;
+          // if game ended via reducer, keep it (GAME_OVER); if empty, null
+          if (!res.state.players || res.state.players.length===0) {
+             // leave cleanup below will delete room if needed; keep GAME_OVER for podium briefly
+          }
+        } catch {
+          // fallback: null
+          room.gameState = null;
+          room.gameStartedAt = null;
+        }
+        // do not null gameStartedAt yet, keep room alive unless empty
+      } else {
+        room.gameState = null;
+        room.gameStartedAt = null;
+      }
     }
     const idx = room.players.findIndex(p => p.id === socketId);
     if (idx === -1) return this.getFull(room.id);
@@ -347,8 +368,18 @@ export class RoomManager {
       // Only abort if this socket is actually a player in this room
       const isPlayerInRoom = room.players.some(p => p.id === socketId);
       if (wasActiveGame && isPlayerInRoom) {
-        room.gameState = null;
-        room.gameStartedAt = null;
+        if (room.game === "street-trivia") {
+          try {
+            const res = triviaReducer(room.gameState, { type: "REMOVE_PLAYER", payload: { playerId: socketId } });
+            room.gameState = res.state;
+          } catch {
+            room.gameState = null;
+            room.gameStartedAt = null;
+          }
+        } else {
+          room.gameState = null;
+          room.gameStartedAt = null;
+        }
       }
       const idx = room.players.findIndex(p => p.id === socketId);
       if (idx !== -1) {
@@ -780,5 +811,118 @@ export class RoomManager {
     const room = this.get(roomId);
     if (!room || !room.gameState) return null;
     return questAIView(room.gameState, botId);
+  }
+
+  // --- Street Trivia - game lifecycle ---
+  canStartTrivia(roomId, requesterId) {
+    const room = this.get(roomId);
+    if (!room) throw new Error("Room not found");
+    if (room.hostId !== requesterId) throw new Error("Only host can start trivia");
+    if (room.game !== "street-trivia") throw new Error("Start Trivia only for Street Trivia");
+    const total = room.players.length + room.bots.length;
+    const game = getGame(room.game);
+    const min = game?.minPlayers || 2;
+    const max = game?.maxPlayers || 12;
+    if (total < min) throw new Error(`Need ${min} players (have ${total})`);
+    if (total > max) throw new Error(`Too many players (${total} > ${max})`);
+    if (game && game.supportsBots===false && room.bots.length>0) throw new Error("This game doesn't support bots - remove bots first");
+    if (room.gameState && room.gameState.phase !== TriviaPhases.LOBBY && room.gameState.phase !== TriviaPhases.GAME_OVER) {
+      throw new Error("Game already in progress");
+    }
+    return true;
+  }
+
+  startTrivia(roomId, requesterId) {
+    this.canStartTrivia(roomId, requesterId);
+    const room = this.get(roomId);
+    const allParticipants = [
+      ...room.players.map(p => ({ id: p.id, name: p.name, isBot: false, avatar: p.avatar || null })),
+      ...room.bots.map(b => ({ id: b.id, name: b.name, isBot: true, avatar: null })),
+    ];
+    const opts = room.gameOptions || {};
+    const result = triviaReducer(undefined, { type: 'SETUP_GAME', payload: { players: allParticipants, opts, roomCode: room.id } });
+    room.gameState = result.state;
+    room.gameStartedAt = Date.now();
+    room.updatedAt = Date.now();
+    this._notify();
+    return { room: this.getFull(room.id), effects: result.effects };
+  }
+
+  resetTrivia(roomId, requesterId) {
+    const room = this.get(roomId);
+    if (!room) throw new Error("Room not found");
+    if (room.game !== "street-trivia") throw new Error("Not a Trivia game");
+    const isGameOver = room.gameState?.phase === TriviaPhases.GAME_OVER;
+    if (!isGameOver && room.hostId !== requesterId) throw new Error("Only host can reset during active trivia");
+    room.gameState = null;
+    room.gameStartedAt = null;
+    room.updatedAt = Date.now();
+    this._notify();
+    return this.getFull(room.id);
+  }
+
+  handleTriviaAction({ roomId, socketId, actionType, payload }) {
+    const room = this.get(roomId);
+    if (!room) throw new Error("Room not found");
+    if (room.game !== "street-trivia") throw new Error("Not a Trivia game");
+    if (!room.gameState) throw new Error("Game not started");
+    // spectators cannot answer
+    if (room.spectators?.some(s=>s.id===socketId)) throw new Error("Spectators cannot answer");
+    if (!room.gameState.players.some(p=>p.id===socketId)) throw new Error("You are not in this trivia game");
+    let action;
+    switch(actionType){
+      case "SUBMIT_ANSWER": {
+        const choice = payload?.choice;
+        if (choice==null) throw new Error("choice required 0..3");
+        action = { type: "SUBMIT_ANSWER", payload: { playerId: socketId, choice } };
+        break;
+      }
+      case "ACK_REVEAL": {
+        action = { type: "ACK_REVEAL", payload: { playerId: socketId } };
+        break;
+      }
+      case "TIMER_EXPIRED":
+      case "FORCE_REVEAL":
+      case "REVEAL_QUESTION": {
+        action = { type: "TIMER_EXPIRED" };
+        break;
+      }
+      case "NEXT_QUESTION": {
+        action = { type: "NEXT_QUESTION" };
+        break;
+      }
+      default: throw new Error(`Unknown trivia action: ${actionType}`);
+    }
+    const result = triviaReducer(room.gameState, action);
+    room.gameState = result.state;
+    room.updatedAt = Date.now();
+    this._notify();
+    return { room: this.getFull(room.id), state: result.state, effects: result.effects };
+  }
+
+  dispatchTriviaInternal(roomId, action) {
+    const room = this.get(roomId);
+    if (!room || !room.gameState) return null;
+    if (room.game !== "street-trivia") return null;
+    try {
+      const result = triviaReducer(room.gameState, action);
+      room.gameState = result.state;
+      room.updatedAt = Date.now();
+      this._notify();
+      return { room: this.getFull(room.id), state: result.state, effects: result.effects };
+    } catch(e){ console.warn(`[trivia internal] ${action.type} fail: ${e.message}`); return null; }
+  }
+
+  getTriviaPublic(roomId){
+    const room = this.get(roomId);
+    if(!room || !room.gameState) return null;
+    if(room.game!=="street-trivia") return null;
+    return triviaPublic(room.gameState);
+  }
+  getTriviaPrivate(roomId, playerId){
+    const room = this.get(roomId);
+    if(!room || !room.gameState) return null;
+    if(room.game!=="street-trivia") return null;
+    try { return triviaPrivate(room.gameState, playerId); } catch { return triviaPublic(room.gameState); }
   }
 }

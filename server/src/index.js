@@ -20,6 +20,8 @@ import { listGames, getGame } from "./games.js";
 import { isValidRoomId, sanitizeName } from "./utils.js";
 import { handleQuestEffects } from "./questScheduler.js";
 import { getPublicState as questPublic, getPrivateState as questPrivate } from "../../games/veil-street/server/state.js";
+import { handleTriviaEffects } from "../../games/street-trivia/server/scheduler.js";
+import { getPublicState as triviaPublic, getPrivateState as triviaPrivate } from "../../games/street-trivia/server/state.js";
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3001;
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || "http://localhost:5173";
@@ -109,6 +111,32 @@ function questDispatchInternal(roomId, action) {
   const res = roomManager.dispatchQuestInternal(roomId, action);
   if (res) broadcastQuestState(roomId);
   return res;
+}
+
+function broadcastTriviaState(roomId) {
+  const room = roomManager.get(roomId);
+  if (!room || !room.gameState) { emitLobbyUpdate(roomId); return; }
+  const pub = triviaPublic(room.gameState);
+  io.to(roomId).emit("game:update", pub);
+  io.to(roomId).emit("lobby:update", roomManager.getFull(roomId));
+  for (const p of room.gameState.players) {
+    if (p.isBot) continue;
+    const sock = io.sockets.sockets.get(p.id);
+    if (sock) {
+      try { const priv = triviaPrivate(room.gameState, p.id); sock.emit("game:private", priv); } catch {}
+    }
+  }
+}
+function triviaDispatchInternal(roomId, action){
+  const res = roomManager.dispatchTriviaInternal(roomId, action);
+  if (res) broadcastTriviaState(roomId);
+  return res;
+}
+function broadcastGameState(roomId){
+  const room = roomManager.get(roomId);
+  if(!room || !room.gameState) return emitLobbyUpdate(roomId);
+  if(room.game==="street-trivia") return broadcastTriviaState(roomId);
+  return broadcastQuestState(roomId);
 }
 
 // --- Socket handlers ---
@@ -454,13 +482,13 @@ io.on("connection", (socket) => {
       // Also send current game state if any (public + private)
       const room = roomManager.get(id);
       if (room && room.gameState) {
-        const pub = questPublic(room.gameState);
-        socket.emit("game:update", pub);
         try {
-          const priv = questPrivate(room.gameState, socket.id);
+          const pub = room.game==="street-trivia" ? triviaPublic(room.gameState) : questPublic(room.gameState);
+          socket.emit("game:update", pub);
+          const priv = room.game==="street-trivia" ? triviaPrivate(room.gameState, socket.id) : questPrivate(room.gameState, socket.id);
           socket.emit("game:private", priv);
         } catch {
-          socket.emit("game:private", null);
+          try { socket.emit("game:private", null); } catch {}
         }
       }
     } else {
@@ -468,14 +496,23 @@ io.on("connection", (socket) => {
     }
   });
 
-  // --- Veil Street - game lifecycle ---
+  // --- Game lifecycle (generic) ---
   socket.on("game:start", ({ roomId } = {}, ack) => {
     try {
       const id = String(roomId || socket.data.currentRoom || "").toUpperCase();
-      const { room, effects } = roomManager.startQuest(id, socket.id);
-      if (typeof ack === "function") ack({ ok: true, room });
-      broadcastQuestState(id);
-      handleQuestEffects({ roomManager, roomId: id, effects, broadcast: broadcastQuestState, dispatchInternal: questDispatchInternal });
+      const rm = roomManager.get(id);
+      if(!rm) throw new Error("Room not found");
+      if(rm.game==="street-trivia"){
+        const { room, effects } = roomManager.startTrivia(id, socket.id);
+        if (typeof ack === "function") ack({ ok: true, room });
+        broadcastTriviaState(id);
+        handleTriviaEffects({ roomManager, roomId: id, effects, broadcast: broadcastTriviaState, dispatchInternal: triviaDispatchInternal });
+      } else {
+        const { room, effects } = roomManager.startQuest(id, socket.id);
+        if (typeof ack === "function") ack({ ok: true, room });
+        broadcastQuestState(id);
+        handleQuestEffects({ roomManager, roomId: id, effects, broadcast: broadcastQuestState, dispatchInternal: questDispatchInternal });
+      }
     } catch (e) {
       if (typeof ack === "function") ack({ ok: false, error: e.message });
       socket.emit("room:error", { error: e.message });
@@ -485,7 +522,10 @@ io.on("connection", (socket) => {
   socket.on("game:reset", ({ roomId } = {}, ack) => {
     try {
       const id = String(roomId || socket.data.currentRoom || "").toUpperCase();
-      const room = roomManager.resetQuest(id, socket.id);
+      const rm = roomManager.get(id);
+      let room;
+      if(rm && rm.game==="street-trivia") room = roomManager.resetTrivia(id, socket.id);
+      else room = roomManager.resetQuest(id, socket.id);
       if (typeof ack === "function") ack({ ok: true, room });
       io.to(id).emit("game:update", null);
       io.to(id).emit("game:private", null);
@@ -500,10 +540,18 @@ io.on("connection", (socket) => {
   socket.on("game:action", ({ roomId, type, payload } = {}, ack) => {
     try {
       const id = String(roomId || socket.data.currentRoom || "").toUpperCase();
-      const result = roomManager.handleQuestAction({ roomId: id, socketId: socket.id, actionType: type, payload });
-      if (typeof ack === "function") ack({ ok: true, public: questPublic(result.state) });
-      broadcastQuestState(id);
-      handleQuestEffects({ roomManager, roomId: id, effects: result.effects, broadcast: broadcastQuestState, dispatchInternal: questDispatchInternal });
+      const rm = roomManager.get(id);
+      if(rm && rm.game==="street-trivia"){
+        const result = roomManager.handleTriviaAction({ roomId: id, socketId: socket.id, actionType: type, payload });
+        if (typeof ack === "function") ack({ ok: true, public: triviaPublic(result.state) });
+        broadcastTriviaState(id);
+        handleTriviaEffects({ roomManager, roomId: id, effects: result.effects, broadcast: broadcastTriviaState, dispatchInternal: triviaDispatchInternal });
+      } else {
+        const result = roomManager.handleQuestAction({ roomId: id, socketId: socket.id, actionType: type, payload });
+        if (typeof ack === "function") ack({ ok: true, public: questPublic(result.state) });
+        broadcastQuestState(id);
+        handleQuestEffects({ roomManager, roomId: id, effects: result.effects, broadcast: broadcastQuestState, dispatchInternal: questDispatchInternal });
+      }
     } catch (e) {
       if (typeof ack === "function") ack({ ok: false, error: e.message });
       socket.emit("room:error", { error: e.message });
@@ -518,9 +566,10 @@ io.on("connection", (socket) => {
         if (typeof ack === "function") ack({ ok: true, public: null, private: null });
         return;
       }
-      const pub = questPublic(room.gameState);
+      const isTrivia = room.game==="street-trivia";
+      const pub = isTrivia ? triviaPublic(room.gameState) : questPublic(room.gameState);
       let priv = null;
-      try { priv = questPrivate(room.gameState, socket.id); } catch { priv = null; }
+      try { priv = isTrivia ? triviaPrivate(room.gameState, socket.id) : questPrivate(room.gameState, socket.id); } catch { priv = null; }
       if (typeof ack === "function") ack({ ok: true, public: pub, private: priv });
       socket.emit("game:update", pub);
       if (priv) socket.emit("game:private", priv);

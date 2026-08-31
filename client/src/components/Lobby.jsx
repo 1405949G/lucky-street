@@ -11,6 +11,7 @@ import { ProfileContext } from "../context/ProfileContext.jsx";
 import { SocketContext } from "../context/SocketContext.jsx";
 import IdentityModal from "./IdentityModal.jsx";
 import QuestGame from "../../../games/veil-street/client/Game.jsx";
+import TriviaGame from "../../../games/street-trivia/client/Game.jsx";
 
 export default function Lobby({ spectate = false }) {
   const { roomId } = useParams();
@@ -268,9 +269,10 @@ export default function Lobby({ spectate = false }) {
   const isPlayer = !!(myId && room.players.some(p => p.id === myId));
   const game = games.find(g => g.id === room.game) || { label: room.game, optionSchema: [] };
   const isQuestGame = room.game === "veil-street";
+  const isTriviaGame = room.game === "street-trivia";
   const hasGameState = !!room.hasGame;
   const hasActiveGame = !!(room.hasGame && room.gameState && room.gameState.phase && room.gameState.phase !== "LOBBY" && room.gameState.phase !== "GAME_OVER") || !!(room.hasGame && room.gamePhase && room.gamePhase !== "LOBBY" && room.gamePhase !== "GAME_OVER");
-  const isGameLocked = hasGameState; // lobby locked while any quest exists (including GAME_OVER until reset)
+  const isGameLocked = hasGameState; // lobby locked while any game exists (including GAME_OVER until reset)
   const totalPlayers = room.players.length + room.bots.length;
   const canStart = !!room.canStart;
   const supportsBots = room.supportsBots !== false;
@@ -285,9 +287,10 @@ export default function Lobby({ spectate = false }) {
     }
     socket.emit("game:start", { roomId: id }, (res) => {
       if (!res?.ok) showToast(res?.error || "Start failed");
-      else showToast("Quest started - roles dealt");
+      else showToast(isTriviaGame ? "Trivia started!" : "Quest started - roles dealt");
     });
   }
+  function handleStartGame() { return handleStartQuest(); }
 
   function handleResetQuest() {
     socket.emit("game:reset", { roomId: id }, (res) => {
@@ -545,9 +548,10 @@ export default function Lobby({ spectate = false }) {
         {/* Controls */}
         <div className={`${hasGameState ? 'block w-full max-w-[820px]' : mobileTab === "board" ? "hidden lg:block" : "block"} space-y-5`}>
 
-          {isQuestGame && hasGameState ? (
+          {(isQuestGame || isTriviaGame) && hasGameState ? (
             <>
-              <QuestGame roomId={id} isHost={isHost} isSpectator={isSpectator} hideTopAllegiance />
+              {isQuestGame && <QuestGame roomId={id} isHost={isHost} isSpectator={isSpectator} hideTopAllegiance />}
+              {isTriviaGame && <TriviaGame roomId={id} isHost={isHost} isSpectator={isSpectator} />}
               <div className="rounded-2xl bg-white/[0.04] border border-white/10 p-3">
                 <div className="flex items-center justify-center">
                   <span className="text-xs font-bold text-white/60">Watching • {room.spectatorCount || 0}</span>
@@ -567,6 +571,22 @@ export default function Lobby({ spectate = false }) {
                         {canStart ? "▶ Start Quest" : `Need ${room.minPlayers} players (have ${totalPlayers})`}
                       </button>
                       {!canStart && supportsBots && <p className="text-xs text-white/30 mt-2">Add bots or wait for players to reach {room.minPlayers}.</p>}
+                    </>
+                  ) : (
+                    <p className="text-xs text-white/40 mt-3">{canStart ? "Ready to start!" : `Need ${room.minPlayers - totalPlayers} more to start`}</p>
+                  )}
+                </div>
+              )}
+              {isTriviaGame && (
+                <div className="rounded-2xl bg-gradient-to-br from-violet-600/20 to-amber-500/20 border border-white/10 p-4">
+                  <h4 className="font-bold text-white text-sm flex items-center gap-2"><span className="px-2 py-0.5 rounded-full bg-amber-400 text-[#0e2533] text-[10px] font-black">NEW</span> Street Trivia</h4>
+                  <p className="text-xs text-white/60 mt-1">{totalPlayers}/{room.maxPlayers} • {room.gameOptions.questionCount} Q • {room.gameOptions.timerSeconds}s • {room.gameOptions.category}/{room.gameOptions.difficulty}</p>
+                  {isHost ? (
+                    <>
+                      <button onClick={handleStartGame} disabled={!canStart} className={`mt-3 w-full py-3 rounded-full font-extrabold ${canStart ? "bg-amber-400 hover:bg-amber-300 text-[#0e2533]" : "bg-white/10 text-white/30 cursor-not-allowed"}`}>
+                        {canStart ? "▶ Start Trivia" : `Need ${room.minPlayers} players (have ${totalPlayers})`}
+                      </button>
+                      {!canStart && <p className="text-xs text-white/40 mt-2">Need {room.minPlayers} players to start solo trivia.</p>}
                     </>
                   ) : (
                     <p className="text-xs text-white/40 mt-3">{canStart ? "Ready to start!" : `Need ${room.minPlayers - totalPlayers} more to start`}</p>
