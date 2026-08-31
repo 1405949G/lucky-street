@@ -69,6 +69,25 @@ export const BANK = [
   { category:"tech", difficulty:"easy", q:"What company makes the iPhone?", options:["Samsung","Google","Apple","Microsoft"], correctIndex:2, imageUrl:null },
   { category:"tech", difficulty:"medium", q:"What does CPU stand for?", options:["Central Processing Unit","Computer Personal Unit","Central Power Unit","Core Processing Utility"], correctIndex:0, imageUrl:null },
 
+  // extra music to support music/hard 10Q without fallback
+  { category:"music", difficulty:"hard", q:"Which Beatles album is the 'White Album'?", options:["Revolver","The Beatles","Abbey Road","Sgt. Pepper"], correctIndex:1, imageUrl:null },
+  { category:"music", difficulty:"hard", q:"Who is known as the King of Pop?", options:["Elvis Presley","Michael Jackson","Prince","Freddie Mercury"], correctIndex:1, imageUrl:null },
+  { category:"music", difficulty:"medium", q:"Which singer's real name is Stefani Germanotta?", options:["Lady Gaga","Ariana Grande","Taylor Swift","Rihanna"], correctIndex:0, imageUrl:null },
+  { category:"music", difficulty:"easy", q:"Which pop star sang '...Baby One More Time' debut?", options:["Britney Spears","Christina Aguilera","Jessica Simpson","Mandy Moore"], correctIndex:0, imageUrl:null },
+  { category:"music", difficulty:"hard", q:"What does EDM stand for?", options:["Electronic Dance Music","Electric Drum Machine","Every Day Music","Enhanced Digital Melody"], correctIndex:0, imageUrl:null },
+  { category:"music", difficulty:"medium", q:"Who composed 'Moonlight Sonata'?", options:["Mozart","Beethoven","Chopin","Bach"], correctIndex:1, imageUrl:null },
+  // extra tech/history/pop/sports/movies
+  { category:"tech", difficulty:"hard", q:"What does GPU stand for?", options:["General Processing Unit","Graphics Processing Unit","Graphical Performance Unit","Global Processor Unit"], correctIndex:1, imageUrl:null },
+  { category:"tech", difficulty:"medium", q:"Which company owns Instagram?", options:["Google","Meta","Twitter","Snap"], correctIndex:1, imageUrl:null },
+  { category:"movies", difficulty:"hard", q:"Who played Iron Man?", options:["Chris Evans","Robert Downey Jr.","Mark Ruffalo","Chris Hemsworth"], correctIndex:1, imageUrl:null },
+  { category:"pop", difficulty:"medium", q:"Who is called 'Queen of Pop'?", options:["Madonna","Beyoncé","Whitney Houston","Mariah Carey"], correctIndex:0, imageUrl:null },
+  { category:"pop", difficulty:"hard", q:"Which band performed at Live Aid 1985 Wembley?", options:["Queen","The Beatles","ABBA","Nirvana"], correctIndex:0, imageUrl:null },
+  { category:"sports", difficulty:"medium", q:"How many rings on the Olympic flag?", options:["4","5","6","7"], correctIndex:1, imageUrl:null },
+  { category:"sports", difficulty:"hard", q:"Which chess piece moves in an L shape?", options:["Bishop","Knight","Rook","Queen"], correctIndex:1, imageUrl:null },
+  { category:"history", difficulty:"medium", q:"Which empire built Machu Picchu?", options:["Aztec","Inca","Maya","Olmec"], correctIndex:1, imageUrl:null },
+  { category:"history", difficulty:"hard", q:"When did the Berlin Wall fall?", options:["1987","1989","1991","1993"], correctIndex:1, imageUrl:null },
+  { category:"general", difficulty:"hard", q:"What is the term for a fear of long words?", options:["Hippopotomonstrosesquippedaliophobia","Arachnophobia","Claustrophobia","Acrophobia"], correctIndex:0, imageUrl:null },
+
   // image samples (use placeholder image urls)
   { category:"general", difficulty:"easy", q:"Which landmark is shown? (Eiffel Tower)", options:["Eiffel Tower","Big Ben","Statue of Liberty","Burj Khalifa"], correctIndex:0, imageUrl:"https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=480&q=60" },
   { category:"geography", difficulty:"medium", q:"This island nation is known for cherry blossoms — which is it?", options:["Japan","Thailand","Vietnam","Philippines"], correctIndex:0, imageUrl:"https://images.unsplash.com/photo-1492571350019-22de08371fd3?w=480&q=60" },
@@ -85,19 +104,59 @@ function shuffle(arr) {
 }
 
 export function pickQuestions({ category = "mixed", difficulty = "mixed", count = 10, excludeIds = [] } = {}) {
-  let pool = BANK.slice();
-  if (category && category !== "mixed") pool = pool.filter(q => q.category === category);
-  if (difficulty && difficulty !== "mixed") pool = pool.filter(q => q.difficulty === difficulty);
+  const cat = (category || "mixed").toLowerCase();
+  const diff = (difficulty || "mixed").toLowerCase();
+  let strict = BANK.filter(q => (cat==="mixed" || q.category===cat) && (diff==="mixed" || q.difficulty===diff));
   if (excludeIds.length) {
     const ex = new Set(excludeIds);
-    pool = pool.filter((_, i) => !ex.has(i));
+    strict = strict.filter((_, i) => !ex.has(i));
   }
-  // if pool too small, refill from all (mixed fallback)
-  if (pool.length < count) {
-    const extra = BANK.filter(q => !pool.includes(q));
-    pool = pool.concat(shuffle(extra));
+  if (strict.length >= count) {
+    return shuffle(strict).slice(0, count).map((q, idx) => ({
+      id: `q_${Date.now().toString(36)}_${idx}_${Math.random().toString(36).slice(2,6)}`,
+      category: q.category,
+      difficulty: q.difficulty,
+      q: q.q,
+      options: q.options.slice(),
+      correctIndex: q.correctIndex,
+      imageUrl: q.imageUrl || null,
+    }));
   }
-  const picked = shuffle(pool).slice(0, count).map((q, idx) => ({
+  // Not enough strict — fill with priority: same category any diff, then same diff any cat, then mixed
+  let result = shuffle(strict);
+  const used = new Set(result);
+  let remaining = count - result.length;
+  const addFrom = (pool, need) => {
+    const cand = shuffle(pool.filter(q => !used.has(q)));
+    const take = cand.slice(0, need);
+    for(const q of take) used.add(q);
+    result = result.concat(take);
+    return need - take.length;
+  };
+  if (cat!=="mixed" && remaining>0) {
+    const sameCat = BANK.filter(q => q.category===cat && !used.has(q));
+    remaining = addFrom(sameCat, remaining);
+  }
+  if (diff!=="mixed" && remaining>0) {
+    const sameDiff = BANK.filter(q => q.difficulty===diff && !used.has(q));
+    remaining = addFrom(sameDiff, remaining);
+  }
+  if (remaining>0) {
+    const mixed = BANK.filter(q => !used.has(q));
+    remaining = addFrom(mixed, remaining);
+  }
+  // Still short (bank < count): allow duplicates from strict/category
+  if (remaining>0) {
+    const dupPool = strict.length ? strict : (cat!=="mixed" ? BANK.filter(q=>q.category===cat) : BANK);
+    const pool = dupPool.length ? dupPool : BANK;
+    while (remaining>0) {
+      const q = pool[Math.floor(Math.random()*pool.length)];
+      result.push(q);
+      remaining--;
+    }
+  }
+  result = shuffle(result).slice(0, count);
+  return result.map((q, idx) => ({
     id: `q_${Date.now().toString(36)}_${idx}_${Math.random().toString(36).slice(2,6)}`,
     category: q.category,
     difficulty: q.difficulty,
@@ -106,7 +165,6 @@ export function pickQuestions({ category = "mixed", difficulty = "mixed", count 
     correctIndex: q.correctIndex,
     imageUrl: q.imageUrl || null,
   }));
-  return picked;
 }
 
 // Optional API fallback: try OpenTDB, else pickQuestions
