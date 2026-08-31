@@ -30,26 +30,9 @@ export function handleTriviaEffects({ roomManager, roomId, effects, broadcast, d
         break;
       }
       case "ENTER_REVEAL": {
-        const room = roomManager.get(roomId);
-        if (!room || !room.gameState) break;
-        const idxAtEntry = room.gameState.currentIndex;
-        // auto-advance after REVEAL_MS (but also allow early ACKs)
-        const revealMs = 4500;
-        setTimeout(() => {
-          const curRoom = roomManager.get(roomId);
-          if (!curRoom || !curRoom.gameState) return;
-          const cur = curRoom.gameState;
-          if (cur.phase !== "REVEAL") return;
-          if (cur.currentIndex !== idxAtEntry) return;
-          // if all acked, reducer already advanced; this will be no-op
-          try {
-            const res = dispatchInternal(roomId, { type: "NEXT_QUESTION" });
-            if (res) {
-              broadcast(roomId);
-              handleTriviaEffects({ roomManager, roomId, effects: res.effects, broadcast, dispatchInternal });
-            }
-          } catch (e) { /* may be not in REVEAL if ack advanced */ }
-        }, revealMs);
+        // No auto-advance — wait for all players to press Continue (ACK_REVEAL)
+        // This fixes "game is continuing without me pressing continue"
+        // Timer stays at question phase only; reveal is manual.
         break;
       }
       case "ENTER_GAME_OVER":

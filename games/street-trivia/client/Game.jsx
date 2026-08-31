@@ -19,6 +19,7 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
   const [priv, setPriv] = useState(null);
   const [toast, setToast] = useState(null);
   const [now, setNow] = useState(Date.now());
+  const [localStart, setLocalStart] = useState(null);
   const myId = socket?.id;
 
   function showToast(m){ setToast(m); setTimeout(()=>setToast(null),2200); }
@@ -61,12 +62,22 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
     };
   },[socket,roomId]);
 
-  // tick for timer bar
+  // tick for timer bar + reset localStart on new question
   useEffect(()=>{
     if(!pub || pub.phase!=="QUESTION") return;
     const id = setInterval(()=> setNow(Date.now()), 200);
     return ()=> clearInterval(id);
-  },[pub?.phase, pub?.questionStartAt]);
+  },[pub?.phase, pub?.question?.id]);
+
+  useEffect(()=>{
+    if(pub?.phase==="QUESTION" && pub?.question?.id){
+      setLocalStart(Date.now());
+      setNow(Date.now());
+    }
+    if(pub?.phase==="REVEAL" || pub?.phase==="GAME_OVER"){
+      setLocalStart(null);
+    }
+  },[pub?.phase, pub?.question?.id]);
 
   if(!pub){
     return (
@@ -90,13 +101,16 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
   const breakdown = pub.breakdown || {0:0,1:0,2:0,3:0};
   const correctIndex = pub.correctIndex;
 
-  // timer progress
+  // timer progress — use client localStart to avoid clock skew (server Date.now vs client)
   let timeLeft = null;
   let timePct = 0;
-  if(pub.phase==="QUESTION" && pub.questionStartAt){
-    const elapsed = (now - pub.questionStartAt)/1000;
+  if(pub.phase==="QUESTION" && pub.timerSeconds){
+    const start = localStart || pub.questionStartAt || now;
+    const elapsed = (now - start)/1000;
     timeLeft = Math.max(0, pub.timerSeconds - elapsed);
     timePct = Math.max(0, Math.min(1, timeLeft / pub.timerSeconds));
+    // clamp display: if localStart was just set, ensure not > timerSeconds
+    if(timeLeft > pub.timerSeconds) timeLeft = pub.timerSeconds;
   }
 
   function emitAnswer(choice){
@@ -132,7 +146,7 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
               <div key={p.id} className={`shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-bold ${isTop?"bg-amber-400 border-amber-300 text-[#0e2533]": isMe?"bg-white/15 border-white/20 text-white":"bg-white/5 border-white/10 text-white/70"}`}>
                 <span className="w-5 h-5 rounded-full bg-[#0a1e2e] text-white flex items-center justify-center text-[10px] font-black">{rank+1}</span>
                 <span className="truncate max-w-[80px]">{p.name} {isMe?"(you)":""}</span>
-                <span className={`px-1.5 py-0.5 rounded-full text-[11px] font-black ${isTop?"bg-[#0e2533] text-amber-300":"bg-white/10 text-white"}`}>{p.score}</span>
+                <span className={`px-2 py-0.5 rounded-full text-[11px] font-black border ${isTop?"bg-white text-[#0e2533] border-[#0e2533]/20": isMe?"bg-amber-400 text-[#0e2533] border-amber-300":"bg-white text-[#0e2533] border-white/20"}`}>{p.score} pts</span>
               </div>
             );
           })}
@@ -145,11 +159,21 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
 
       {/* Question card */}
       {!isOver ? (
-        <div className="rounded-[24px] bg-[#0f2231] border border-white/10 shadow-xl overflow-hidden">
+        <div className="relative rounded-[24px] bg-[#0f2231] border border-white/10 shadow-xl overflow-visible pt-3">
           {/* progress bar */}
-          <div className="h-1.5 bg-white/10 w-full">
+          <div className="h-1.5 bg-white/10 w-full rounded-t-[24px] overflow-hidden">
             <div className="h-full bg-gradient-to-r from-amber-300 to-orange-400 transition-all duration-200" style={{ width: `${((idx)/Math.max(total,1))*100}%` }} />
           </div>
+          {/* Timer at top middle of question border */}
+          {phase==="QUESTION" && timeLeft!==null && (
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 px-4 py-1 rounded-full bg-[#0a1e2e] border-2 border-amber-300 shadow-lg">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className={`text-xs font-black tracking-wide ${timeLeft<5?"text-rose-300":"text-white"}`}>⏱ {Math.ceil(timeLeft)}s</span>
+            </div>
+          )}
+          {isReveal && (
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 px-4 py-1 rounded-full bg-emerald-500 border-2 border-emerald-300 shadow-lg text-xs font-black text-white">Answer • {LETTERS[correctIndex]}</div>
+          )}
           {q ? (
             <div className="p-5 sm:p-6">
               <div className="flex items-center justify-between">
