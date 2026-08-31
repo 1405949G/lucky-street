@@ -641,7 +641,6 @@ export function reducer(state, action) {
 
       let newState = {
         ...state,
-        proposalTracker: 0,
         questVotes: Object.freeze({}),
         proposal: Object.freeze({ teamIds: [], votes: Object.freeze({}), result: null, revealed: false }),
         questRevealAcks: Object.freeze({}),
