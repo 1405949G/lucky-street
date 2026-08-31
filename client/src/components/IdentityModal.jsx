@@ -1,3 +1,4 @@
+// TEXT LOCK — strings from client/src/content/copy.js:1 (do not edit text here without explicit user prompt)
 ﻿/**
  * IdentityModal - onboarding
  * Shows once, remembers you next time. Blocking variant for direct room links.

@@ -1,7 +1,9 @@
-﻿import React, { useContext, useMemo, useState } from "react";
+﻿// TEXT LOCK — strings from client/src/content/copy.js:1, visuals from client/src/ui/theme.js:1
+import React, { useContext, useMemo, useState } from "react";
 import { SocketContext } from "../context/SocketContext.jsx";
 import RoomCard from "./RoomCard.jsx";
 import JoinByIdBox from "./JoinByIdBox.jsx";
+import { copy } from "../content/copy.js";
 
 export default function RoomBrowser({ onJoinRoom, onSpectate, onCreateClick }) {
   const { rooms } = useContext(SocketContext);
@@ -21,13 +23,13 @@ export default function RoomBrowser({ onJoinRoom, onSpectate, onCreateClick }) {
     <div className="max-w-[960px] mx-auto">
       <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
         <div>
-          <h2 className="font-display font-extrabold text-[24px] text-[#f3ecd8]">Game Rooms</h2>
-          <p className="text-sm text-white/50">Jump in or start your own.</p>
+          <h2 className="font-display font-extrabold text-[24px] text-[#f3ecd8]">{copy.roomBrowser.title}</h2>
+          <p className="text-sm text-white/50">{copy.roomBrowser.subtitle}</p>
         </div>
         <button
           onClick={onCreateClick}
           className="px-5 py-3 rounded-full bg-[#f3ecd8] hover:bg-white text-[#0e2533] font-extrabold shadow-md"
-        >+ New Game</button>
+        >{copy.roomBrowser.newGame}</button>
       </div>
 
       <div className="mt-5 grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-5">
@@ -36,16 +38,16 @@ export default function RoomBrowser({ onJoinRoom, onSpectate, onCreateClick }) {
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Search rooms…"
+              placeholder={copy.roomBrowser.searchPlaceholder}
               className="flex-1 px-4 py-2.5 rounded-xl bg-white/10 border border-white/15 text-white placeholder:text-white/30 text-sm outline-none focus:border-amber-400/50"
             />
-            <span className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-white/60 flex items-center">{filtered.length} rooms</span>
+            <span className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-white/60 flex items-center">{filtered.length} {copy.roomBrowser.roomsSuffix}</span>
           </div>
 
           {filtered.length === 0 ? (
             <div className="rounded-2xl bg-[#0f2231]/60 border border-white/10 border-dashed p-8 text-center">
-              <p className="text-white font-bold">No games right now</p>
-              <p className="text-sm text-white/50 mt-1">Start a new one - it’ll show up instantly.</p>
+              <p className="text-white font-bold">{copy.roomBrowser.emptyTitle}</p>
+              <p className="text-sm text-white/50 mt-1">{copy.roomBrowser.emptyDesc}</p>
             </div>
           ) : (
             <div className="grid gap-3">
@@ -59,11 +61,9 @@ export default function RoomBrowser({ onJoinRoom, onSpectate, onCreateClick }) {
         <div className="space-y-4">
           <JoinByIdBox onJoin={(code) => onJoinRoom({ id: code })} />
           <div className="rounded-2xl bg-[#29546c] border border-white/10 p-5">
-            <h3 className="font-extrabold text-[#f3ecd8]">Quick tips</h3>
+            <h3 className="font-extrabold text-[#f3ecd8]">{copy.roomBrowser.quickTipsTitle}</h3>
             <ul className="text-sm text-white/70 mt-2 space-y-1.5 list-disc list-inside">
-              <li>Your name stays saved for next time.</li>
-              <li>Pick a unique name - try another if taken.</li>
-              <li>Share your invite link to play together.</li>
+              {copy.roomBrowser.quickTips.map(t => <li key={t}>{t}</li>)}
             </ul>
             <a href="/admin" className="hidden">Admin</a>
           </div>

@@ -1,3 +1,4 @@
+// TEXT LOCK — strings from client/src/content/copy.js:1 (do not edit text here without explicit user prompt)
 import React from "react";
 
 export default function RoomCard({ room, onJoin, onSpectate }) {

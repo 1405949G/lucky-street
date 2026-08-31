@@ -1,4 +1,5 @@
-﻿import React, { useContext, useState } from "react";
+﻿// TEXT LOCK — copy comes from client/src/content/copy.js:1 (do not hardcode new strings here)
+import React, { useContext, useState } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { ProfileContext } from "./context/ProfileContext.jsx";
 import { SocketContext } from "./context/SocketContext.jsx";
@@ -7,6 +8,7 @@ import RoomBrowser from "./components/RoomBrowser.jsx";
 import CreateRoomModal from "./components/CreateRoomModal.jsx";
 import Lobby from "./components/Lobby.jsx";
 import AdminView from "./components/AdminView.jsx";
+import { copy } from "./content/copy.js";
 
 function MainPage() {
   const { profile, hasProfile, showOnboarding, setShowOnboarding } = useContext(ProfileContext);
@@ -68,13 +70,13 @@ function MainPage() {
               <span className="font-display font-black text-[#0a1e2e]">LS</span>
             </div>
             <div>
-              <h1 className="font-display font-extrabold tracking-[0.12em] text-white leading-none">LUCKY STREET</h1>
-              <p className="text-[11px] tracking-[0.16em] text-white/50 font-medium -mt-0.5">PARTY LOBBY</p>
+              <h1 className="font-display font-extrabold tracking-[0.12em] text-white leading-none">{copy.app.brand}</h1>
+              <p className="text-[11px] tracking-[0.16em] text-white/50 font-medium -mt-0.5">{copy.app.sub}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <span className={`w-2 h-2 rounded-full ${connected ? "bg-emerald-400" : "bg-rose-400 animate-pulse"}`}></span>
-            <span className="text-xs text-white/60 hidden sm:inline">{connected ? "Live" : "Connecting…"}</span>
+            <span className="text-xs text-white/60 hidden sm:inline">{connected ? copy.app.live : copy.app.connecting}</span>
             {hasProfile ? (
               <div className="flex items-center gap-2 ml-2 pl-2 border-l border-white/10">
                 <div
@@ -88,10 +90,10 @@ function MainPage() {
                   )}
                 </div>
                 <span className="text-sm font-bold text-white hidden sm:inline max-w-[100px] truncate">{profile.username}</span>
-                <button onClick={() => setShowOnboarding(true)} className="px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-xs font-bold text-white/70">Edit</button>
+                <button onClick={() => setShowOnboarding(true)} className="px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-xs font-bold text-white/70">{copy.app.edit}</button>
               </div>
             ) : (
-              <button onClick={() => setShowOnboarding(true)} className="ml-2 px-3 py-1.5 rounded-full bg-[#f3ecd8] text-[#0e2533] text-xs font-extrabold">Set Profile</button>
+              <button onClick={() => setShowOnboarding(true)} className="ml-2 px-3 py-1.5 rounded-full bg-[#f3ecd8] text-[#0e2533] text-xs font-extrabold">{copy.app.setProfile}</button>
             )}
           </div>
         </div>

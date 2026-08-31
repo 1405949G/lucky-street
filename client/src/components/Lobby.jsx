@@ -1,3 +1,4 @@
+// TEXT LOCK — strings from client/src/content/copy.js:1 (do not edit text here without explicit user prompt)
 ﻿/**
  * Lobby - Host can change game/options, add bots (generic names), transfer host, kick via popup
  * Name/avatar locked inside room (change only at main menu / direct-link IdentityModal).

@@ -2,6 +2,17 @@
 
 > **Auto-read by AI in new sessions. This is the full website. Read this + `games/README.md:1` before creating games.**
 
+## TEXT LOCK — UI Text Must Never Change Without Explicit User Prompt (AI: obey strictly)
+
+**Rule: AI may change colours, shapes, spacing, shadows, hover animations, and add icons — but MUST NOT change any user-facing text.**
+
+- **Single source of truth:** `client/src/content/copy.js:1` holds every string the player reads (brand, buttons, modals, toasts, tips, lobby, game rules).
+- **Visual-only allowlist:** `client/src/ui/theme.js:1`, `client/src/ui/primitives.jsx:1`, `client/src/index.css:1`, `tailwind.config.js:1`, `client/public/assets/*` — edit these for visuals.
+- **Blocked without `change text:` prompt:** Do NOT edit `client/src/content/copy.js:1`, do NOT alter string literals in `client/src/components/*`, `games/*/client/*`, or `games/*/manifest.js` labels/descriptions.
+- **If you need new text:** Ask the user. Do not invent copy. Wait for explicit `change text: "old" -> "new"` or user approval to add a key to `copy.js`.
+- **Icons:** Add icons/symbols via `client/src/ui/theme.js:18` `icons` registry or inline SVG — never by replacing words.
+- **This protects playability:** Text was locked after revert `930f746` because mass UI revamps kept breaking wording. Visuals go in `client/src/ui/` so a visuals-only AI never touches game logic `server/src/durable/LuckyStreetDO.js:1` or `client/src/context/SocketContext.jsx:1`.
+
 ## Project Context
 
 - **Monorepo:** `lucky-street/` is the **full website** (not `reference/Veil Street Game/` which is legacy reference for recreating Veil Street later).
@@ -107,6 +118,14 @@ Local test: `npx wrangler dev --local --port 3001` (if you have terminal) or kee
 
 - **Render free:** single region, sleeps after 15m -> 5-15s cold start, single `Map` lost on restart.
 - **Workers DO:** edge (300 PoPs), no sleep, DO `alarm()` survives hibernation, shards by `roomId` -> global ~10-30ms vs 40-120ms for Render. For test lobby difference negligible; scale to many regions favors Workers (see `ARCHITECTURE.md:9`).
+
+## UI Visual-Only Layer (for safe re-theming)
+
+- **Copy (locked):** `client/src/content/copy.js:1` + `client/src/content/README.md:1`
+- **Theme (free to edit):** `client/src/ui/theme.js:1` (colours, radii, Tailwind class maps), `client/src/ui/primitives.jsx:1` (Card/Button/Input/Badge + Icon), `client/src/index.css:1`, `tailwind.config.js:1`
+- **Assets (free):** `client/public/assets/*` — add hero/icons here, reference via `theme.js:18` icons
+- **Workflow for visuals:** Prompt `visual only: update theme` → AI edits only `client/src/ui/*`, `index.css`, `tailwind.config.js`, `public/assets/*`. Text stays in `copy.js`.
+- **Workflow for text:** Prompt `change text: ...` → AI may edit `copy.js:1` and the one component that imports that key. Keep diff small, one section at a time (main menu `App.jsx:1`/`RoomBrowser.jsx:1`, then lobby `Lobby.jsx:1`, then game `games/veil-street/client/Game.jsx:1`).
 
 ## References
 
