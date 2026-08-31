@@ -17,12 +17,13 @@ export function createInitialState() {
     questions: Object.freeze([]), // filled on SETUP_GAME
     currentIndex: 0,
     scores: Object.freeze({}), // {playerId: number}
-    answers: Object.freeze({}), // {playerId: choice 0..3} for current Q
+    answers: Object.freeze({}), // {playerId: choice 0..1 or 0..3}
     answerAt: Object.freeze({}), // {playerId: timestamp}
     reveal: Object.freeze(null), // {correctIndex, breakdown:{0:count,...}} when in REVEAL
     questionStartAt: null,
     timerSeconds: 20,
-    category: "random",
+    category: "Random",
+    questionType: "Random",
     roomCode: null,
     winners: Object.freeze([]), // ids at GAME_OVER
     log: Object.freeze([]),
@@ -100,6 +101,7 @@ export function getPublicState(state){
     log: state.log,
     roomCode: state.roomCode,
     category: state.category,
+    questionType: state.questionType,
   });
 }
 
@@ -126,20 +128,21 @@ export function reducer(state, action){
 
   switch(action.type){
     case "SETUP_GAME": {
-      const { players, opts, roomCode } = action.payload || {};
+      const { players, opts, roomCode, preFetchedQuestions } = action.payload || {};
       if (!Array.isArray(players) || players.length < 1) throw new Error("Need 1+ player");
       if (players.length > 12) throw new Error("Max 12 players");
       const names = players.map(p=> String(p.name||"").trim());
       if (names.some(n=>!n)) throw new Error("All players need names");
       if (new Set(names.map(n=>n.toLowerCase())).size !== names.length) throw new Error("Duplicate names");
-      const questionCount = Math.min(30, Math.max(5, Number(opts?.questionCount) || 10));
+      const questionCount = Math.min(50, Math.max(5, Number(opts?.questionCount) || 10));
       const timerSeconds = Math.min(45, Math.max(10, Number(opts?.timerSeconds) || 20));
-      const category = (opts?.category || "random").toLowerCase();
-      const questions = pickQuestions({ category, count: questionCount });
+      const category = (opts?.category || "Random").toString();
+      const questionType = (opts?.questionType || opts?.type || "Random").toString();
+      const questions = Array.isArray(preFetchedQuestions) && preFetchedQuestions.length ? preFetchedQuestions.slice(0, questionCount) : pickQuestions({ category, questionType, count: questionCount });
       const builtPlayers = players.map(p=> Object.freeze({ id: p.id, name: String(p.name).trim(), isBot: !!p.isBot, avatar: p.avatar||null }));
       const scores = {};
       for(const p of builtPlayers) scores[p.id]=0;
-      let log = appendLog([], "SETUP", `Street Trivia • ${questionCount} Q • ${timerSeconds}s • ${category}`);
+      let log = appendLog([], "SETUP", `Street Trivia • ${questionCount} Q • ${timerSeconds}s • ${category} • ${questionType}`);
       log = appendLog(log, "QUESTION", fmtQuestion(questions[0], 0, questionCount));
       const newState = {
         ...createInitialState(),
@@ -154,6 +157,7 @@ export function reducer(state, action){
         questionStartAt: Date.now(),
         timerSeconds,
         category,
+        questionType,
         roomCode: roomCode || null,
         log,
         revealAcks: Object.freeze({}),
@@ -167,7 +171,9 @@ export function reducer(state, action){
       if (playerId == null || choice == null) throw new Error("playerId + choice required");
       if (!state.players.some(p=>p.id===playerId)) throw new Error("Player not in game");
       if (state.answers[playerId] !== undefined) throw new Error("Already answered");
-      if (!Number.isInteger(choice) || choice <0 || choice>3) throw new Error("Choice must be 0..3");
+      const curQForChoice = state.questions[state.currentIndex];
+      const maxChoice = (curQForChoice?.options?.length || 4) - 1;
+      if (!Number.isInteger(choice) || choice <0 || choice>maxChoice) throw new Error(`Choice must be 0..${maxChoice}`);
       const nextAnswers = Object.freeze({ ...state.answers, [playerId]: choice });
       const nextAt = Object.freeze({ ...state.answerAt, [playerId]: Date.now() });
       let newState = { ...state, answers: nextAnswers, answerAt: nextAt };

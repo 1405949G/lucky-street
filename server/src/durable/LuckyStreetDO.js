@@ -1028,7 +1028,7 @@ export class LuckyStreetDO {
           const id = String(data.roomId || sess.currentRoom || "").toUpperCase();
           const rm = this.roomManager.get(id);
           if (rm && rm.game==="street-trivia") {
-            const { room, effects } = this.roomManager.startTrivia(id, socketId);
+            const { room, effects } = await this.roomManager.startTrivia(id, socketId);
             okAck({ ok: true, room });
             this.broadcastTriviaState(id);
             handleTriviaEffects({ roomManager: this.roomManager, roomId: id, effects, broadcast: (rid) => this.broadcastTriviaState(rid), dispatchInternal: (rid, act) => this.triviaDispatchInternal(rid, act) });

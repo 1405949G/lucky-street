@@ -497,13 +497,13 @@ io.on("connection", (socket) => {
   });
 
   // --- Game lifecycle (generic) ---
-  socket.on("game:start", ({ roomId } = {}, ack) => {
+  socket.on("game:start", async ({ roomId } = {}, ack) => {
     try {
       const id = String(roomId || socket.data.currentRoom || "").toUpperCase();
       const rm = roomManager.get(id);
       if(!rm) throw new Error("Room not found");
       if(rm.game==="street-trivia"){
-        const { room, effects } = roomManager.startTrivia(id, socket.id);
+        const { room, effects } = await roomManager.startTrivia(id, socket.id);
         if (typeof ack === "function") ack({ ok: true, room });
         broadcastTriviaState(id);
         handleTriviaEffects({ roomManager, roomId: id, effects, broadcast: broadcastTriviaState, dispatchInternal: triviaDispatchInternal });

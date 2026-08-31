@@ -87,6 +87,12 @@ export const BANK = [
   { category:"history", difficulty:"medium", q:"Which empire built Machu Picchu?", options:["Aztec","Inca","Maya","Olmec"], correctIndex:1, imageUrl:null },
   { category:"history", difficulty:"hard", q:"When did the Berlin Wall fall?", options:["1987","1989","1991","1993"], correctIndex:1, imageUrl:null },
   { category:"general", difficulty:"hard", q:"What is the term for a fear of long words?", options:["Hippopotomonstrosesquippedaliophobia","Arachnophobia","Claustrophobia","Acrophobia"], correctIndex:0, imageUrl:null },
+  // boolean samples (True/False)
+  { category:"general", difficulty:"easy", q:"The Great Wall of China is visible from the Moon.", options:["True","False"], correctIndex:1, imageUrl:null },
+  { category:"science", difficulty:"easy", q:"Water boils at 100°C at sea level.", options:["True","False"], correctIndex:0, imageUrl:null },
+  { category:"history", difficulty:"easy", q:"World War II ended in 1945.", options:["True","False"], correctIndex:0, imageUrl:null },
+  { category:"geography", difficulty:"easy", q:"The Sahara Desert is the largest desert in the world.", options:["True","False"], correctIndex:1, imageUrl:null },
+  { category:"sports", difficulty:"easy", q:"A basketball team has 5 players on the court.", options:["True","False"], correctIndex:0, imageUrl:null },
 
   // image samples (use placeholder image urls)
   { category:"general", difficulty:"easy", q:"Which landmark is shown? (Eiffel Tower)", options:["Eiffel Tower","Big Ben","Statue of Liberty","Burj Khalifa"], correctIndex:0, imageUrl:"https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=480&q=60" },
@@ -103,10 +109,30 @@ function shuffle(arr) {
   return a;
 }
 
-export function pickQuestions({ category = "random", count = 10, excludeIds = [] } = {}) {
-  const cat = (category || "random").toLowerCase();
-  const isRandom = cat==="random" || cat==="mixed";
-  let strict = BANK.filter(q => isRandom || q.category===cat);
+export function pickQuestions({ category = "Random", questionType = "Random", count = 10, excludeIds = [] } = {}) {
+  const catRaw = (category || "Random").toString();
+  const cat = catRaw.toLowerCase();
+  const isRandomCat = cat==="random" || cat==="mixed";
+  const typeRaw = (questionType || "Random").toString().toLowerCase();
+  const isRandomType = typeRaw==="random" || typeRaw==="mixed" || typeRaw==="any";
+  const wantBoolean = typeRaw.includes("true") || typeRaw==="boolean";
+  const wantMultiple = typeRaw.includes("multiple");
+  // normalize BANK category names for matching: our BANK uses short lower names like general, science, etc.
+  // Map new full names to short for fallback matching
+  const catShortMap = {
+    "general knowledge":"general", "entertainment: books":"general", "entertainment: film":"movies", "entertainment: music":"music",
+    "entertainment: musicals & theatres":"general", "entertainment: television":"pop", "entertainment: video games":"general",
+    "entertainment: board games":"general", "science & nature":"science", "science: computers":"tech", "science: mathematics":"science",
+    "mythology":"history", "sports":"sports", "geography":"geography", "history":"history", "politics":"history",
+    "art":"general", "celebrities":"pop", "animals":"science", "vehicles":"general", "entertainment: comics":"movies",
+    "science: gadgets":"tech", "entertainment: japanese anime & manga":"movies", "entertainment: cartoon & animations":"movies"
+  };
+  const strictCat = catShortMap[cat] || cat;
+  let strict = BANK.filter(q => {
+    const catMatch = isRandomCat || q.category===strictCat || q.category===cat;
+    const typeMatch = isRandomType || (wantBoolean ? q.options.length===2 : wantMultiple ? q.options.length===4 : true);
+    return catMatch && typeMatch;
+  });
   if (excludeIds.length) {
     const ex = new Set(excludeIds);
     strict = strict.filter((_, i) => !ex.has(i));
@@ -139,7 +165,7 @@ export function pickQuestions({ category = "random", count = 10, excludeIds = []
   }
   // Still short (bank < count): allow duplicates from strict/category
   if (remaining>0) {
-    const dupPool = strict.length ? strict : (!isRandom ? BANK.filter(q=>q.category===cat) : BANK);
+    const dupPool = strict.length ? strict : (!isRandomCat ? BANK.filter(q=>q.category===strictCat || q.category===cat) : BANK);
     const pool = dupPool.length ? dupPool : BANK;
     while (remaining>0) {
       const q = pool[Math.floor(Math.random()*pool.length)];
@@ -161,16 +187,34 @@ export function pickQuestions({ category = "random", count = 10, excludeIds = []
 
 // Optional API fallback: try OpenTDB, else pickQuestions
 export async function fetchQuestionsWithFallback(opts) {
-  // Attempt OpenTDB if global fetch exists and category not image-dependent
+  // Attempt OpenTDB if global fetch exists
   try {
-    const catRaw = (opts.category || "random").toLowerCase();
-    const isRandom = catRaw==="random" || catRaw==="mixed";
-    if (typeof fetch !== "undefined" && !isRandom) {
-      const catMap = { general:9, science:17, history:23, geography:22, pop:14, movies:11, music:12, sports:21, tech:18 };
-      const catId = catMap[catRaw];
-      const catParam = catId ? `&category=${catId}` : "";
-      const amount = Math.min(20, opts.count || 10);
-      const url = `https://opentdb.com/api.php?amount=${amount}${catParam}&type=multiple`;
+    const catRaw = (opts.category || "Random").toString();
+    const catLower = catRaw.toLowerCase();
+    const isRandomCat = catLower==="random" || catLower==="mixed";
+    const typeRaw = (opts.questionType || opts.type || "Random").toString().toLowerCase();
+    const isRandomType = typeRaw==="random" || typeRaw==="mixed" || typeRaw==="any";
+    const wantBoolean = typeRaw.includes("true") || typeRaw==="boolean";
+    const wantMultiple = typeRaw.includes("multiple");
+    const catMap = {
+      "general knowledge":9, "entertainment: books":10, "entertainment: film":11, "entertainment: music":12,
+      "entertainment: musicals & theatres":13, "entertainment: television":14, "entertainment: video games":15, "entertainment: board games":16,
+      "science & nature":17, "science: computers":18, "science: mathematics":19, "mythology":20, "sports":21, "geography":22,
+      "history":23, "politics":24, "art":25, "celebrities":26, "animals":27, "vehicles":28, "entertainment: comics":29,
+      "science: gadgets":30, "entertainment: japanese anime & manga":31, "entertainment: cartoon & animations":32,
+      // short fallback
+      "general":9, "science":17, "history":23, "geography":22, "pop":14, "movies":11, "music":12, "sports":21, "tech":18
+    };
+    const catId = catMap[catLower] || catMap[catRaw.toLowerCase()];
+    const catParam = !isRandomCat && catId ? `&category=${catId}` : "";
+    let typeParam = "";
+    if (!isRandomType) {
+      if (wantBoolean) typeParam = "&type=boolean";
+      else if (wantMultiple) typeParam = "&type=multiple";
+    }
+    const amount = Math.min(50, opts.count || 10);
+    if (typeof fetch !== "undefined") {
+      const url = `https://opentdb.com/api.php?amount=${amount}${catParam}${typeParam}`;
       const res = await fetch(url);
       if (res.ok) {
         const json = await res.json();

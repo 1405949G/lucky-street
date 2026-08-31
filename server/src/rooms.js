@@ -26,6 +26,7 @@ import { PHASES as QuestPhases } from "../../games/veil-street/server/config.js"
 import * as questAI from "../../games/veil-street/server/ai.js";
 import { reducer as triviaReducer, getPublicState as triviaPublic, getPrivateState as triviaPrivate } from "../../games/street-trivia/server/state.js";
 import { PHASES as TriviaPhases } from "../../games/street-trivia/server/config.js";
+import { fetchQuestionsWithFallback } from "../../games/street-trivia/server/questions.js";
 
 const BOT_NAMES = [
   "Ava", "Milo", "Zoe", "Finn", "Luna", "Kai", "Nova", "Rex",
@@ -832,7 +833,7 @@ export class RoomManager {
     return true;
   }
 
-  startTrivia(roomId, requesterId) {
+  async startTrivia(roomId, requesterId) {
     this.canStartTrivia(roomId, requesterId);
     const room = this.get(roomId);
     const allParticipants = [
@@ -840,7 +841,12 @@ export class RoomManager {
       ...room.bots.map(b => ({ id: b.id, name: b.name, isBot: true, avatar: null })),
     ];
     const opts = room.gameOptions || {};
-    const result = triviaReducer(undefined, { type: 'SETUP_GAME', payload: { players: allParticipants, opts, roomCode: room.id } });
+    let preFetched = null;
+    try {
+      const count = Math.min(50, Math.max(5, Number(opts.questionCount) || 10));
+      preFetched = await fetchQuestionsWithFallback({ category: opts.category, questionType: opts.questionType || opts.type, count });
+    } catch {}
+    const result = triviaReducer(undefined, { type: 'SETUP_GAME', payload: { players: allParticipants, opts, roomCode: room.id, preFetchedQuestions: preFetched } });
     room.gameState = result.state;
     room.gameStartedAt = Date.now();
     room.updatedAt = Date.now();
@@ -873,7 +879,7 @@ export class RoomManager {
     switch(actionType){
       case "SUBMIT_ANSWER": {
         const choice = payload?.choice;
-        if (choice==null) throw new Error("choice required 0..3");
+        if (choice==null) throw new Error("choice required");
         action = { type: "SUBMIT_ANSWER", payload: { playerId: socketId, choice } };
         break;
       }

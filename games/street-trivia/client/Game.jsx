@@ -137,7 +137,7 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
       <div className="rounded-2xl bg-[#0f2231]/70 border border-white/10 p-3">
         <div className="flex items-center justify-between">
           <span className="text-[11px] tracking-widest font-bold text-white/40">LIVE SCORES</span>
-          <span className="text-[11px] font-bold text-white/30">Street Trivia • {total} Q • {pub.timerSeconds}s • {pub.category}</span>
+          <span className="text-[11px] font-bold text-white/30">Street Trivia • {total} Q • {pub.timerSeconds}s • {pub.category} • {pub.questionType}</span>
         </div>
         <div className="mt-2 flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
           {sorted.length===0 ? <span className="text-xs text-white/30">No scores yet</span> : sorted.map((p,rank)=>{
@@ -201,10 +201,10 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
                 </div>
               )}
 
-              {/* Options A-D */}
-              <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Options — supports Multiple (4) and True/False (2) */}
+              <div className={`mt-5 grid gap-3 ${q.options.length===2 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1 sm:grid-cols-2"}`}>
                 {q.options.map((opt, i)=>{
-                  const letter = LETTERS[i];
+                  const letter = LETTERS[i] || String.fromCharCode(65+i);
                   const isMy = myAnswer===i;
                   const isCorrect = isReveal && correctIndex===i;
                   const isWrongPick = isReveal && isMy && correctIndex!==i;
@@ -225,7 +225,7 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
                         ${isSpectator ? "opacity-70" : ""}
                       `}
                     >
-                      <span className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center font-black text-white border shadow ${OPTION_COLORS[i]}`}>{letter}</span>
+                      <span className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center font-black text-white border shadow ${OPTION_COLORS[i]}`}>{q.options.length===2 ? opt.slice(0,1).toUpperCase() : letter}</span>
                       <span className="flex-1 text-sm font-bold text-white pr-2">{opt}</span>
                       {isReveal && (
                         <span className={`px-2 py-1 rounded-full text-xs font-black ${isCorrect?"bg-emerald-400 text-black":"bg-white/10 text-white/60"}`}>{count} • {pct}%</span>
@@ -241,22 +241,22 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
 
               {phase==="QUESTION" && !isSpectator && (
                 hasAnswered
-                  ? <div className="mt-4 text-center py-3 rounded-full bg-white/10 border border-white/15 text-white/60 font-bold text-sm">Locked in {LETTERS[myAnswer]} — waiting {pub.answersCount}/{pub.totalPlayers}</div>
-                  : <p className="mt-4 text-center text-xs text-white/40">Pick A-D — early reveal when everyone answers</p>
+                  ? <div className="mt-4 text-center py-3 rounded-full bg-white/10 border border-white/15 text-white/60 font-bold text-sm">Locked in {q.options.length===2 ? q.options[myAnswer] : LETTERS[myAnswer]} — waiting {pub.answersCount}/{pub.totalPlayers}</div>
+                  : <p className="mt-4 text-center text-xs text-white/40">Pick {q.options.length===2 ? "True/False" : "A-D"} — early reveal when everyone answers</p>
               )}
               {isSpectator && phase==="QUESTION" && <div className="mt-4 text-center py-3 rounded-full bg-white/5 text-white/40 font-bold text-sm">Spectating — answers hidden until reveal</div>}
 
-              {/* Reveal breakdown: who picked what — enlarged for 12p */}
+              {/* Reveal breakdown: who picked what — enlarged for 12p, adapts to 2 or 4 */}
               {isReveal && (
                 <div className="mt-6 rounded-2xl bg-white/[0.04] border border-white/10 p-5">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-black text-white">Answer • <span className="text-emerald-300">{LETTERS[correctIndex]} is correct</span></h3>
+                    <h3 className="text-sm font-black text-white">Answer • <span className="text-emerald-300">{q.options[correctIndex]} is correct</span></h3>
                     <span className="text-xs text-white/40">{pub.revealAckCount}/{pub.totalPlayers} ready</span>
                   </div>
-                  <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-                    {LETTERS.map((L,i)=>(
-                      <div key={L} className={`rounded-xl p-3 border min-h-[96px] flex flex-col ${i===correctIndex?"bg-emerald-500/15 border-emerald-400/40":"bg-white/5 border-white/10"}`}>
-                        <div className={`text-xs font-black ${i===correctIndex?"text-emerald-300":"text-white/60"}`}>{L} • {breakdown[i]||0}</div>
+                  <div className={`mt-4 grid gap-3 text-center ${q.options.length===2 ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-4"}`}>
+                    {q.options.map((opt,i)=>(
+                      <div key={i} className={`rounded-xl p-3 border min-h-[96px] flex flex-col ${i===correctIndex?"bg-emerald-500/15 border-emerald-400/40":"bg-white/5 border-white/10"}`}>
+                        <div className={`text-xs font-black truncate ${i===correctIndex?"text-emerald-300":"text-white/60"}`}>{q.options.length===2 ? opt : `${LETTERS[i]} • ${opt.slice(0,18)}`} • {breakdown[i]||0}</div>
                         <div className="mt-2 flex flex-wrap gap-1.5 justify-center content-start flex-1">
                           {(Object.entries(picks).filter(([,ch])=> ch===i).map(([pid])=>{
                             const pl = pub.players.find(p=>p.id===pid);
@@ -287,7 +287,7 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
         <div className="rounded-[24px] bg-[#0f2231] border border-white/10 shadow-xl p-6 text-center">
           <p className="text-xs tracking-widest font-bold text-amber-300">STREET TRIVIA • FINISHED</p>
           <h2 className="mt-1 text-2xl font-black text-white">Results</h2>
-          <p className="text-xs text-white/40">{pub.category} • {total} Q</p>
+          <p className="text-xs text-white/40">{pub.category} • {pub.questionType} • {total} Q</p>
 
           <div className="mt-5 flex justify-center gap-2 items-end">
             {(() => {

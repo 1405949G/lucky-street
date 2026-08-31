@@ -29,6 +29,7 @@ export default function Lobby({ spectate = false }) {
   const [botConfirm, setBotConfirm] = useState(null);
   const [mobileTab, setMobileTab] = useState("board"); // board | controls - for phone split-view like Kahoot
   const [showRules, setShowRules] = useState(false);
+  const [triviaCatSearch, setTriviaCatSearch] = useState("");
   const leavingRef = useRef(false);
   const roomRef = useRef(null);
   useEffect(() => { roomRef.current = room; }, [room]);
@@ -589,7 +590,7 @@ export default function Lobby({ spectate = false }) {
               {isTriviaGame && (
                 <div className="rounded-2xl bg-gradient-to-br from-violet-600/20 to-amber-500/20 border border-white/10 p-4">
                   <h4 className="font-bold text-white text-sm flex items-center gap-2">Street Trivia</h4>
-                  <p className="text-xs text-white/60 mt-1">{totalPlayers}/{room.maxPlayers} • {room.gameOptions.questionCount} Q • {room.gameOptions.timerSeconds}s • {room.gameOptions.category}</p>
+                  <p className="text-xs text-white/60 mt-1">{totalPlayers}/{room.maxPlayers} • {room.gameOptions.questionCount} Q • {room.gameOptions.timerSeconds}s • {room.gameOptions.category} • {room.gameOptions.questionType}</p>
                   {isHost ? (
                     <>
                       <button onClick={handleStartGame} disabled={!canStart} className={`mt-3 w-full py-3 rounded-full font-extrabold ${canStart ? "bg-amber-400 hover:bg-amber-300 text-[#0e2533]" : "bg-white/10 text-white/30 cursor-not-allowed"}`}>
@@ -668,7 +669,29 @@ export default function Lobby({ spectate = false }) {
                           <span className="text-sm font-bold text-white">{room.gameOptions[opt.key]}{opt.unit || ""}</span>
                         )
                       ) : opt.type === "select" ? (
-                        isHost ? (
+                        isTriviaGame && opt.key === "category" ? (
+                          isHost ? (
+                            <div className="flex-1 flex flex-col gap-2">
+                              <div className="relative">
+                                <input value={triviaCatSearch} onChange={e=>setTriviaCatSearch(e.target.value)} placeholder="Search categories…" disabled={isGameLocked} className="w-full pl-8 pr-3 py-2 rounded-xl bg-white/10 border border-white/15 text-white placeholder:text-white/30 text-xs outline-none disabled:opacity-40" />
+                                <span className="absolute left-2.5 top-2.5 text-white/40 text-xs">⌕</span>
+                              </div>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[220px] overflow-auto pr-1 p-1 border border-white/5 rounded-xl bg-white/[0.02]">
+                                {opt.options.filter(o=> o.toLowerCase().includes(triviaCatSearch.toLowerCase())).map(o=>{
+                                  const isSel = room.gameOptions[opt.key]===o;
+                                  return (
+                                    <button key={o} onClick={()=>handleOptionChange(opt.key, o)} disabled={isGameLocked} className={`text-left px-3 py-2 rounded-xl text-xs font-bold border transition-colors ${isSel?"bg-amber-400 border-amber-300 text-[#0e2533]":"bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:border-white/15"} ${isGameLocked?"opacity-40 cursor-not-allowed":""}`}>
+                                      {o}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                              <span className="text-xs text-white/30">Selected: <span className="text-white font-bold">{room.gameOptions[opt.key]}</span></span>
+                            </div>
+                          ) : (
+                            <span className="text-sm font-bold text-white">{room.gameOptions[opt.key]}</span>
+                          )
+                        ) : isHost ? (
                           <select value={room.gameOptions[opt.key]} onChange={e => handleOptionChange(opt.key, e.target.value)} disabled={isGameLocked} className={`flex-1 px-3 py-2 rounded-xl border text-xs ${isGameLocked ? "bg-white/5 border-white/10 text-white/30" : "bg-white/10 border-white/15 text-white"}`}>
                             {opt.options.map(o => <option key={o} value={o} className="bg-[#0f2231]">{o}</option>)}
                           </select>
@@ -752,7 +775,7 @@ export default function Lobby({ spectate = false }) {
                 </div>
                 <div className="rounded-xl bg-white/5 border border-white/10 p-3">
                   <p className="text-xs font-bold text-white">Options — set by host in lobby</p>
-                  <p className="text-xs text-white/60 mt-1.5 leading-snug">Questions (5–30), Timer (10–45s), Category. Defaults are 10 Q / 20s / Random. Change them before starting.</p>
+                  <p className="text-xs text-white/60 mt-1.5 leading-snug">Questions (5–50), Timer (10–45s), Category, Type (Multiple / True-False). Defaults are 10 Q • 20s • Random • Random. Change them before starting.</p>
                 </div>
                 <div className="rounded-xl bg-white/5 border border-white/10 p-3">
                   <p className="text-xs font-bold text-white">Tips</p>
