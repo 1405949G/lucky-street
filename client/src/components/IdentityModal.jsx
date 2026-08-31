@@ -108,7 +108,7 @@ export default function IdentityModal({ blocking = false, onDone, title = "Welco
     <div className={`fixed inset-0 z-[80] flex items-center justify-center p-4 ${blocking ? "bg-[#070b14]/90 backdrop-blur-md" : "bg-[#070b14]/78 backdrop-blur-md"}`}>
       <form onSubmit={handleSubmit} className="w-full max-w-[420px] rounded-[24px] glass-lantern shadow-2xl overflow-hidden animate-[slideUp_0.35s_ease-out]">
         <div className="relative h-[112px] overflow-hidden">
-          <img src="/assets/hero-cafe.svg" alt="" className="w-full h-full object-cover object-center opacity-88" />
+          <img src="/assets/hero-street.svg" alt="" className="w-full h-full object-cover object-top opacity-85" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#132a3d] via-[#0f2231]/50 to-transparent" />
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#fffbeb] to-[#fde68a] border border-amber-400/30 flex items-center justify-center shadow-lantern mx-auto">

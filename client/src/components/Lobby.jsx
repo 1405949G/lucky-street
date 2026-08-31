@@ -388,36 +388,35 @@ export default function Lobby({ spectate = false }) {
         </button>
         <div className="text-center flex-1 px-3">
           <div className="inline-flex items-center gap-2">
-            <span className="hidden sm:flex w-7 h-7 rounded-xl bg-[#c9734b]/12 border border-[#c9734b]/18 items-center justify-center text-xs">🎲</span>
+            <img src="/assets/lantern-icon.svg" alt="" className="w-5 h-6 hidden sm:block drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]" />
             <h1 className="font-display font-[900] text-[18px] tracking-[0.14em] text-white">LUCKY STREET</h1>
-            <span className="hidden sm:flex w-7 h-7 rounded-xl bg-[#8aa899]/12 border border-[#8aa899]/18 items-center justify-center text-xs">🃏</span>
+            <img src="/assets/lantern-icon.svg" alt="" className="w-5 h-6 hidden sm:block scale-x-[-1] drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]" />
           </div>
           <p className="text-xs text-white/55 -mt-0.5 flex items-center justify-center gap-1.5 flex-wrap">
-            <span className="font-mono font-black tracking-[0.14em] text-[#f3ecd8]">{room.id}</span>
+            <span className="font-mono font-black tracking-[0.14em] text-amber-200">{room.id}</span>
             <span className="w-1 h-1 rounded-full bg-white/20" />
             <span>Host <span className="font-bold text-white/85">{room.hostName}</span></span>
-            <span className={`hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-black tracking-widest ${hasActiveGame ? 'bg-[#c9734b]/12 border-[#c9734b]/18 text-[#f3ecd8]' : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300'}`}>{hasActiveGame ? 'IN PROGRESS' : 'OPEN'}</span>
+            <span className={`hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-black tracking-widest ${hasActiveGame ? 'bg-amber-500/15 border-amber-500/25 text-amber-200' : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300'}`}>{hasActiveGame ? 'IN PROGRESS' : 'LANTERN LIT'}</span>
           </p>
         </div>
-        <button onClick={()=>setShowRules(true)} aria-label="Rules" className="w-9 h-9 rounded-full bg-gradient-to-br from-white/[0.08] to-white/[0.04] hover:from-white/[0.13] hover:to-white/[0.06] border border-white/10 flex items-center justify-center text-[#f3ecd8] font-black text-sm shadow-md backdrop-blur">?</button>
+        <button onClick={()=>setShowRules(true)} aria-label="Rules" className="w-9 h-9 rounded-full bg-gradient-to-br from-white/[0.08] to-white/[0.04] hover:from-white/[0.13] hover:to-white/[0.06] border border-white/10 flex items-center justify-center text-amber-200 font-black text-sm shadow-md backdrop-blur">?</button>
       </div>
 
       {/* Mobile toggle */}
       {!hasGameState && (
         <div className="mt-4 flex justify-center lg:hidden">
           <div className="inline-flex rounded-full bg-white/[0.06] border border-white/10 p-1 backdrop-blur">
-            <button onClick={() => setMobileTab("board")} className={`px-5 py-1.5 rounded-full text-xs font-black tracking-wide ${mobileTab === "board" ? "bg-gradient-to-br from-[#fff8e7] via-[#f3ecd8] to-[#d88a63] text-[#1a1d1f] shadow-cafe" : "text-white/60 hover:text-white/85"}`}>Board</button>
-            <button onClick={() => setMobileTab("controls")} className={`px-5 py-1.5 rounded-full text-xs font-black tracking-wide ${mobileTab === "controls" ? "bg-gradient-to-br from-[#fff8e7] via-[#f3ecd8] to-[#d88a63] text-[#1a1d1f] shadow-cafe" : "text-white/60 hover:text-white/85"}`}>Controls</button>
+            <button onClick={() => setMobileTab("board")} className={`px-5 py-1.5 rounded-full text-xs font-black tracking-wide ${mobileTab === "board" ? "bg-gradient-to-br from-[#fffbeb] to-[#fde68a] text-[#0e2533] shadow-lantern-soft" : "text-white/60 hover:text-white/85"}`}>Board</button>
+            <button onClick={() => setMobileTab("controls")} className={`px-5 py-1.5 rounded-full text-xs font-black tracking-wide ${mobileTab === "controls" ? "bg-gradient-to-br from-[#fffbeb] to-[#fde68a] text-[#0e2533] shadow-lantern-soft" : "text-white/60 hover:text-white/85"}`}>Controls</button>
           </div>
         </div>
       )}
 
       {hasGameState && isQuestGame && room.gameState && (
-        <div className="mt-4 rounded-[24px] glass-library p-5 sm:p-6 text-center relative overflow-hidden">
-          <div className="absolute inset-0 pointer-events-none opacity-[0.10]"><img src="/assets/hero-library.svg" alt="" className="w-full h-full object-cover object-top opacity-[0.22]" /></div>
-          <div className="absolute inset-0 pointer-events-none opacity-[0.06]" style={{ background: "radial-gradient(ellipse 560px 180px at 50% 0%, #f59e0b, transparent 72%)" }} />
-          <div className="absolute -top-10 -left-10 w-28 h-28 bg-amber-500/10 blur-2xl rounded-full pointer-events-none" />
-          <div className="absolute -top-10 -right-10 w-28 h-28 bg-amber-500/10 blur-2xl rounded-full pointer-events-none" />
+        <div className="mt-4 rounded-[24px] glass-lantern p-5 sm:p-6 text-center relative overflow-hidden">
+          <div className="absolute inset-0 pointer-events-none opacity-[0.07]" style={{ background: "radial-gradient(ellipse 560px 180px at 50% 0%, #fbbf24, transparent 72%)" }} />
+          <div className="absolute -top-10 -left-10 w-28 h-28 bg-amber-400/12 blur-2xl rounded-full pointer-events-none" />
+          <div className="absolute -top-10 -right-10 w-28 h-28 bg-amber-400/12 blur-2xl rounded-full pointer-events-none" />
           <div className="relative">
             <div className="flex items-center justify-center gap-2">
               <span className="w-6 h-[1px] bg-amber-400/30 hidden sm:block" />
@@ -463,29 +462,29 @@ export default function Lobby({ spectate = false }) {
           {!hasGameState && (
             <div className="rounded-[24px] glass-lantern shadow-xl p-0 text-center relative overflow-hidden">
               <div className="absolute inset-0">
-                <img src="/assets/hero-cafe.svg" alt="" className="w-full h-full object-cover object-center opacity-[0.38]" />
-                <div className="absolute inset-0 bg-gradient-to-b from-[#23272a]/35 via-[#1a1d1f]/62 to-[#121416]/92" />
-                <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 420px 180px at 50% 0%, rgba(201,115,75,0.13), transparent 68%)" }} />
+                <img src="/assets/hero-street.svg" alt="" className="w-full h-full object-cover object-top opacity-[0.32]" />
+                <div className="absolute inset-0 bg-gradient-to-b from-[#0f2231]/40 via-[#0f2231]/65 to-[#0f2231]/92" />
+                <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 420px 180px at 50% 0%, rgba(251,191,36,0.14), transparent 68%)" }} />
               </div>
               <div className="relative p-6 sm:p-7">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#c9734b]/12 border border-[#c9734b]/18 backdrop-blur">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#c9734b] animate-pulse" />
-                  <span className="text-[10px] font-black tracking-[0.18em] text-[#f3ecd8]">JOIN CODE</span>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/14 border border-amber-400/20 backdrop-blur">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                  <span className="text-[10px] font-black tracking-[0.18em] text-amber-200">JOIN CODE</span>
                 </div>
-                <div className="mt-2 font-display font-[900] text-[38px] sm:text-[42px] tracking-[0.18em] text-[#fff8e7] drop-shadow-[0_2px_18px_rgba(201,115,75,0.22)]" style={{ textShadow: "0 2px 0 rgba(0,0,0,0.35), 0 0 22px rgba(201,115,75,0.20)" }}>{room.id}</div>
+                <div className="mt-2 font-display font-[900] text-[38px] sm:text-[42px] tracking-[0.18em] text-[#fffbeb] drop-shadow-[0_2px_18px_rgba(251,191,36,0.32)]" style={{ textShadow: "0 2px 0 rgba(0,0,0,0.35), 0 0 22px rgba(251,191,36,0.28)" }}>{room.id}</div>
                 <div className="mt-1 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.08] border border-white/10 backdrop-blur">
                   <span className="text-xs text-white/60">Share</span>
                   <span className="font-mono font-bold text-white text-xs whitespace-nowrap">{window.location.origin}/room/{room.id}</span>
                 </div>
                 <p className="text-xs text-white/40 mt-2">Everyone look here!</p>
                 <div className="mt-4 flex justify-center gap-2.5 flex-wrap">
-                  <button onClick={() => { navigator.clipboard?.writeText(`${window.location.origin}/room/${room.id}`); showToast("Link copied!"); }} className="px-5 py-2.5 rounded-full bg-gradient-to-br from-[#fff8e7] via-[#f3ecd8] to-[#d88a63] hover:from-white hover:to-[#f3ecd8] text-[#1a1d1f] text-xs font-[900] shadow-cafe border border-[#c9734b]/18">Copy link</button>
+                  <button onClick={() => { navigator.clipboard?.writeText(`${window.location.origin}/room/${room.id}`); showToast("Link copied!"); }} className="px-5 py-2.5 rounded-full bg-gradient-to-br from-[#fffbeb] via-[#fde68a] to-[#fbbf24] hover:from-white hover:to-[#fde68a] text-[#0e2533] text-xs font-[900] shadow-lantern border border-amber-400/20">Copy link</button>
                   <span className="px-3.5 py-2.5 rounded-full bg-white/[0.08] border border-white/10 text-xs font-black tracking-wide text-white/80 backdrop-blur">{room.slotsText}</span>
                 </div>
               </div>
-              <div className="h-[1px] bg-gradient-to-r from-transparent via-[#c9734b]/14 to-transparent" />
+              <div className="h-[1px] bg-gradient-to-r from-transparent via-amber-400/18 to-transparent" />
               <div className="bg-white/[0.03] px-4 py-2.5 flex items-center justify-center gap-2 text-[11px] text-white/45">
-                <span className="w-5 h-5 rounded-full bg-[#c9734b]/12 border border-[#c9734b]/16 flex items-center justify-center text-[10px]">🎲</span>
+                <span className="w-5 h-5 rounded-full bg-amber-400/15 border border-amber-400/20 flex items-center justify-center text-[10px]">🏮</span>
                 Share this code with friends
               </div>
             </div>
@@ -592,7 +591,7 @@ export default function Lobby({ spectate = false }) {
           {isQuestGame && hasGameState ? (
             <>
               <QuestGame roomId={id} isHost={isHost} isSpectator={isSpectator} hideTopAllegiance />
-              <div className="rounded-2xl glass-library p-3.5 flex flex-col items-center gap-2">
+              <div className="rounded-2xl glass-lantern p-3.5 flex flex-col items-center gap-2">
                 <span className="inline-flex items-center gap-2 text-xs font-black tracking-widest text-white/60"><span className="w-7 h-7 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">👁️</span> Watching • {room.spectatorCount || 0}</span>
                 {room.spectators?.length>0 && <div className="flex flex-wrap gap-2 justify-center">{room.spectators.map(s=> <span key={s.id} className="px-2.5 py-1 rounded-full bg-white/[0.07] border border-white/10 text-white text-xs font-bold backdrop-blur">{s.name}</span>)}</div>}
               </div>
@@ -600,12 +599,11 @@ export default function Lobby({ spectate = false }) {
           ) : (
             <>
               {isQuestGame && (
-                <div className="rounded-[20px] glass-library p-4 sm:p-5 relative overflow-hidden">
-                  <div className="absolute -top-8 -right-8 w-28 h-28 bg-amber-500/10 blur-2xl rounded-full pointer-events-none" />
-                  <div className="absolute inset-0 pointer-events-none opacity-[0.14]"><img src="/assets/hero-library.svg" alt="" className="w-full h-full object-cover object-top opacity-[0.18]" /></div>
-                  <div className="flex items-start justify-between gap-3 relative">
+                <div className="rounded-[20px] glass-lantern p-4 sm:p-5 relative overflow-hidden">
+                  <div className="absolute -top-8 -right-8 w-28 h-28 bg-amber-400/10 blur-2xl rounded-full pointer-events-none" />
+                  <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 border border-amber-500/20 flex items-center justify-center text-lg">🕵️</div>
+                      <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400/20 to-orange-500/10 border border-amber-400/20 flex items-center justify-center text-lg">🕵️</div>
                       <div>
                         <h4 className="font-[900] text-white text-[15px] leading-none">Veil Street</h4>
                         <p className="text-xs text-white/40 mt-0.5">{totalPlayers} / {room.maxPlayers} — need {room.minPlayers} to start</p>
