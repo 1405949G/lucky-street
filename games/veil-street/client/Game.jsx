@@ -121,17 +121,9 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
     <div className="space-y-4">
       {/* Private Role Card - top (hidden when hideTopAllegiance, shown at bottom) */}
       {!hideTopAllegiance && priv?.self && (
-        <div className={`rounded-[22px] border p-5 text-center relative overflow-hidden backdrop-blur ${priv.self.allegiance==='GOOD' ? 'bg-gradient-to-br from-emerald-500/[0.12] via-emerald-500/[0.04] to-transparent border-emerald-400/25 shadow-[0_8px_32px_rgba(16,185,129,0.14)]' : 'bg-gradient-to-br from-rose-500/[0.12] via-rose-500/[0.04] to-transparent border-rose-400/25 shadow-[0_8px_32px_rgba(244,63,94,0.14)]'}`}>
-          <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-40 h-20 blur-2xl pointer-events-none opacity-40" style={{ background: priv.self.allegiance==='GOOD' ? 'radial-gradient(ellipse at center, rgba(16,185,129,0.35), transparent 70%)' : 'radial-gradient(ellipse at center, rgba(244,63,94,0.32), transparent 70%)' }} />
-          <div className="absolute top-0 left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-          <div className="relative">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.06] border border-white/10">
-              <span className={`w-1.5 h-1.5 rounded-full ${priv.self.allegiance==='GOOD' ? 'bg-emerald-400' : 'bg-rose-400'} animate-pulse`} />
-              <span className="text-[10px] font-black tracking-[0.18em] text-white/60">YOUR SECRET VEIL</span>
-            </div>
-            <h3 className={`font-display font-[900] text-[20px] leading-none mt-2 ${priv.self.allegiance==='GOOD' ? 'text-emerald-300' : 'text-rose-300'}`}>{priv.self.role} <span className="font-sans font-bold text-white/35 text-sm">• {priv.self.allegiance}</span></h3>
-            <img src="/assets/veil-ornament.svg" alt="" className="mx-auto mt-2 h-[14px] w-auto opacity-70" />
-          </div>
+        <div className={`rounded-2xl border p-4 text-center ${priv.self.allegiance==='GOOD' ? 'bg-emerald-500/10 border-emerald-400/30' : 'bg-rose-500/10 border-rose-400/30'}`}>
+          <p className="text-xs tracking-widest font-bold text-white/60">YOUR SECRET ROLE</p>
+          <h3 className={`font-black text-lg ${priv.self.allegiance==='GOOD' ? 'text-emerald-300' : 'text-rose-300'}`}>{priv.self.role} • {priv.self.allegiance}</h3>
           {priv.vision?.sees?.length > 0 ? (
             <div className="mt-3">
               <p className="text-xs text-white/60">
@@ -191,9 +183,8 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
         </div>
       )}
       {!hideTopAllegiance && isSpectator && !priv?.self && (
-        <div className="rounded-[18px] glass-lantern p-4 text-center relative overflow-hidden">
-          <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-32 h-16 bg-amber-400/10 blur-xl rounded-full pointer-events-none" />
-          <p className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.06] border border-white/10 text-amber-200 text-xs font-bold"><span className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[10px]">👁️</span> Watching the street — roles stay veiled</p>
+        <div className="rounded-xl bg-white/5 border border-white/10 p-3 text-center">
+          <p className="text-xs text-amber-200">Spectating - you see the board only. Private roles hidden.</p>
           <div className="mt-3 pt-3 border-t border-white/10">
             <p className="text-[10px] tracking-widest font-bold text-white/40">ROLES IN THIS GAME</p>
             <div className="mt-2 grid grid-cols-2 gap-3">
@@ -220,10 +211,8 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
         </div>
       )}
 
-      {/* Phase Body — lantern table */}
-      <div className="rounded-[22px] glass-lantern p-4 sm:p-5 relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none opacity-[0.04]" style={{ background: "radial-gradient(ellipse 520px 220px at 50% 0%, #fbbf24, transparent 72%)" }} />
-        <div className="absolute top-0 left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-amber-400/14 to-transparent" />
+      {/* Phase Body */}
+      <div className="rounded-2xl bg-[#0f2231]/60 border border-white/10 p-4">
       {phase==='ROLE_REVEAL' && (
         <div className="text-center">
           <h3 className="font-extrabold text-white">Your secret</h3>
@@ -559,17 +548,9 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
 
       {/* Bottom Allegiance when in centered layout (right above Spectators) */}
       {hideTopAllegiance && priv?.self && (
-        <div className={`rounded-[22px] border p-5 text-center relative overflow-hidden backdrop-blur ${priv.self.allegiance==='GOOD' ? 'bg-gradient-to-br from-emerald-500/[0.12] via-emerald-500/[0.04] to-transparent border-emerald-400/25 shadow-[0_8px_32px_rgba(16,185,129,0.14)]' : 'bg-gradient-to-br from-rose-500/[0.12] via-rose-500/[0.04] to-transparent border-rose-400/25 shadow-[0_8px_32px_rgba(244,63,94,0.14)]'}`}>
-          <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-40 h-20 blur-2xl pointer-events-none opacity-40" style={{ background: priv.self.allegiance==='GOOD' ? 'radial-gradient(ellipse at center, rgba(16,185,129,0.32), transparent 70%)' : 'radial-gradient(ellipse at center, rgba(244,63,94,0.30), transparent 70%)' }} />
-          <div className="absolute top-0 left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-          <div className="relative">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.06] border border-white/10">
-              <span className={`w-1.5 h-1.5 rounded-full ${priv.self.allegiance==='GOOD' ? 'bg-emerald-400' : 'bg-rose-400'} animate-pulse`} />
-              <span className="text-[10px] font-black tracking-[0.18em] text-white/60">YOUR SECRET VEIL</span>
-            </div>
-            <h3 className={`font-display font-[900] text-[20px] leading-none mt-2 ${priv.self.allegiance==='GOOD' ? 'text-emerald-300' : 'text-rose-300'}`}>{priv.self.role} <span className="font-sans font-bold text-white/35 text-sm">• {priv.self.allegiance}</span></h3>
-            <img src="/assets/veil-ornament.svg" alt="" className="mx-auto mt-2 h-[14px] w-auto opacity-70" />
-          </div>
+        <div className={`rounded-2xl border p-4 text-center ${priv.self.allegiance==='GOOD' ? 'bg-emerald-500/10 border-emerald-400/30' : 'bg-rose-500/10 border-rose-400/30'}`}>
+          <p className="text-xs tracking-widest font-bold text-white/60">YOUR SECRET ROLE</p>
+          <h3 className={`font-black text-lg ${priv.self.allegiance==='GOOD' ? 'text-emerald-300' : 'text-rose-300'}`}>{priv.self.role} • {priv.self.allegiance}</h3>
           {priv.vision?.sees?.length > 0 ? (
             <div className="mt-3">
               <p className="text-xs text-white/60">
@@ -628,10 +609,9 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
         </div>
       )}
       {hideTopAllegiance && isSpectator && !priv?.self && (
-        <div className="rounded-[18px] glass-lantern p-4 text-center relative overflow-hidden">
-          <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-32 h-16 bg-amber-400/10 blur-xl rounded-full pointer-events-none" />
-          <p className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.06] border border-white/10 text-amber-200 text-sm font-bold">👁️ Watching the street</p>
-          <p className="text-xs font-medium text-white/45 mt-1.5">Veil stays — you see the board, not the secrets</p>
+        <div className="rounded-xl bg-[#0f2231] border border-white/10 p-4 text-center shadow-lg">
+          <p className="text-sm font-bold text-white">👁️ Spectating</p>
+          <p className="text-xs font-medium text-amber-200 mt-1">You see the board only - private roles are hidden</p>
           {(() => {
             const n = pub.players.length;
             const opts = pub.extraRoles || {};
@@ -672,10 +652,9 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
         </div>
       )}
       {!hideTopAllegiance && isSpectator && !priv?.self && (
-        <div className="rounded-[18px] glass-lantern p-4 text-center relative overflow-hidden">
-          <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-32 h-16 bg-amber-400/10 blur-xl rounded-full pointer-events-none" />
-          <p className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.06] border border-white/10 text-amber-200 text-sm font-bold">👁️ Watching the street</p>
-          <p className="text-xs font-medium text-white/45 mt-1.5">Veil stays — you see the board, not the secrets</p>
+        <div className="rounded-xl bg-[#0f2231] border border-white/10 p-4 text-center shadow-lg">
+          <p className="text-sm font-bold text-white">👁️ Spectating</p>
+          <p className="text-xs font-medium text-amber-200 mt-1">You see the board only - private roles are hidden</p>
           {(() => {
             const n = pub.players.length;
             const opts = pub.extraRoles || {};
@@ -717,20 +696,20 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
       )}
 
       {pub.log?.length>0 && (
-        <details className="rounded-[16px] glass-lantern overflow-hidden" open>
-          <summary className="px-4 py-2.5 text-xs font-black tracking-widest text-amber-200/70 cursor-pointer flex items-center gap-2"><span className="w-6 h-6 rounded-full bg-amber-400/12 border border-amber-400/20 flex items-center justify-center text-[10px]">📜</span> Street log • {pub.log.length}</summary>
-          <div className="px-4 pb-3 space-y-1 max-h-[320px] overflow-auto overscroll-contain border-t border-white/10 bg-white/[0.02]">
+        <details className="rounded-xl bg-white/[0.03] border border-white/10" open>
+          <summary className="px-4 py-2 text-xs font-bold text-white/50 cursor-pointer">Game log • {pub.log.length}</summary>
+          <div className="px-4 pb-3 space-y-1 max-h-[320px] overflow-auto overscroll-contain">
             {[...pub.log].reverse().map(e=>(
-              <div key={e.id} className="flex gap-2 text-xs border-l-2 border-amber-400/10 pl-3 py-1.5 bg-white/[0.02] rounded-r-lg">
-                <span className="font-black text-amber-200/60 shrink-0 min-w-[72px] text-left tracking-wide">{e.type}</span>
-                <span className="text-white/68 text-left flex-1">{e.text}</span>
+              <div key={e.id} className="flex gap-2 text-xs border-l-2 border-white/10 pl-2 py-1">
+                <span className="font-bold text-white/40 shrink-0 min-w-[72px] text-left">{e.type}</span>
+                <span className="text-white/60 text-left flex-1">{e.text}</span>
               </div>
             ))}
           </div>
         </details>
       )}
 
-      {toast && <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-gradient-to-br from-[#fffbeb] via-[#fde68a] to-[#fbbf24] text-[#0e2533] text-sm font-black px-5 py-3 rounded-full shadow-lantern border border-amber-400/30 z-50 flex items-center gap-2"><span className="w-6 h-6 rounded-full bg-[#0e2533] text-amber-300 flex items-center justify-center text-xs">🏮</span>{toast}</div>}
+      {toast && <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-amber-400 text-[#0e2533] text-sm font-bold px-4 py-2.5 rounded-full shadow-xl border border-white/20 z-50">{toast}</div>}
     </div>
   );
 }
