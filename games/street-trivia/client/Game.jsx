@@ -20,6 +20,7 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
   const [toast, setToast] = useState(null);
   const [now, setNow] = useState(Date.now());
   const [localStart, setLocalStart] = useState(null);
+  const [logOpen, setLogOpen] = useState(true);
   const myId = socket?.id;
 
   function showToast(m){ setToast(m); setTimeout(()=>setToast(null),2200); }
@@ -200,8 +201,8 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
                 </div>
               )}
 
-              {/* Options A-D — enlarged vertically for 12p, better spacing */}
-              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              {/* Options A-D */}
+              <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {q.options.map((opt, i)=>{
                   const letter = LETTERS[i];
                   const isMy = myAnswer===i;
@@ -215,7 +216,7 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
                       key={i}
                       onClick={()=>emitAnswer(i)}
                       disabled={phase!=="QUESTION" || hasAnswered || isSpectator}
-                      className={`group relative text-left rounded-2xl border-2 p-4 sm:p-5 flex items-center gap-3.5 transition-all min-h-[64px]
+                      className={`group relative text-left rounded-2xl border-2 p-3 sm:p-4 flex items-center gap-3 transition-all
                         ${isReveal && isCorrect ? "border-emerald-400 bg-emerald-500/20 ring-2 ring-emerald-300" : ""}
                         ${isReveal && isWrongPick ? "border-rose-400 bg-rose-500/15" : ""}
                         ${!isReveal && isMy ? "border-amber-300 bg-amber-400/20" : ""}
@@ -224,13 +225,13 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
                         ${isSpectator ? "opacity-70" : ""}
                       `}
                     >
-                      <span className={`shrink-0 w-11 h-11 rounded-xl flex items-center justify-center font-black text-white border shadow ${OPTION_COLORS[i]}`}>{letter}</span>
-                      <span className="flex-1 text-[15px] font-bold text-white pr-2 leading-tight">{opt}</span>
+                      <span className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center font-black text-white border shadow ${OPTION_COLORS[i]}`}>{letter}</span>
+                      <span className="flex-1 text-sm font-bold text-white pr-2">{opt}</span>
                       {isReveal && (
-                        <span className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-black ${isCorrect?"bg-emerald-400 text-black":"bg-white/10 text-white/60"}`}>{count} • {pct}%</span>
+                        <span className={`px-2 py-1 rounded-full text-xs font-black ${isCorrect?"bg-emerald-400 text-black":"bg-white/10 text-white/60"}`}>{count} • {pct}%</span>
                       )}
-                      {!isReveal && isMy && <span className="shrink-0 px-2.5 py-1 rounded-full bg-amber-400 text-[#0e2533] text-xs font-black">You</span>}
-                      {isReveal && <div className="absolute bottom-0 left-4 right-4 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                      {!isReveal && isMy && <span className="px-2 py-1 rounded-full bg-amber-400 text-[#0e2533] text-xs font-black">You</span>}
+                      {isReveal && <div className="absolute bottom-0 left-3 right-3 h-1 bg-white/10 rounded-full overflow-hidden">
                         <div className={`h-full ${isCorrect?"bg-emerald-400":"bg-white/40"}`} style={{ width: `${barW}%` }} />
                       </div>}
                     </button>
@@ -343,24 +344,32 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
         </div>
       )}
 
-      {/* Game log — uniform colour, always visible, organised for 12p */}
+      {/* Game log — uniform, organised for 12p, only button toggles */}
       {pub.log?.length>0 && (
-        <details className="rounded-2xl bg-[#0f2231]/70 border border-white/10 shadow-xl" open={!isOver}>
-          <summary className="px-4 py-3 text-xs font-black tracking-wide text-white/70 cursor-pointer flex items-center justify-between list-none">
-            <span>Game log • {pub.log.length}</span>
-            <span className="px-2.5 py-1 rounded-full bg-white/10 border border-white/10 text-[11px] font-bold text-white/60">Minimise</span>
-          </summary>
-          <div className="px-3 pb-3 space-y-1.5 max-h-[420px] overflow-auto overscroll-contain pr-1">
-            {[...pub.log].reverse().map(e=>{
-              return (
-                <div key={e.id} className="flex gap-2.5 text-xs rounded-xl px-3 py-2.5 border bg-white/[0.03] border-white/10">
-                  <span className="font-bold shrink-0 min-w-[74px] text-[11px] tracking-wide text-white/40">{e.type}</span>
-                  <span className="text-white/70 flex-1 leading-snug break-words whitespace-pre-wrap">{e.text}</span>
-                </div>
-              );
-            })}
+        <div className="rounded-2xl bg-[#0f2231]/70 border border-white/10 shadow-xl">
+          <div className="px-4 py-3 flex items-center justify-between">
+            <span className="text-xs font-black tracking-wide text-white/70">Game log • {pub.log.length}</span>
+            <button
+              onClick={()=> setLogOpen(v=>!v)}
+              aria-label={logOpen ? "Collapse log" : "Expand log"}
+              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+            >
+              <span className={`text-[12px] transition-transform duration-300 ${logOpen ? "rotate-180" : "rotate-0"}`}>⌄</span>
+            </button>
           </div>
-        </details>
+          {logOpen && (
+            <div className="px-3 pb-3 space-y-1.5 max-h-[420px] overflow-auto overscroll-contain pr-1">
+              {[...pub.log].reverse().map(e=>{
+                return (
+                  <div key={e.id} className="flex gap-2.5 text-xs rounded-xl px-3 py-2.5 border bg-white/[0.03] border-white/10">
+                    <span className="font-bold shrink-0 min-w-[74px] text-[11px] tracking-wide text-white/40">{e.type}</span>
+                    <span className="text-white/70 flex-1 leading-snug break-words whitespace-pre-wrap">{e.text}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       )}
 
       {toast && <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-amber-400 text-[#0e2533] text-sm font-bold px-4 py-2.5 rounded-full shadow-xl border border-white/20 z-50">{toast}</div>}

@@ -738,6 +738,23 @@ export default function Lobby({ spectate = false }) {
                 </div>
                 <p className="text-xs text-white/40">Now: {totalPlayers} players • {['morgana','mordred','oberon'].filter(k=> !!room.gameOptions[k]).length}/{totalPlayers<=6?1:totalPlayers<=8?2:3} extra Evil • Merlin + Assassin always in</p>
               </div>
+            ) : isTriviaGame ? (
+              <div className="mt-4 space-y-4 text-sm leading-relaxed">
+                <p className="text-white/80"><span className="text-white font-bold">How to play:</span> The host starts. Everyone gets the same question with 4 choices A–D. Tap your answer before the timer runs out — if everyone answers early, it reveals early.</p>
+                <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-3">
+                  <p className="text-xs font-bold tracking-widest text-amber-300">SCORING</p>
+                  <p className="text-xs mt-1.5 text-white/70 leading-snug">1 point for a correct answer, 0 for wrong or missed. The high score at the end wins — ties share the win. Check <span className="text-white font-bold">Live scores</span> during questions and the full breakdown after each reveal.</p>
+                </div>
+                <div className="rounded-xl bg-white/5 border border-white/10 p-3">
+                  <p className="text-xs font-bold text-white">Options — set by host in lobby</p>
+                  <p className="text-xs text-white/60 mt-1.5 leading-snug">Questions (5–30), Timer (10–45s), Category and Difficulty. Defaults are 10 Q / 20s / Mixed. Change them before starting.</p>
+                </div>
+                <div className="rounded-xl bg-white/5 border border-white/10 p-3">
+                  <p className="text-xs font-bold text-white">Tips</p>
+                  <p className="text-xs text-white/60 mt-1.5 leading-snug">• Teams can share one device. • Spectators tap “Watch” and can join with “Join to play” when lobby is open. • After the answer is shown, everyone taps <span className="text-white font-bold">Continue</span> to go to the next question. • Need 1–12 players, no bots — share your invite link!</p>
+                </div>
+                <p className="text-xs text-white/40">Host can start when 1+ players are ready. Good luck!</p>
+              </div>
             ) : (
               <div className="mt-4 space-y-3 text-sm text-white/60">
                 <p>{game.description}</p>

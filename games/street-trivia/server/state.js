@@ -40,21 +40,15 @@ function fmtQuestion(q, idx, total){
   const opts = q.options.map((o,i)=> `${String.fromCharCode(65+i)} ${o}`).join(" • ");
   return `Question Q${idx+1} [${q.category} • ${q.difficulty}] ${q.q} — ${opts}${q.imageUrl?" • [image]":""}`;
 }
-function fmtReveal(curQ, answers, scoresBefore, scoresAfter, players, idx){
+function fmtReveal(curQ, answers, players, idx){
   const correctLetter = String.fromCharCode(65+curQ.correctIndex);
   const correctOpt = curQ.options[curQ.correctIndex];
   const breakdown = {0:0,1:0,2:0,3:0};
   for(const v of Object.values(answers)) breakdown[v]=(breakdown[v]||0)+1;
-  const picks = Object.entries(answers).map(([pid,ch])=>{
-    const pl = players.find(p=>p.id===pid);
-    const name = pl?.name || pid.slice(0,4);
-    const letter = String.fromCharCode(65+ch);
-    const ok = ch===curQ.correctIndex;
-    return `${name}:${letter}${ok?"✓":"✗"}`;
-  }).join(" • ") || "none answered";
-  const gained = Object.entries(answers).filter(([,ch])=> ch===curQ.correctIndex).map(([pid])=> players.find(p=>p.id===pid)?.name).join(", ");
   const breakdownStr = `A:${breakdown[0]} B:${breakdown[1]} C:${breakdown[2]} D:${breakdown[3]}`;
-  return `Reveal Q${idx+1}: Correct ${correctLetter} ${correctOpt} — ${picks} | ${breakdownStr} | ${Object.keys(answers).length}/${players.length} answered${gained?` • +1: ${gained}`:""}`;
+  const answered = Object.keys(answers).length;
+  const missed = players.length - answered;
+  return `Reveal Q${idx+1}: Correct ${correctLetter} ${correctOpt} — ${breakdownStr} | ${answered} answered • ${missed} missed`;
 }
 
 export function getPublicState(state){
@@ -201,7 +195,7 @@ export function reducer(state, action){
           scores: Object.freeze(nextScores),
           reveal,
           phase: PHASES.REVEAL,
-          log: appendLog(newState.log, "REVEAL", fmtReveal(curQ, nextAnswers, state.scores, nextScores, state.players, state.currentIndex)),
+          log: appendLog(newState.log, "REVEAL", fmtReveal(curQ, nextAnswers, state.players, state.currentIndex)),
           revealAcks: Object.freeze({}),
         };
         effects.push({ type:"ENTER_REVEAL", index: state.currentIndex });
@@ -227,7 +221,7 @@ export function reducer(state, action){
         scores: Object.freeze(nextScores),
         reveal: Object.freeze({ correctIndex: curQ.correctIndex, breakdown: Object.freeze(breakdown) }),
         phase: PHASES.REVEAL,
-        log: appendLog(state.log, "REVEAL", fmtReveal(curQ, state.answers, state.scores, nextScores, state.players, state.currentIndex)),
+        log: appendLog(state.log, "REVEAL", fmtReveal(curQ, state.answers, state.players, state.currentIndex)),
         revealAcks: Object.freeze({}),
       };
       return { state: Object.freeze(newState), effects: Object.freeze([{ type:"ENTER_REVEAL", index: state.currentIndex }]) };
