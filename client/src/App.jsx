@@ -60,37 +60,35 @@ function MainPage() {
 
   return (
     <div className="min-h-screen">
-      {/* Top bar — lantern street */}
-      <header className="sticky top-0 z-20 backdrop-blur-xl bg-[#070b14]/78 border-b border-white/[0.07] shadow-[0_8px_32px_rgba(0,0,0,0.35)]">
-        <div className="absolute inset-0 pointer-events-none opacity-[0.32]" style={{ background: "radial-gradient(ellipse 520px 120px at 22% 0%, rgba(251,191,36,0.18), transparent 68%), radial-gradient(ellipse 520px 120px at 88% 0%, rgba(251,191,36,0.12), transparent 68%)" }} />
+      {/* Top bar — board café */}
+      <header className="sticky top-0 z-20 backdrop-blur-xl bg-[#121416]/84 border-b border-white/[0.07] shadow-[0_8px_32px_rgba(0,0,0,0.38)]">
+        <div className="absolute inset-0 pointer-events-none opacity-[0.28]" style={{ background: "radial-gradient(ellipse 520px 120px at 22% 0%, rgba(201,115,75,0.14), transparent 68%), radial-gradient(ellipse 520px 120px at 88% 0%, rgba(138,168,153,0.10), transparent 68%)" }} />
         <div className="relative max-w-[1020px] mx-auto px-4 flex items-center justify-between h-[68px]">
           <div className="flex items-center gap-3.5">
-            {/* Lantern logo */}
+            {/* Café logo — dice */}
             <div className="relative">
-              <div className="absolute -inset-2 bg-amber-400/18 blur-xl rounded-full" />
-              <div className="relative w-[42px] h-[42px] rounded-[13px] bg-gradient-to-br from-[#1e3a4f] to-[#0f2231] border border-amber-400/25 flex items-center justify-center shadow-lantern-soft overflow-hidden">
-                <div className="absolute inset-0 opacity-[0.12]" style={{ background: "radial-gradient(circle at 50% 30%, #fde68a, transparent 62%)" }} />
-                <svg viewBox="0 0 32 38" className="w-[22px] h-[26px] drop-shadow-[0_0_8px_rgba(251,191,36,0.55)]">
-                  <ellipse cx="16" cy="19" rx="14" ry="14" fill="url(#hdrGlow)" />
-                  <defs><radialGradient id="hdrGlow" cx="50%" cy="38%" r="58%"><stop offset="0%" stopColor="#fffbeb"/><stop offset="55%" stopColor="#fbbf24"/><stop offset="100%" stopColor="#f59e0b"/></radialGradient></defs>
-                  <g transform="translate(16 19) scale(0.78)">
-                    <path d="M-10 -11 H10 L8 9 H-8 Z" fill="#0f2231" stroke="#fbbf24" strokeWidth="1.1"/><rect x="-9" y="-11" width="18" height="2.2" rx="1" fill="#fbbf24"/><rect x="-8" y="9" width="16" height="1.8" rx="1" fill="#fbbf24"/><rect x="-7" y="-8" width="14" height="14" rx="1.2" fill="#fff7d6"/><ellipse cx="0" cy="-1" rx="3" ry="3.8" fill="#f59e0b"/><ellipse cx="0.5" cy="-1.4" rx="1.5" ry="2" fill="#fffbeb"/>
-                  </g>
+              <div className="absolute -inset-2 bg-[#c9734b]/14 blur-xl rounded-full" />
+              <div className="relative w-[42px] h-[42px] rounded-[13px] bg-gradient-to-br from-[#2e3336] to-[#1a1d1f] border border-[#c9734b]/22 flex items-center justify-center shadow-cafe overflow-hidden">
+                <div className="absolute inset-0 opacity-[0.08]" style={{ background: "radial-gradient(circle at 50% 28%, #f3ecd8, transparent 62%)" }} />
+                <svg viewBox="0 0 32 32" className="w-[22px] h-[22px] drop-shadow-[0_1px_6px_rgba(201,115,75,0.28)]">
+                  <rect x="3" y="3" width="26" height="26" rx="6" fill="#fff8e7" stroke="rgba(0,0,0,0.08)" strokeWidth="0.8"/>
+                  <circle cx="10.2" cy="10.2" r="2.1" fill="#23272a"/><circle cx="21.8" cy="10.2" r="2.1" fill="#23272a"/>
+                  <circle cx="16" cy="16" r="2.1" fill="#c9734b"/><circle cx="10.2" cy="21.8" r="2.1" fill="#23272a"/><circle cx="21.8" cy="21.8" r="2.1" fill="#23272a"/>
                 </svg>
               </div>
             </div>
             <div>
               <h1 className="font-display font-[900] tracking-[0.14em] text-white leading-none text-[15px] sm:text-[16px]">LUCKY STREET</h1>
               <div className="flex items-center gap-1.5 -mt-0.5">
-                <span className="hidden sm:inline w-[18px] h-[1px] bg-amber-400/50" />
-                <p className="text-[10px] tracking-[0.22em] text-amber-200/70 font-[700]">PARTY LOBBY</p>
-                <span className="hidden sm:inline w-[18px] h-[1px] bg-amber-400/50" />
+                <span className="hidden sm:inline w-[18px] h-[1px] bg-[#c9734b]/40" />
+                <p className="text-[10px] tracking-[0.22em] text-[#f3ecd8]/55 font-[700]">PARTY LOBBY</p>
+                <span className="hidden sm:inline w-[18px] h-[1px] bg-[#c9734b]/40" />
               </div>
             </div>
           </div>
           <div className="flex items-center gap-2.5">
-            <div className={`hidden sm:flex items-center gap-2 pl-2 pr-2.5 py-1.5 rounded-full border text-xs font-bold ${connected ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-300" : "bg-amber-500/10 border-amber-500/20 text-amber-300 animate-pulse"}`}>
-              <span className={`w-2 h-2 rounded-full ${connected ? "bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.7)]" : "bg-amber-400"}`} style={connected ? { animation: "flicker 2.4s ease-in-out infinite" } : {}} />
+            <div className={`hidden sm:flex items-center gap-2 pl-2 pr-2.5 py-1.5 rounded-full border text-xs font-bold backdrop-blur ${connected ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-300" : "bg-[#c9734b]/10 border-[#c9734b]/20 text-[#f3ecd8] animate-pulse"}`}>
+              <span className={`w-2 h-2 rounded-full ${connected ? "bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.7)]" : "bg-[#c9734b]"}`} style={connected ? { animation: "flicker 2.4s ease-in-out infinite" } : {}} />
               {connected ? "Live" : "Connecting…"}
             </div>
             {hasProfile ? (
@@ -98,9 +96,9 @@ function MainPage() {
                 <div
                   className="w-9 h-9 rounded-full border-[1.5px] flex items-center justify-center overflow-hidden shadow-md relative"
                   style={{
-                    borderColor: "rgba(251,191,36,0.35)",
-                    background: profile.avatar && !profile.avatar.startsWith("data:") ? profile.avatar : "linear-gradient(135deg, #1e3a4f, #0f2231)",
-                    boxShadow: "0 0 14px rgba(251,191,36,0.18)"
+                    borderColor: "rgba(201,115,75,0.30)",
+                    background: profile.avatar && !profile.avatar.startsWith("data:") ? profile.avatar : "linear-gradient(135deg, #2e3336, #1a1d1f)",
+                    boxShadow: "0 0 12px rgba(201,115,75,0.16)"
                   }}
                 >
                   {profile.avatar && profile.avatar.startsWith("data:") ? (
@@ -108,24 +106,24 @@ function MainPage() {
                   ) : (
                     <span className="text-[11px] font-black text-white tracking-widest">{profile.username.slice(0,2).toUpperCase()}</span>
                   )}
-                  <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#070b14] shadow" />
+                  <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#121416] shadow" />
                 </div>
                 <span className="text-sm font-bold text-white hidden sm:inline max-w-[100px] truncate">{profile.username}</span>
                 <button onClick={() => setShowOnboarding(true)} className="px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-xs font-bold text-white/70">Edit</button>
               </div>
             ) : (
-              <button onClick={() => setShowOnboarding(true)} className="ml-1 px-3 py-1.5 rounded-full bg-[#f3ecd8] text-[#0e2533] text-xs font-extrabold">Set Profile</button>
+              <button onClick={() => setShowOnboarding(true)} className="ml-1 px-3 py-1.5 rounded-full bg-[#f3ecd8] text-[#1a1d1f] text-xs font-extrabold">Set Profile</button>
             )}
           </div>
         </div>
       </header>
 
-      {/* Hero — midnight street */}
+      {/* Hero — board café */}
       <div className="relative overflow-hidden border-b border-white/[0.06]">
         <div className="absolute inset-0">
-          <img src="/assets/hero-street.svg" alt="" className="w-full h-full object-cover object-top opacity-[0.94]" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#070b14]/10 to-[#070b14]/92" />
-          <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 720px 360px at 50% 68%, rgba(251,191,36,0.08), transparent 66%)" }} />
+          <img src="/assets/hero-cafe.svg" alt="" className="w-full h-full object-cover object-center opacity-[0.96]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#121416]/18 to-[#121416]/88" />
+          <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 720px 360px at 50% 68%, rgba(201,115,75,0.08), transparent 66%)" }} />
         </div>
         <div className="relative max-w-[1020px] mx-auto px-4 pt-7 sm:pt-10 pb-6 sm:pb-7">
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
@@ -133,26 +131,26 @@ function MainPage() {
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.08] border border-white/10 backdrop-blur-md">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.7)]" />
                 <span className="text-[11px] font-black tracking-[0.18em] text-white/85">PARTY LOBBY • 5-10 FRIENDS • 1 TV + PHONES</span>
-                <span className="hidden sm:inline-flex ml-1 px-1.5 py-0.5 rounded-full bg-amber-400 text-[#0e2533] text-[10px] font-black">NEW</span>
+                <span className="hidden sm:inline-flex ml-1 px-1.5 py-0.5 rounded-full bg-[#c9734b] text-white text-[10px] font-black">NEW</span>
               </div>
               <h2 className="mt-3 font-display font-[900] leading-[0.9] tracking-[-0.02em] text-white">
                 <span className="block text-[28px] sm:text-[38px]">Gather on</span>
-                <span className="block text-[34px] sm:text-[44px] bg-gradient-to-r from-[#fffbeb] via-[#fde68a] to-[#fbbf24] bg-clip-text text-transparent text-glow">Lucky Street</span>
+                <span className="block text-[34px] sm:text-[44px] bg-gradient-to-r from-[#fff8e7] via-[#f3ecd8] to-[#d88a63] bg-clip-text text-transparent" style={{ textShadow: "0 0 18px rgba(201,115,75,0.22)" }}>Lucky Street</span>
               </h2>
-              <p className="mt-2.5 text-[14px] sm:text-[15px] leading-relaxed text-white/72 max-w-[560px]">A party lobby for friends. Create a room, share the code, play <span className="font-bold text-amber-200">Veil Street</span> — bluff, deduce, and hunt Merlin.</p>
+              <p className="mt-2.5 text-[14px] sm:text-[15px] leading-relaxed text-white/72 max-w-[560px]">A cozy party lobby. Create a room, share the code, play <span className="font-bold text-[#f3ecd8]">Veil Street</span> — bluff, deduce, and hunt Merlin.</p>
               <div className="mt-4 flex flex-wrap items-center gap-2.5">
                 <button
                   onClick={handleCreateClick}
-                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-gradient-to-br from-[#fffbeb] via-[#fde68a] to-[#fbbf24] hover:from-white hover:to-[#fde68a] text-[#0e2533] font-[900] tracking-wide shadow-lantern border border-amber-400/30"
+                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-gradient-to-br from-[#fff8e7] via-[#f3ecd8] to-[#d88a63] hover:from-white hover:to-[#f3ecd8] text-[#1a1d1f] font-[900] tracking-wide shadow-cafe border border-[#c9734b]/20"
                 >
-                  <span className="w-6 h-6 rounded-full bg-[#0e2533] text-amber-300 flex items-center justify-center text-sm">+</span>
+                  <span className="w-6 h-6 rounded-full bg-[#1a1d1f] text-[#f3ecd8] flex items-center justify-center text-sm">+</span>
                   New Game
                 </button>
                 <div className="hidden sm:flex items-center gap-3 pl-3 ml-1 border-l border-white/10">
                   <div className="flex -space-x-1.5">
-                    <span className="w-7 h-7 rounded-full bg-[#1e3a4f] border-2 border-[#070b14] flex items-center justify-center text-[10px]">🏮</span>
-                    <span className="w-7 h-7 rounded-full bg-[#1a2a3a] border-2 border-[#070b14] flex items-center justify-center text-[10px]">🕵️</span>
-                    <span className="w-7 h-7 rounded-full bg-[#f3ecd8] border-2 border-[#070b14] flex items-center justify-center text-[10px] font-black text-[#0e2533]">5</span>
+                    <span className="w-7 h-7 rounded-full bg-[#8aa899] border-2 border-[#121416] flex items-center justify-center text-[10px]">🎲</span>
+                    <span className="w-7 h-7 rounded-full bg-[#c9734b] border-2 border-[#121416] flex items-center justify-center text-[10px]">🃏</span>
+                    <span className="w-7 h-7 rounded-full bg-[#f3ecd8] border-2 border-[#121416] flex items-center justify-center text-[10px] font-black text-[#1a1d1f]">5</span>
                   </div>
                   <p className="text-xs leading-none"><span className="font-black text-white">{rooms.length} rooms open</span><br/><span className="text-white/50">Jump in — no password</span></p>
                 </div>
@@ -162,7 +160,7 @@ function MainPage() {
               <div className="px-3 py-2 rounded-2xl bg-white/[0.06] border border-white/10 backdrop-blur">
                 <p className="text-[10px] tracking-[0.16em] font-black text-white/45">FEATURED GAME</p>
                 <p className="text-sm font-black text-white mt-1">Veil Street <span className="font-normal text-white/60">— hidden roles</span></p>
-                <p className="text-xs text-amber-200/70 mt-0.5">Merlin • Percival • Morgana • Mordred • Oberon</p>
+                <p className="text-xs text-[#f3ecd8]/70 mt-0.5">Merlin • Percival • Morgana • Mordred • Oberon</p>
               </div>
               <p className="text-[11px] text-white/35">Tip: open on TV, friends join on phones</p>
             </div>

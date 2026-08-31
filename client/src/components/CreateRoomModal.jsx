@@ -59,7 +59,7 @@ export default function CreateRoomModal({ onClose, onCreated }) {
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-[#070b14]/78 backdrop-blur-md">
       <form onSubmit={submit} className="w-full max-w-[440px] rounded-[24px] glass-lantern shadow-2xl overflow-hidden">
         <div className="relative h-[92px] overflow-hidden">
-          <img src="/assets/hero-street.svg" alt="" className="w-full h-full object-cover object-top opacity-90" />
+          <img src="/assets/hero-cafe.svg" alt="" className="w-full h-full object-cover object-center opacity-92" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0f2231] via-[#0f2231]/45 to-transparent" />
           <div className="absolute inset-0 flex items-center justify-between px-6">
             <div>

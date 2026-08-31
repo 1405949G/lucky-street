@@ -129,7 +129,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
               <span className={`w-1.5 h-1.5 rounded-full ${priv.self.allegiance==='GOOD' ? 'bg-emerald-400' : 'bg-rose-400'} animate-pulse`} />
               <span className="text-[10px] font-black tracking-[0.18em] text-white/60">YOUR SECRET ROLE</span>
             </div>
-            <h3 className={`font-display font-[900] text-[20px] leading-none mt-2 ${priv.self.allegiance==='GOOD' ? 'text-emerald-300' : 'text-rose-300'}`}>{priv.self.role} <span className="font-sans font-bold text-white/35 text-sm">• {priv.self.allegiance}</span></h3>
+            <h3 className={`font-display font-[900] text-[20px] leading-none mt-2 ${priv.self.allegiance==='GOOD' ? 'text-emerald-300' : 'text-rose-300'}`}>{priv.self.role} <span className="font-sans font-bold text-white/35 text-sm">ï¿½ {priv.self.allegiance}</span></h3>
             <img src="/assets/veil-ornament.svg" alt="" className="mx-auto mt-2 h-[14px] w-auto opacity-70" />
           </div>
           {priv.vision?.sees?.length > 0 ? (
@@ -147,7 +147,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
             </div>
           ) : (
             <p className="text-xs text-white/50 mt-2">
-              {priv.self.role==='LOYAL' ? 'You’re Loyal - no extra info.' : priv.self.role==='OBERON' ? 'You’re Oberon - you work alone.' : priv.self.role==='MERLIN' && priv.vision.sees.length===0 ? 'Mordred is hiding - you see no one.' : 'You see no one.'}
+              {priv.self.role==='LOYAL' ? 'Youï¿½re Loyal - no extra info.' : priv.self.role==='OBERON' ? 'Youï¿½re Oberon - you work alone.' : priv.self.role==='MERLIN' && priv.vision.sees.length===0 ? 'Mordred is hiding - you see no one.' : 'You see no one.'}
             </p>
           )}
           {(() => {
@@ -171,7 +171,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
                   <div className="mt-1.5 flex flex-wrap gap-1.5 justify-center">
                     <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Merlin</span>
                     {hasPercival && <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Percival</span>}
-                    {loyal > 0 && <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Loyal ×{loyal}</span>}
+                    {loyal > 0 && <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Loyal ï¿½{loyal}</span>}
                   </div>
                 </div>
                 <div className="text-center">
@@ -181,7 +181,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
                     {e.includes('morgana') && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Morgana</span>}
                     {e.includes('mordred') && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Mordred</span>}
                     {e.includes('oberon') && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Oberon</span>}
-                    {minion > 0 && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Minion ×{minion}</span>}
+                    {minion > 0 && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Minion ï¿½{minion}</span>}
                   </div>
                 </div>
               </div>
@@ -191,9 +191,9 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
         </div>
       )}
       {!hideTopAllegiance && isSpectator && !priv?.self && (
-        <div className="rounded-[18px] glass-lantern p-4 text-center relative overflow-hidden">
+        <div className="rounded-[18px] glass-library p-4 text-center relative overflow-hidden">
           <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-32 h-16 bg-amber-400/10 blur-xl rounded-full pointer-events-none" />
-          <p className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.06] border border-white/10 text-amber-200 text-xs font-bold"><span className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[10px]">???</span> Spectating — you see the board only. Private roles hidden.</p>
+          <p className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.06] border border-white/10 text-amber-200 text-xs font-bold"><span className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[10px]">???</span> Spectating ï¿½ you see the board only. Private roles hidden.</p>
           <div className="mt-3 pt-3 border-t border-white/10">
             <p className="text-[10px] tracking-widest font-bold text-white/40">ROLES IN THIS GAME</p>
             <div className="mt-2 grid grid-cols-2 gap-3">
@@ -220,10 +220,11 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
         </div>
       )}
 
-      {/* Phase Body — lantern table */}
-      <div className="rounded-[22px] glass-lantern p-4 sm:p-5 relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none opacity-[0.04]" style={{ background: "radial-gradient(ellipse 520px 220px at 50% 0%, #fbbf24, transparent 72%)" }} />
-        <div className="absolute top-0 left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-amber-400/14 to-transparent" />
+      {/* Phase Body â€” midnight library table */}
+      <div className="rounded-[22px] glass-library p-4 sm:p-5 relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none opacity-[0.22]"><img src="/assets/hero-library.svg" alt="" className="w-full h-full object-cover object-top opacity-[0.32]" /></div>
+        <div className="absolute inset-0 pointer-events-none opacity-[0.06]" style={{ background: "radial-gradient(ellipse 520px 220px at 50% 0%, #f59e0b, transparent 72%)" }} />
+        <div className="absolute top-0 left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-amber-500/14 to-transparent" />
       {phase==='ROLE_REVEAL' && (
         <div className="text-center">
           <h3 className="font-extrabold text-white">Your secret</h3>
@@ -255,9 +256,9 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
             {(() => {
               const myIdx = pub.players.findIndex(p=>p.id===myId);
               const myRevealed = myIdx!==-1 ? pub.revealed[myIdx] : false;
-              if (isSpectator) return <div className="py-3 rounded-full bg-white/5 text-white/40 text-sm font-bold">Watching… {pub.revealed.filter(Boolean).length}/{pub.players.length} have seen</div>;
-              if (myRevealed) return <div className="py-3 rounded-full bg-white/10 border border-white/15 text-white/60 text-sm font-bold">Waiting for everyone… {pub.revealed.filter(Boolean).length}/{pub.players.length}</div>;
-              return <button onClick={handleReveal} disabled={actionLoading} className="w-full py-3 rounded-full bg-[#f3ecd8] hover:bg-white text-[#0e2533] font-extrabold">I’ve seen it</button>;
+              if (isSpectator) return <div className="py-3 rounded-full bg-white/5 text-white/40 text-sm font-bold">Watchingï¿½ {pub.revealed.filter(Boolean).length}/{pub.players.length} have seen</div>;
+              if (myRevealed) return <div className="py-3 rounded-full bg-white/10 border border-white/15 text-white/60 text-sm font-bold">Waiting for everyoneï¿½ {pub.revealed.filter(Boolean).length}/{pub.players.length}</div>;
+              return <button onClick={handleReveal} disabled={actionLoading} className="w-full py-3 rounded-full bg-[#f3ecd8] hover:bg-white text-[#0e2533] font-extrabold">Iï¿½ve seen it</button>;
             })()}
           </div>
         </div>
@@ -272,7 +273,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
             if (isLeader) {
               return (
                 <div className="text-center">
-                  <p className="text-xs tracking-widest font-bold text-[#7ec8e6]">YOU’RE LEADING • QUEST {questNum}</p>
+                  <p className="text-xs tracking-widest font-bold text-[#7ec8e6]">YOUï¿½RE LEADING ï¿½ QUEST {questNum}</p>
                   <h3 className="font-black text-white text-lg">Pick {need} teammates</h3>
                   <p className="text-xs text-white/50">Choose who goes on the quest.</p>
                   <div className="mt-4 grid grid-cols-3 sm:grid-cols-5 gap-2">
@@ -332,7 +333,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
 
       {phase==='TEAM_VOTE' && (
         <div className="text-center">
-          <p className="text-xs tracking-widest font-bold text-[#7ec8e6]">TEAM PICKED • QUEST {questNum}</p>
+          <p className="text-xs tracking-widest font-bold text-[#7ec8e6]">TEAM PICKED ï¿½ QUEST {questNum}</p>
           <h3 className="font-black text-white text-lg">Should this team go?</h3>
           <div className="flex justify-center gap-2 mt-3 flex-wrap">
             {pub.proposal.teamIds.map(id=>{
@@ -351,7 +352,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
                 <span className="text-xs font-bold text-white/70 mt-1 flex items-center gap-1">{pl?.name || id.slice(0,4)} {id===myId && <span className="px-1 py-0.5 rounded-full bg-amber-400 text-[#0e2533] text-[8px] font-black">YOU</span>}</span></div>;
             })}
           </div>
-          {isSpectator ? <div className="mt-4 py-3 rounded-full bg-white/5 text-white/40 font-bold">Spectating vote… {pub.proposal.voteCount}/{pub.players.length}</div> :
+          {isSpectator ? <div className="mt-4 py-3 rounded-full bg-white/5 text-white/40 font-bold">Spectating voteï¿½ {pub.proposal.voteCount}/{pub.players.length}</div> :
            priv?.myTeamVote ? <div className="mt-4 py-3 rounded-full bg-white/10 border border-white/15 text-white/60 font-bold">You voted {priv.myTeamVote} - waiting {pub.proposal.voteCount}/{pub.players.length}</div> :
            <div className="mt-4 grid grid-cols-2 gap-3">
               <button onClick={()=>handleTeamVote('APPROVE')} disabled={actionLoading} className="py-3 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-black border border-emerald-400/40">Yes, go</button>
@@ -384,9 +385,9 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
                   })}
                 </div>
                 {isSpectator ? (
-                  <div className="mt-4 py-3 rounded-full bg-white/5 text-white/40 font-bold">Spectating… {ackCount}/{total} ready</div>
+                  <div className="mt-4 py-3 rounded-full bg-white/5 text-white/40 font-bold">Spectatingï¿½ {ackCount}/{total} ready</div>
                 ) : hasAcked ? (
-                  <div className="mt-4 py-3 rounded-full bg-white/10 border border-white/15 text-white/60 font-bold">Waiting for others… {ackCount}/{total}</div>
+                  <div className="mt-4 py-3 rounded-full bg-white/10 border border-white/15 text-white/60 font-bold">Waiting for othersï¿½ {ackCount}/{total}</div>
                 ) : (
                   <button onClick={()=>emitAction('ACK_TEAM_VOTE_REVEAL', {})} disabled={actionLoading} className="mt-4 w-full py-3 rounded-full bg-[#f3ecd8] hover:bg-white text-[#0e2533] font-extrabold">Continue ({ackCount}/{total})</button>
                 )}
@@ -414,17 +415,17 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
               );
             })}
           </div>
-          {isSpectator ? <div className="mt-4 py-3 rounded-full bg-white/5 text-white/40 font-bold">Quest happening…</div> :
-           !pub.proposal.teamIds.includes(myId) ? <div className="mt-4 py-3 rounded-full bg-white/5 text-white/40 font-bold">You’re sitting out - watching</div> :
+          {isSpectator ? <div className="mt-4 py-3 rounded-full bg-white/5 text-white/40 font-bold">Quest happeningï¿½</div> :
+           !pub.proposal.teamIds.includes(myId) ? <div className="mt-4 py-3 rounded-full bg-white/5 text-white/40 font-bold">Youï¿½re sitting out - watching</div> :
            hasVotedQuest ? <div className="mt-4 py-3 rounded-full bg-white/10 border border-white/15 text-white/60 font-bold">You played - waiting for others</div> :
            <div className="mt-4">
               <h3 className="font-black text-white">Choose your card</h3>
-              <p className="text-xs text-white/50 max-w-[320px] mx-auto">If you’re Good, you must play Success. If you’re Evil, you can play Fail to block.</p>
+              <p className="text-xs text-white/50 max-w-[320px] mx-auto">If youï¿½re Good, you must play Success. If youï¿½re Evil, you can play Fail to block.</p>
               <div className="mt-3 grid grid-cols-2 gap-3">
                 <button onClick={()=>handleQuestVote('SUCCESS')} disabled={actionLoading} className="py-3 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-black border border-emerald-400/40">Success</button>
                 <button onClick={()=>handleQuestVote('FAIL')} disabled={actionLoading || priv?.self?.allegiance==='GOOD'} className={`py-3 rounded-full font-black border ${priv?.self?.allegiance==='GOOD' ? 'bg-white/5 border-white/10 text-white/20 border-dashed' : 'bg-rose-600 hover:bg-rose-500 text-white border-rose-400/40'}`}>Fail</button>
               </div>
-              {priv?.self?.allegiance==='GOOD' && <p className="text-xs text-white/30 mt-2">You’re Good - you can only play Success</p>}
+              {priv?.self?.allegiance==='GOOD' && <p className="text-xs text-white/30 mt-2">Youï¿½re Good - you can only play Success</p>}
             </div>
           }
         </div>
@@ -446,11 +447,11 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
                   {votes.map((v,i)=><span key={i} className={`px-4 py-1.5 rounded-full text-xs font-black ${v==='FAIL'?'bg-rose-500 text-white':'bg-emerald-400 text-black'}`}>{v}</span>)}
                 </div>
                 <h3 className={`font-black text-lg mt-3 ${isSuccess?'text-emerald-300':'text-rose-300'}`}>{isSuccess?'Quest Succeeded':'Quest Failed'}</h3>
-                <p className="text-xs text-white/50">{(q?.votesShuffled?.filter(v=>v==='SUCCESS').length ?? 0)} Success • {(q?.failCount ?? 0)} Fail • {q?.teamIds?.length||pub.proposal.teamIds.length||0} on quest</p>
+                <p className="text-xs text-white/50">{(q?.votesShuffled?.filter(v=>v==='SUCCESS').length ?? 0)} Success ï¿½ {(q?.failCount ?? 0)} Fail ï¿½ {q?.teamIds?.length||pub.proposal.teamIds.length||0} on quest</p>
                 {isSpectator ? (
-                  <div className="mt-4 py-3 rounded-full bg-white/5 text-white/40 font-bold">Spectating… {ackCount}/{total}</div>
+                  <div className="mt-4 py-3 rounded-full bg-white/5 text-white/40 font-bold">Spectatingï¿½ {ackCount}/{total}</div>
                 ) : hasAcked ? (
-                  <div className="mt-4 py-3 rounded-full bg-white/10 border border-white/15 text-white/60 font-bold">Waiting… {ackCount}/{total}</div>
+                  <div className="mt-4 py-3 rounded-full bg-white/10 border border-white/15 text-white/60 font-bold">Waitingï¿½ {ackCount}/{total}</div>
                 ) : (
                   <button onClick={()=>emitAction('ACK_QUEST_REVEAL', {})} disabled={actionLoading} className="mt-4 w-full py-3 rounded-full bg-[#f3ecd8] hover:bg-white text-[#0e2533] font-extrabold">Continue ({ackCount}/{total})</button>
                 )}
@@ -464,7 +465,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
         <div className="text-center">
           <p className="text-xs tracking-widest font-bold text-emerald-300">GOOD IS ABOUT TO WIN!</p>
           <h3 className="font-black text-white text-lg">Find Merlin</h3>
-          <p className="text-xs text-white/50 max-w-[320px] mx-auto">Assassin - who is Merlin? If you’re right, Evil wins!</p>
+          <p className="text-xs text-white/50 max-w-[320px] mx-auto">Assassin - who is Merlin? If youï¿½re right, Evil wins!</p>
           {priv?.self?.role==='ASSASSIN' ? (
             <div className="mt-4">
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
@@ -494,14 +495,14 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
               <button onClick={handleAssassinate} disabled={!assassinPick || actionLoading} className={`mt-4 w-full py-3 rounded-full font-extrabold ${assassinPick?'bg-rose-500 hover:bg-rose-600 text-white':'bg-white/10 text-white/30'}`}>Choose {assassinPick ? pub.players.find(p=>p.id===assassinPick)?.name : 'someone'}</button>
             </div>
           ) : (
-            <div className="mt-4 py-3 rounded-full bg-white/5 text-white/40 font-bold">Assassin is choosing…</div>
+            <div className="mt-4 py-3 rounded-full bg-white/5 text-white/40 font-bold">Assassin is choosingï¿½</div>
           )}
         </div>
       )}
 
       {phase==='GAME_OVER' && (
         <div className="text-center">
-          <p className={`text-xs tracking-widest font-bold ${pub.winner==='GOOD'?'text-emerald-300':'text-rose-300'}`}>{pub.winner} WINS • {pub.winReason}</p>
+          <p className={`text-xs tracking-widest font-bold ${pub.winner==='GOOD'?'text-emerald-300':'text-rose-300'}`}>{pub.winner} WINS ï¿½ {pub.winReason}</p>
           <h3 className={`font-black text-xl ${pub.winner==='GOOD'?'text-emerald-300':'text-rose-400'}`}>{pub.winner==='GOOD'?'Good prevails':'Evil triumphs'}</h3>
           {pub.winReason==='ASSASSINATION' && (
             <p className="text-xs text-white/60 mt-1">
@@ -551,7 +552,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
                 if(!res?.ok) showToast(res?.error||'Could not restart');
                 else showToast('Back to lobby!');
               });
-            }} className="flex-1 py-3 rounded-full bg-amber-400 hover:bg-amber-300 text-[#0e2533] font-extrabold shadow-lg">Play Again</button> : <div className="flex-1 py-3 rounded-full bg-white/5 text-white/40 font-bold text-center">Waiting for host…</div>}
+            }} className="flex-1 py-3 rounded-full bg-amber-400 hover:bg-amber-300 text-[#0e2533] font-extrabold shadow-lg">Play Again</button> : <div className="flex-1 py-3 rounded-full bg-white/5 text-white/40 font-bold text-center">Waiting for hostï¿½</div>}
           </div>
         </div>
       )}
@@ -567,7 +568,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
               <span className={`w-1.5 h-1.5 rounded-full ${priv.self.allegiance==='GOOD' ? 'bg-emerald-400' : 'bg-rose-400'} animate-pulse`} />
               <span className="text-[10px] font-black tracking-[0.18em] text-white/60">YOUR SECRET ROLE</span>
             </div>
-            <h3 className={`font-display font-[900] text-[20px] leading-none mt-2 ${priv.self.allegiance==='GOOD' ? 'text-emerald-300' : 'text-rose-300'}`}>{priv.self.role} <span className="font-sans font-bold text-white/35 text-sm">• {priv.self.allegiance}</span></h3>
+            <h3 className={`font-display font-[900] text-[20px] leading-none mt-2 ${priv.self.allegiance==='GOOD' ? 'text-emerald-300' : 'text-rose-300'}`}>{priv.self.role} <span className="font-sans font-bold text-white/35 text-sm">ï¿½ {priv.self.allegiance}</span></h3>
             <img src="/assets/veil-ornament.svg" alt="" className="mx-auto mt-2 h-[14px] w-auto opacity-70" />
           </div>
           {priv.vision?.sees?.length > 0 ? (
@@ -585,7 +586,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
             </div>
           ) : (
             <p className="text-xs text-white/50 mt-2">
-              {priv.self.role==='LOYAL' ? 'You’re Loyal - no extra info.' : priv.self.role==='OBERON' ? 'You’re Oberon - you work alone.' : priv.self.role==='MERLIN' && priv.vision.sees.length===0 ? 'Mordred is hiding - you see no one.' : 'You see no one.'}
+              {priv.self.role==='LOYAL' ? 'Youï¿½re Loyal - no extra info.' : priv.self.role==='OBERON' ? 'Youï¿½re Oberon - you work alone.' : priv.self.role==='MERLIN' && priv.vision.sees.length===0 ? 'Mordred is hiding - you see no one.' : 'You see no one.'}
             </p>
           )}
           {(() => {
@@ -608,7 +609,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
                 <div className="mt-1.5 flex flex-wrap gap-1.5 justify-center">
                   <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Merlin</span>
                   {hasPercival && <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Percival</span>}
-                  {loyal > 0 && <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Loyal ×{loyal}</span>}
+                  {loyal > 0 && <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Loyal ï¿½{loyal}</span>}
                 </div>
               </div>
               <div className="text-center">
@@ -618,7 +619,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
                   {e.includes('morgana') && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Morgana</span>}
                   {e.includes('mordred') && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Mordred</span>}
                   {e.includes('oberon') && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Oberon</span>}
-                  {minion > 0 && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Minion ×{minion}</span>}
+                  {minion > 0 && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Minion ï¿½{minion}</span>}
                 </div>
               </div>
             </div>
@@ -628,10 +629,10 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
         </div>
       )}
       {hideTopAllegiance && isSpectator && !priv?.self && (
-        <div className="rounded-[18px] glass-lantern p-4 text-center relative overflow-hidden">
+        <div className="rounded-[18px] glass-library p-4 text-center relative overflow-hidden">
           <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-32 h-16 bg-amber-400/10 blur-xl rounded-full pointer-events-none" />
           <p className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.06] border border-white/10 text-amber-200 text-sm font-bold">??? Spectating</p>
-          <p className="text-xs font-medium text-white/45 mt-1.5">You see the board only — private roles are hidden</p>
+          <p className="text-xs font-medium text-white/45 mt-1.5">You see the board only ï¿½ private roles are hidden</p>
           {(() => {
             const n = pub.players.length;
             const opts = pub.extraRoles || {};
@@ -652,7 +653,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
                   <div className="mt-1.5 flex flex-wrap gap-1.5 justify-center">
                     <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Merlin</span>
                     {hasPercival && <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Percival</span>}
-                    {loyal > 0 && <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Loyal ×{loyal}</span>}
+                    {loyal > 0 && <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Loyal ï¿½{loyal}</span>}
                   </div>
                 </div>
                 <div className="text-center">
@@ -662,7 +663,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
                     {e.includes('morgana') && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Morgana</span>}
                     {e.includes('mordred') && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Mordred</span>}
                     {e.includes('oberon') && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Oberon</span>}
-                    {minion > 0 && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Minion ×{minion}</span>}
+                    {minion > 0 && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Minion ï¿½{minion}</span>}
                   </div>
                 </div>
               </div>
@@ -672,10 +673,10 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
         </div>
       )}
       {!hideTopAllegiance && isSpectator && !priv?.self && (
-        <div className="rounded-[18px] glass-lantern p-4 text-center relative overflow-hidden">
+        <div className="rounded-[18px] glass-library p-4 text-center relative overflow-hidden">
           <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-32 h-16 bg-amber-400/10 blur-xl rounded-full pointer-events-none" />
           <p className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.06] border border-white/10 text-amber-200 text-sm font-bold">??? Spectating</p>
-          <p className="text-xs font-medium text-white/45 mt-1.5">You see the board only — private roles are hidden</p>
+          <p className="text-xs font-medium text-white/45 mt-1.5">You see the board only ï¿½ private roles are hidden</p>
           {(() => {
             const n = pub.players.length;
             const opts = pub.extraRoles || {};
@@ -696,7 +697,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
                 <div className="mt-1.5 flex flex-wrap gap-1.5 justify-center">
                   <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Merlin</span>
                   {hasPercival && <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Percival</span>}
-                  {loyal > 0 && <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Loyal ×{loyal}</span>}
+                  {loyal > 0 && <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-200">Loyal ï¿½{loyal}</span>}
                 </div>
               </div>
               <div className="text-center">
@@ -706,7 +707,7 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
                   {e.includes('morgana') && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Morgana</span>}
                   {e.includes('mordred') && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Mordred</span>}
                   {e.includes('oberon') && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Oberon</span>}
-                  {minion > 0 && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Minion ×{minion}</span>}
+                  {minion > 0 && <span className="px-2.5 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[10px] font-bold text-rose-200">Minion ï¿½{minion}</span>}
                 </div>
               </div>
             </div>
@@ -717,8 +718,8 @@ export default function QuestGame({ roomId, isHost, isSpectator, hideTopAllegian
       )}
 
       {pub.log?.length>0 && (
-        <details className="rounded-[16px] glass-lantern overflow-hidden" open>
-          <summary className="px-4 py-2.5 text-xs font-black tracking-widest text-amber-200/70 cursor-pointer flex items-center gap-2"><span className="w-6 h-6 rounded-full bg-amber-400/12 border border-amber-400/20 flex items-center justify-center text-[10px]">??</span> Game log • {pub.log.length}</summary>
+        <details className="rounded-[16px] glass-library overflow-hidden" open>
+          <summary className="px-4 py-2.5 text-xs font-black tracking-widest text-amber-200/70 cursor-pointer flex items-center gap-2"><span className="w-6 h-6 rounded-full bg-amber-400/12 border border-amber-400/20 flex items-center justify-center text-[10px]">??</span> Game log ï¿½ {pub.log.length}</summary>
           <div className="px-4 pb-3 space-y-1 max-h-[320px] overflow-auto overscroll-contain border-t border-white/10 bg-white/[0.02]">
             {[...pub.log].reverse().map(e=>(
               <div key={e.id} className="flex gap-2 text-xs border-l-2 border-amber-400/10 pl-3 py-1.5 bg-white/[0.02] rounded-r-lg">
