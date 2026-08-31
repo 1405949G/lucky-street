@@ -115,7 +115,7 @@ export function reducer(state, action){
   switch(action.type){
     case "SETUP_GAME": {
       const { players, opts, roomCode } = action.payload || {};
-      if (!Array.isArray(players) || players.length < 2) throw new Error("Need 2+ players");
+      if (!Array.isArray(players) || players.length < 1) throw new Error("Need 1+ player");
       if (players.length > 12) throw new Error("Max 12 players");
       const names = players.map(p=> String(p.name||"").trim());
       if (names.some(n=>!n)) throw new Error("All players need names");

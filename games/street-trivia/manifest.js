@@ -1,15 +1,15 @@
 /**
- * games/street-trivia/manifest.js - Street Trivia (solo FFA, 2-12p)
- * No teams / no bots v1 — 2 people can share 1 phone.
+ * games/street-trivia/manifest.js - Street Trivia (solo FFA, 1-12p)
+ * No teams / no bots v1 — 2 people can share 1 phone, 1 player can practice solo.
  * See ../README.md + AGENTS.md for AI rule.
  */
 export default {
   id: "street-trivia",
   label: "Street Trivia",
   description: "Solo trivia — A/B/C/D, live scores, categories",
-  minPlayers: 2,
+  minPlayers: 1,
   maxPlayers: 12,
-  defaultMaxPlayers: 8,
+  defaultMaxPlayers: 4,
   supportsBots: false,
   defaultOptions: {
     questionCount: 10,
