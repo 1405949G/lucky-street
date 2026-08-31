@@ -222,14 +222,21 @@ export async function fetchQuestionsWithFallback(opts) {
           const mapped = json.results.slice(0, opts.count).map(r => {
             const correct = decodeHtml(r.correct_answer);
             const incorrect = r.incorrect_answers.map(decodeHtml);
-            const options = shuffle([correct, ...incorrect]);
+            let options, correctIndex;
+            if (r.type === "boolean") {
+              options = ["True","False"];
+              correctIndex = correct === "True" ? 0 : 1;
+            } else {
+              options = shuffle([correct, ...incorrect]);
+              correctIndex = options.indexOf(correct);
+            }
             return {
               id: `q_api_${Math.random().toString(36).slice(2,8)}`,
-              category: opts.category,
+              category: opts.category || "Random",
               difficulty: r.difficulty === "easy" ? "easy" : r.difficulty==="hard"?"hard":"medium",
               q: decodeHtml(r.question),
               options,
-              correctIndex: options.indexOf(correct),
+              correctIndex,
               imageUrl: null,
             };
           });

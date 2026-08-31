@@ -37,18 +37,20 @@ function appendLog(log, type, text){
 }
 function fmtQuestion(q, idx, total){
   if(!q) return `Question Q${idx+1}`;
-  const opts = q.options.map((o,i)=> `${String.fromCharCode(65+i)} ${o}`).join(" • ");
-  return `Question Q${idx+1} [${q.category}] ${q.q} — ${opts}${q.imageUrl?" • [image]":""}`;
+  const isBool = q.options.length===2;
+  const opts = isBool ? q.options.join(" • ") : q.options.map((o,i)=> `${String.fromCharCode(65+i)} ${o}`).join(" • ");
+  return `Question Q${idx+1}: ${q.q} — ${opts}${q.imageUrl?" • [image]":""}`;
 }
 function fmtReveal(curQ, answers, players, idx){
-  const correctLetter = String.fromCharCode(65+curQ.correctIndex);
+  const isBool = curQ.options.length===2;
   const correctOpt = curQ.options[curQ.correctIndex];
+  const correctLabel = isBool ? correctOpt : `${String.fromCharCode(65+curQ.correctIndex)} ${correctOpt}`;
   const breakdown = {0:0,1:0,2:0,3:0};
   for(const v of Object.values(answers)) breakdown[v]=(breakdown[v]||0)+1;
-  const breakdownStr = `A:${breakdown[0]} B:${breakdown[1]} C:${breakdown[2]} D:${breakdown[3]}`;
+  const breakdownStr = isBool ? `True:${breakdown[0]} False:${breakdown[1]}` : `A:${breakdown[0]} B:${breakdown[1]} C:${breakdown[2]} D:${breakdown[3]}`;
   const correctCount = breakdown[curQ.correctIndex] || 0;
   const wrongCount = players.length - correctCount;
-  return `Reveal Q${idx+1}: Correct ${correctLetter} ${correctOpt} — ${breakdownStr} | ${correctCount} correct • ${wrongCount} wrong`;
+  return `Reveal Q${idx+1}: Correct ${correctLabel} — ${breakdownStr} | ${correctCount} correct • ${wrongCount} wrong`;
 }
 
 export function getPublicState(state){

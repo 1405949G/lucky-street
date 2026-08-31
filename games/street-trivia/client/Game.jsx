@@ -162,10 +162,10 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
         )}
       </div>
 
-      {/* Question card */}
+      {/* Question card — symmetrical border */}
       {!isOver ? (
-        <div className="relative rounded-[24px] bg-[#0f2231] border border-white/10 shadow-xl overflow-visible pt-3">
-          {/* progress bar */}
+        <div className="relative rounded-[24px] bg-[#0f2231] border border-white/10 shadow-xl overflow-visible">
+          {/* progress bar — flush top, symmetrical */}
           <div className="h-1.5 bg-white/10 w-full rounded-t-[24px] overflow-hidden">
             <div className="h-full bg-gradient-to-r from-amber-300 to-orange-400 transition-all duration-200" style={{ width: `${((idx)/Math.max(total,1))*100}%` }} />
           </div>
@@ -344,7 +344,7 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
         </div>
       )}
 
-      {/* Game log — uniform, organised for 12p, only button toggles */}
+      {/* Game log — uniform, only arrow button toggles, centred */}
       {pub.log?.length>0 && (
         <div className="rounded-2xl bg-[#0f2231]/70 border border-white/10 shadow-xl">
           <div className="px-4 py-3 flex items-center justify-between">
@@ -354,7 +354,9 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
               aria-label={logOpen ? "Collapse log" : "Expand log"}
               className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors"
             >
-              <span className={`text-[12px] transition-transform duration-300 ${logOpen ? "rotate-180" : "rotate-0"}`}>⌄</span>
+              <svg width="14" height="14" viewBox="0 0 12 12" className={`transition-transform duration-300 ${logOpen ? "rotate-180" : "rotate-0"}`} style={{display:"block"}} aria-hidden="true">
+                <path d="M3 4.5 L6 7.5 L9 4.5" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </button>
           </div>
           {logOpen && (
