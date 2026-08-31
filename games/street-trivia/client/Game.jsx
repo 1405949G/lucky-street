@@ -7,10 +7,10 @@ import { SocketContext } from "../../../client/src/context/SocketContext.jsx";
 
 const LETTERS = ["A","B","C","D"];
 const OPTION_COLORS = [
-  "bg-[#ef4444] border-red-400", // A red
-  "bg-[#3b82f6] border-blue-400", // B blue
-  "bg-[#eab308] border-yellow-400", // C yellow
-  "bg-[#22c55e] border-green-400", // D green
+  "bg-white/5 border-white/20", // A
+  "bg-white/5 border-white/20", // B
+  "bg-white/5 border-white/20", // C
+  "bg-white/5 border-white/20", // D
 ];
 
 export default function TriviaGame({ roomId, isHost, isSpectator }) {
@@ -268,7 +268,7 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
                       </div>
                     ))}
                   </div>
-                  <div className="mt-4 text-xs text-white/30 text-center">{Object.keys(picks).length} answered • {pub.totalPlayers - Object.keys(picks).length} missed</div>
+                  <div className="mt-4 text-xs text-white/30 text-center">{breakdown[correctIndex]||0} correct • {pub.totalPlayers - (breakdown[correctIndex]||0)} wrong</div>
                   {isSpectator
                     ? <div className="mt-4 py-3 rounded-full bg-white/5 text-white/40 font-bold text-center text-sm">Spectating… {pub.revealAckCount}/{pub.totalPlayers}</div>
                     : pub.revealAcks?.[myId]

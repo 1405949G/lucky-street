@@ -45,9 +45,9 @@ function fmtReveal(curQ, answers, players, idx){
   const breakdown = {0:0,1:0,2:0,3:0};
   for(const v of Object.values(answers)) breakdown[v]=(breakdown[v]||0)+1;
   const breakdownStr = `A:${breakdown[0]} B:${breakdown[1]} C:${breakdown[2]} D:${breakdown[3]}`;
-  const answered = Object.keys(answers).length;
-  const missed = players.length - answered;
-  return `Reveal Q${idx+1}: Correct ${correctLetter} ${correctOpt} — ${breakdownStr} | ${answered} answered • ${missed} missed`;
+  const correctCount = breakdown[curQ.correctIndex] || 0;
+  const wrongCount = players.length - correctCount;
+  return `Reveal Q${idx+1}: Correct ${correctLetter} ${correctOpt} — ${breakdownStr} | ${correctCount} correct • ${wrongCount} wrong`;
 }
 
 export function getPublicState(state){
