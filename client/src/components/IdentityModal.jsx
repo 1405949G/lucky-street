@@ -31,10 +31,14 @@ export default function IdentityModal({ blocking = false, onDone, title = "Welco
     }
   }, [profile]);
 
-  // Clear stale profileError when opening edit (same name should not show taken)
-  useEffect(() => { setLocalError(null); clearProfileError?.(); }, [clearProfileError]);
-  // Clear errors when user types
-  useEffect(() => { if (localError) setLocalError(null); if (profileError) clearProfileError?.(); }, [username]);
+  // Clear stale taken error that belongs to own name when modal opens
+  useEffect(() => {
+    const isOwn = (username.trim().toLowerCase() === (profile?.username || "").toLowerCase());
+    if (isOwn && profileError && /already taken/i.test(profileError)) clearProfileError?.();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  // Clear local error when user starts typing
+  useEffect(() => { if (localError) setLocalError(null); }, [username]);
 
   useEffect(() => {
     return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
@@ -149,10 +153,16 @@ export default function IdentityModal({ blocking = false, onDone, title = "Welco
           <AvatarPicker value={avatar} onChange={setAvatar} />
 
           {(() => {
-            const isOwnName = username.trim().toLowerCase() === profile?.username?.toLowerCase();
-            const showProfileError = profileError && !isOwnName && !/already taken/i.test(profileError || "") || (profileError && !isOwnName);
-            // Don't show already taken for own name — that's not an error when just opening
-            const displayError = localError || (isOwnName ? null : profileError);
+            const isOwnName = username.trim().toLowerCase() === (profile?.username || "").toLowerCase();
+            const isTaken = (m) => /already taken/i.test(m || "");
+            let displayError = null;
+            if (localError) {
+              // Don't show taken error when it's about own name (stale)
+              if (!(isOwnName && isTaken(localError))) displayError = localError;
+            } else if (profileError) {
+              if (!isOwnName) displayError = profileError;
+              // isOwnName -> hide profileError entirely (was stale from previous attempt)
+            }
             return displayError ? (
               <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 px-3 py-2.5">
                 <p className="text-xs font-bold text-rose-300">{displayError}</p>
