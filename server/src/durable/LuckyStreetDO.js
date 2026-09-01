@@ -1222,6 +1222,45 @@ export class LuckyStreetDO {
           let room;
           if (rm && rm.game==="trivia") room = this.roomManager.resetTrivia(id, socketId);
           else room = this.roomManager.resetQuest(id, socketId);
+          // End of game: clear indefinite grace — remove disconnected players so they can join other lobbies
+          const pendingForRoom = [...this.pendingLeaves.entries()].filter(([, p]) => p.roomId === id);
+          for (const [sid, pend] of pendingForRoom) {
+            clearTimeout(pend.timeout);
+            this.pendingLeaves.delete(sid);
+            // Remove ghost player from room if still present and not connected
+            const curRoom = this.roomManager.get(id);
+            if (curRoom) {
+              const idx = curRoom.players.findIndex(p => p.id === sid);
+              if (idx !== -1) {
+                const isActive = (() => {
+                  const ws = this.socketIdToWs.get(sid);
+                  try { return !!(ws && this.state.getWebSockets().includes(ws)); } catch { return !!(ws && this.sessions.has(ws)); }
+                })();
+                if (!isActive) {
+                  curRoom.players.splice(idx, 1);
+                  // Restart UserRegistry GC for this name (was indefinite)
+                  const lower = this.userRegistry.bySocket.get(sid);
+                  const ent = lower ? this.userRegistry.byName.get(lower) : null;
+                  if (ent && !ent.timer) {
+                    ent.connected = false;
+                    ent.disconnectedAt = Date.now();
+                    ent.expiresAt = Date.now() + this.gcMs;
+                    ent.timer = setTimeout(() => {
+                      const cur = this.userRegistry.byName.get(lower);
+                      if (cur && cur.socketId === sid && !cur.connected) {
+                        this.userRegistry.byName.delete(lower);
+                        this.userRegistry.bySocket.delete(sid);
+                        this.persist();
+                      }
+                    }, this.gcMs);
+                    try { await this.state.storage.setAlarm(ent.expiresAt); } catch {}
+                  }
+                }
+              }
+            }
+          }
+          // Refresh room view after cleanup
+          room = this.roomManager.getFull(id);
           okAck({ ok: true, room });
           this.sendToRoom(id, { event: "game:update", data: null });
           this.sendToRoom(id, { event: "game:private", data: null });

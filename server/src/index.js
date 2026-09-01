@@ -547,6 +547,33 @@ io.on("connection", (socket) => {
       let room;
       if(rm && rm.game==="trivia") room = roomManager.resetTrivia(id, socket.id);
       else room = roomManager.resetQuest(id, socket.id);
+      // End of game: clear indefinite grace — remove disconnected ghosts so they can join other lobbies
+      const cur = roomManager.get(id);
+      if (cur) {
+        const toRemove = cur.players.filter(p => !io.sockets.sockets.has(p.id));
+        for (const p of toRemove) {
+          const idx = cur.players.findIndex(x => x.id === p.id);
+          if (idx !== -1) cur.players.splice(idx, 1);
+          const lower = p.name.toLowerCase();
+          const ent = userRegistry.byName.get(lower);
+          if (ent && ent.socketId === p.id && !ent.timer) {
+            ent.connected = false;
+            ent.disconnectedAt = Date.now();
+            ent.expiresAt = Date.now() + userRegistry.gcMs;
+            ent.timer = setTimeout(() => {
+              const cur2 = userRegistry.byName.get(lower);
+              if (cur2 && cur2.socketId === p.id && !cur2.connected) {
+                userRegistry.byName.delete(lower);
+                userRegistry.bySocket.delete(p.id);
+              }
+            }, userRegistry.gcMs);
+          }
+        }
+        if (toRemove.length) {
+          cur.updatedAt = Date.now();
+          room = roomManager.getFull(id);
+        }
+      }
       if (typeof ack === "function") ack({ ok: true, room });
       io.to(id).emit("game:update", null);
       io.to(id).emit("game:private", null);
