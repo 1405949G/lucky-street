@@ -69,6 +69,8 @@ function trimQuestOptionsIfNeeded(room) {
   return true;
 }
 
+export const INACTIVITY_MS = 10 * 60 * 1000; // 10 minutes without starting any game
+
 export class RoomManager {
   constructor({ onRoomsChanged = null } = {}) {
     /** Map<roomId, room> */
@@ -169,6 +171,7 @@ export class RoomManager {
     // Also respect game's min/max as soft bounds - warn but allow
     const id = generateRoomId(new Set(this.rooms.keys()));
 
+    const now = Date.now();
     const room = {
       id,
       hostId,
@@ -182,8 +185,10 @@ export class RoomManager {
       spectators: [],
       gameState: null,
       gameStartedAt: null,
-      createdAt: Date.now(),
-      updatedAt: Date.now()
+      // Inactivity tracking: room open without starting any game -> auto close after 10 min
+      inactiveSince: now,
+      createdAt: now,
+      updatedAt: now
     };
     this.rooms.set(id, room);
     this._notify();
@@ -676,6 +681,7 @@ export class RoomManager {
     const result = questReducer(undefined, { type: 'SETUP_GAME', payload: { players: allParticipants, opts, roomCode: room.id } });
     room.gameState = result.state;
     room.gameStartedAt = Date.now();
+    room.inactiveSince = null;
     room.updatedAt = Date.now();
     this._notify();
     return { room: this.getFull(room.id), effects: result.effects };
@@ -690,6 +696,7 @@ export class RoomManager {
     if (!isGameOver && room.hostId !== requesterId) throw new Error("Only host can reset during active quest");
     room.gameState = null;
     room.gameStartedAt = null;
+    room.inactiveSince = Date.now();
     room.updatedAt = Date.now();
     this._notify();
     return this.getFull(room.id);
@@ -849,6 +856,7 @@ export class RoomManager {
     const result = triviaReducer(undefined, { type: 'SETUP_GAME', payload: { players: allParticipants, opts, roomCode: room.id, preFetchedQuestions: preFetched } });
     room.gameState = result.state;
     room.gameStartedAt = Date.now();
+    room.inactiveSince = null;
     room.updatedAt = Date.now();
     this._notify();
     return { room: this.getFull(room.id), effects: result.effects };
@@ -862,6 +870,7 @@ export class RoomManager {
     if (!isGameOver && room.hostId !== requesterId) throw new Error("Only host can reset during active trivia");
     room.gameState = null;
     room.gameStartedAt = null;
+    room.inactiveSince = Date.now();
     room.updatedAt = Date.now();
     this._notify();
     return this.getFull(room.id);
@@ -930,5 +939,24 @@ export class RoomManager {
     if(!room || !room.gameState) return null;
     if(room.game!=="trivia") return null;
     try { return triviaPrivate(room.gameState, playerId); } catch { return triviaPublic(room.gameState); }
+  }
+
+  // --- Inactivity sweep: close rooms open 10 min without starting any game ---
+  sweepInactive(now = Date.now()) {
+    const deleted = [];
+    for (const [roomId, room] of [...this.rooms.entries()]) {
+      // Only lobby rooms (no gameState) with inactiveSince tracked
+      if (room.gameState) continue;
+      const since = room.inactiveSince || room.createdAt;
+      if (!since) continue;
+      if (now - since >= INACTIVITY_MS) {
+        const playerIds = room.players.map(p => p.id);
+        const spectatorIds = (room.spectators || []).map(s => s.id);
+        this.rooms.delete(roomId);
+        deleted.push({ roomId, playerIds, spectatorIds });
+      }
+    }
+    if (deleted.length) this._notify();
+    return deleted;
   }
 }

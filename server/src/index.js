@@ -73,6 +73,27 @@ roomManager = new RoomManager({
   }
 });
 
+// 10-min inactivity auto-close for lobby rooms without starting any game
+const INACTIVITY_MS_NODE = 10 * 60 * 1000;
+setInterval(() => {
+  const now = Date.now();
+  const deleted = roomManager.sweepInactive(now);
+  if (deleted.length) {
+    for (const { roomId } of deleted) {
+      io.to(roomId).emit("room:closed", { roomId, reason: "inactivity" });
+      io.emit("room:deleted", { roomId, reason: "inactivity" });
+      // Clear socket.data.currentRoom for those in room
+      for (const [, sock] of io.sockets.sockets) {
+        if (sock.data.currentRoom === roomId) {
+          sock.data.currentRoom = null;
+          try { sock.leave(roomId); } catch {}
+        }
+      }
+      console.log(`[rooms] auto-closed inactive ${roomId} after ${INACTIVITY_MS_NODE}ms`);
+    }
+  }
+}, 30000);
+
 function broadcastRooms() {
   io.emit("rooms:update", roomManager.listPublic());
 }

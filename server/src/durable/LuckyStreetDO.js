@@ -76,6 +76,10 @@ export class LuckyStreetDO {
         const storedRooms = await this.state.storage.get("rooms");
         if (storedRooms && Array.isArray(storedRooms)) {
           this.roomManager.rooms = new Map(storedRooms);
+          // Migrate old rooms without inactiveSince (pre-inactivity feature)
+          for (const [, r] of this.roomManager.rooms.entries()) {
+            if (!r.gameState && !r.inactiveSince) r.inactiveSince = r.createdAt || Date.now();
+          }
           console.log(`[DO] restored ${this.roomManager.rooms.size} rooms from storage`);
         }
         const storedUsers = await this.state.storage.get("users");
@@ -461,6 +465,56 @@ export class LuckyStreetDO {
 
   async alarm() {
     const now = Date.now();
+    // --- 10-min inactivity: close lobby rooms open without starting any game ---
+    const INACTIVITY_MS = 10 * 60 * 1000;
+    const inactivityDeleted = [];
+    for (const [roomId, room] of [...this.roomManager.rooms.entries()]) {
+      if (room.gameState) continue;
+      const since = room.inactiveSince || room.createdAt;
+      if (!since) continue;
+      if (now - since >= INACTIVITY_MS) {
+        // Broadcast to everyone in room before delete
+        const msg = { event: "room:closed", data: { roomId, reason: "inactivity" } };
+        // sendToRoom while room still exists in Map
+        this.sendToRoom(roomId, msg);
+        // Also broadcast globally so RoomBrowser updates (sweepInactive will also _notify)
+        this.broadcast({ event: "room:deleted", data: { roomId, reason: "inactivity" } });
+        this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic().filter(r=>r.id!==roomId) });
+        // Also send direct to all sockets in room via fallback (in case sendToRoom missed due to attachment)
+        for (const ws of this.state.getWebSockets()) {
+          const sess = this.sessions.get(ws);
+          let cur = sess?.currentRoom;
+          if (!cur) { try { cur = ws.deserializeAttachment?.()?.currentRoom; } catch {} }
+          if (cur === roomId) { try { ws.send(JSON.stringify(msg)); } catch {} }
+        }
+        // Clear currentRoom attachment for those sockets so they don't auto-rejoin
+        for (const p of room.players) {
+          const ws = this.socketIdToWs.get(p.id);
+          if (ws) {
+            const s = this.sessions.get(ws);
+            if (s) { s.currentRoom = null; this._syncAttachment(ws, s); }
+          }
+        }
+        for (const s of (room.spectators || [])) {
+          const ws = this.socketIdToWs.get(s.id);
+          if (ws) {
+            const sess2 = this.sessions.get(ws);
+            if (sess2) { sess2.currentRoom = null; this._syncAttachment(ws, sess2); }
+          }
+        }
+        inactivityDeleted.push(roomId);
+      }
+    }
+    for (const rid of inactivityDeleted) {
+      this.roomManager.rooms.delete(rid);
+      // clean pendingLeaves for that room
+      for (const [sid, pend] of [...this.pendingLeaves.entries()]) if (pend.roomId === rid) { clearTimeout(pend.timeout); this.pendingLeaves.delete(sid); }
+      console.log(`[DO] auto-closed inactive room ${rid} after ${INACTIVITY_MS}ms`);
+    }
+    if (inactivityDeleted.length) {
+      this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic() });
+      await this.persist();
+    }
     // Idle sweep: remove players whose WS hasn't pinged in 60s and isn't pendingLeaves (covers tab closed to different site without clean close)
     const IDLE_MS = 60000;
     for (const [roomId, room] of [...this.roomManager.rooms.entries()]) {
@@ -555,6 +609,14 @@ export class LuckyStreetDO {
     }
     for (const p of this.pendingLeaves.values()) {
       if (p.expiresAt && (soonest === null || p.expiresAt < soonest)) soonest = p.expiresAt;
+    }
+    // Include inactivity deadlines
+    for (const room of this.roomManager.rooms.values()) {
+      if (room.gameState) continue;
+      const since = room.inactiveSince || room.createdAt;
+      if (!since) continue;
+      const deadline = since + INACTIVITY_MS;
+      if (deadline > now && (soonest === null || deadline < soonest)) soonest = deadline;
     }
     if (soonest) {
       try { await this.state.storage.setAlarm(soonest); } catch {}
@@ -1097,6 +1159,7 @@ export class LuckyStreetDO {
       this.sendAck(ws, ackId, { ok: false, error: e.message });
       this.send(ws, { event: "room:error", data: { error: e.message } });
     }
+    const INACT_HANDLE_MS = 10 * 60 * 1000;
     let soonest = null;
     for (const entry of this.userRegistry.byName.values()) {
       if (entry.expiresAt && !entry.connected) {
@@ -1106,8 +1169,19 @@ export class LuckyStreetDO {
     for (const p of this.pendingLeaves.values()) {
       if (p.expiresAt && (soonest === null || p.expiresAt < soonest)) soonest = p.expiresAt;
     }
+    for (const room of this.roomManager.rooms.values()) {
+      if (room.gameState) continue;
+      const since = room.inactiveSince || room.createdAt;
+      if (!since) continue;
+      const deadline = since + INACT_HANDLE_MS;
+      if (deadline > Date.now() && (soonest === null || deadline < soonest)) soonest = deadline;
+    }
     if (soonest) {
       try { await this.state.storage.setAlarm(soonest); } catch {}
+      await this.persist();
+    } else if (this.roomManager.rooms.size > 0) {
+      try { await this.state.storage.setAlarm(Date.now() + 30000); } catch {}
+      await this.persist();
     } else {
       // still persist even if no alarm
       await this.persist();

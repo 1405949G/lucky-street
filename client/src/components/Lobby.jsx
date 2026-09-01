@@ -25,6 +25,7 @@ export default function Lobby({ spectate = false }) {
   const [botName, setBotName] = useState("");
   const [toast, setToast] = useState(null);
   const [kickedPopup, setKickedPopup] = useState(false);
+  const [inactivePopup, setInactivePopup] = useState(false);
   const [hostActionTarget, setHostActionTarget] = useState(null);
   const [botConfirm, setBotConfirm] = useState(null);
   const [mobileTab, setMobileTab] = useState("board"); // board | controls - for phone split-view like Kahoot
@@ -63,6 +64,12 @@ export default function Lobby({ spectate = false }) {
     function onKicked(data) {
       if (data.roomId === id) setKickedPopup(true);
     }
+    function onRoomClosed(data) {
+      if (data?.roomId === id && data?.reason === "inactivity") setInactivePopup(true);
+    }
+    function onRoomDeleted(data) {
+      if (data?.roomId === id && data?.reason === "inactivity") setInactivePopup(true);
+    }
     function onRoomErr(data) {
       if (data?.error && /kicked/i.test(data.error)) {
         setKickedPopup(true);
@@ -99,6 +106,8 @@ export default function Lobby({ spectate = false }) {
 
     socket.on("lobby:update", onLobbyUpdate);
     socket.on("player:kicked", onKicked);
+    socket.on("room:closed", onRoomClosed);
+    socket.on("room:deleted", onRoomDeleted);
     socket.on("room:error", onRoomErr);
 
     function attemptJoin(retry = 0) {
@@ -191,6 +200,8 @@ export default function Lobby({ spectate = false }) {
     return () => {
       socket.off("lobby:update", onLobbyUpdate);
       socket.off("player:kicked", onKicked);
+      socket.off("room:closed", onRoomClosed);
+      socket.off("room:deleted", onRoomDeleted);
       socket.off("room:error", onRoomErr);
       socket.off("connect", onReconnect);
       socket.off("connected", onReconnect);
@@ -227,6 +238,19 @@ export default function Lobby({ spectate = false }) {
         });
       }, 500);
     }} />;
+  }
+
+  if (inactivePopup) {
+    return (
+      <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-[#070b14]/80 backdrop-blur-md">
+        <div className="w-full max-w-[380px] rounded-[24px] bg-[#142a3d] border border-white/10 p-6 text-center shadow-2xl">
+          <div className="w-12 h-12 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center mx-auto text-xl">⏰</div>
+          <h2 className="font-extrabold text-white text-lg mt-3">Room closed</h2>
+          <p className="text-sm text-white/60 mt-1">Room auto closed due to inactivity</p>
+          <button onClick={() => { setInactivePopup(false); navigate("/"); }} className="mt-5 w-full py-3 rounded-full bg-[#f3ecd8] hover:bg-white text-[#0e2533] font-extrabold">Back to games</button>
+        </div>
+      </div>
+    );
   }
 
   if (kickedPopup) {
