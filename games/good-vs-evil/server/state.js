@@ -1,5 +1,5 @@
 ﻿/**
- * Veil Street - state machine (5-10p social deduction)
+ * Good vs Evil - state machine (5-10p social deduction)
  * Pure reducer, no DOM/side effects.
  */
 

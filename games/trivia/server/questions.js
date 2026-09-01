@@ -1,5 +1,5 @@
 /**
- * games/street-trivia/server/questions.js - Bundled question bank + selector
+ * games/trivia/server/questions.js - Bundled question bank + selector
  * Image support: optional imageUrl per question (null if text-only)
  * Bundled + API fallback handled by caller (tries OpenTDB before falling back here)
  */

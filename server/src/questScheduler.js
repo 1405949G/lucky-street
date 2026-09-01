@@ -1,12 +1,12 @@
 ﻿/**
- * server/src/questScheduler.js - Shared AI + effect scheduler for Veil Street
+ * server/src/questScheduler.js - Shared AI + effect scheduler for Good vs Evil
  * Used by both Node (server/src/index.js) and DO (durable/LuckyStreetDO.js)
  * All scheduling uses setTimeout (Node) - for DO, alarm fallback also works via idle sweep but we keep setTimeout for immediacy.
  * Caller must provide: roomManager, roomId, broadcast function, and dispatchInternal.
  */
 
-import * as questAI from "../../games/veil-street/server/ai.js";
-import { getAIView, getPublicState } from "../../games/veil-street/server/state.js";
+import * as questAI from "../../games/good-vs-evil/server/ai.js";
+import { getAIView, getPublicState } from "../../games/good-vs-evil/server/state.js";
 
 function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 

@@ -19,9 +19,9 @@ import { RoomManager } from "./rooms.js";
 import { listGames, getGame } from "./games.js";
 import { isValidRoomId, sanitizeName } from "./utils.js";
 import { handleQuestEffects } from "./questScheduler.js";
-import { getPublicState as questPublic, getPrivateState as questPrivate } from "../../games/veil-street/server/state.js";
-import { handleTriviaEffects } from "../../games/street-trivia/server/scheduler.js";
-import { getPublicState as triviaPublic, getPrivateState as triviaPrivate } from "../../games/street-trivia/server/state.js";
+import { getPublicState as questPublic, getPrivateState as questPrivate } from "../../games/good-vs-evil/server/state.js";
+import { handleTriviaEffects } from "../../games/trivia/server/scheduler.js";
+import { getPublicState as triviaPublic, getPrivateState as triviaPrivate } from "../../games/trivia/server/state.js";
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3001;
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || "http://localhost:5173";
@@ -135,7 +135,7 @@ function triviaDispatchInternal(roomId, action){
 function broadcastGameState(roomId){
   const room = roomManager.get(roomId);
   if(!room || !room.gameState) return emitLobbyUpdate(roomId);
-  if(room.game==="street-trivia") return broadcastTriviaState(roomId);
+  if(room.game==="trivia") return broadcastTriviaState(roomId);
   return broadcastQuestState(roomId);
 }
 
@@ -241,7 +241,7 @@ io.on("connection", (socket) => {
         hostId: socket.id,
         hostName: user.username,
         hostAvatar: user.avatar,
-        gameId: gameId || "veil-street",
+        gameId: gameId || "good-vs-evil",
         maxPlayers,
         gameOptions
       });
@@ -483,9 +483,9 @@ io.on("connection", (socket) => {
       const room = roomManager.get(id);
       if (room && room.gameState) {
         try {
-          const pub = room.game==="street-trivia" ? triviaPublic(room.gameState) : questPublic(room.gameState);
+          const pub = room.game==="trivia" ? triviaPublic(room.gameState) : questPublic(room.gameState);
           socket.emit("game:update", pub);
-          const priv = room.game==="street-trivia" ? triviaPrivate(room.gameState, socket.id) : questPrivate(room.gameState, socket.id);
+          const priv = room.game==="trivia" ? triviaPrivate(room.gameState, socket.id) : questPrivate(room.gameState, socket.id);
           socket.emit("game:private", priv);
         } catch {
           try { socket.emit("game:private", null); } catch {}
@@ -502,7 +502,7 @@ io.on("connection", (socket) => {
       const id = String(roomId || socket.data.currentRoom || "").toUpperCase();
       const rm = roomManager.get(id);
       if(!rm) throw new Error("Room not found");
-      if(rm.game==="street-trivia"){
+      if(rm.game==="trivia"){
         const { room, effects } = await roomManager.startTrivia(id, socket.id);
         if (typeof ack === "function") ack({ ok: true, room });
         broadcastTriviaState(id);
@@ -524,7 +524,7 @@ io.on("connection", (socket) => {
       const id = String(roomId || socket.data.currentRoom || "").toUpperCase();
       const rm = roomManager.get(id);
       let room;
-      if(rm && rm.game==="street-trivia") room = roomManager.resetTrivia(id, socket.id);
+      if(rm && rm.game==="trivia") room = roomManager.resetTrivia(id, socket.id);
       else room = roomManager.resetQuest(id, socket.id);
       if (typeof ack === "function") ack({ ok: true, room });
       io.to(id).emit("game:update", null);
@@ -541,7 +541,7 @@ io.on("connection", (socket) => {
     try {
       const id = String(roomId || socket.data.currentRoom || "").toUpperCase();
       const rm = roomManager.get(id);
-      if(rm && rm.game==="street-trivia"){
+      if(rm && rm.game==="trivia"){
         const result = roomManager.handleTriviaAction({ roomId: id, socketId: socket.id, actionType: type, payload });
         if (typeof ack === "function") ack({ ok: true, public: triviaPublic(result.state) });
         broadcastTriviaState(id);
@@ -566,7 +566,7 @@ io.on("connection", (socket) => {
         if (typeof ack === "function") ack({ ok: true, public: null, private: null });
         return;
       }
-      const isTrivia = room.game==="street-trivia";
+      const isTrivia = room.game==="trivia";
       const pub = isTrivia ? triviaPublic(room.gameState) : questPublic(room.gameState);
       let priv = null;
       try { priv = isTrivia ? triviaPrivate(room.gameState, socket.id) : questPrivate(room.gameState, socket.id); } catch { priv = null; }

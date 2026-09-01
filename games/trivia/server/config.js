@@ -1,5 +1,5 @@
 /**
- * games/street-trivia/server/config.js - Trivia config
+ * games/trivia/server/config.js - Trivia config
  */
 export const PHASES = Object.freeze({
   LOBBY: "LOBBY",

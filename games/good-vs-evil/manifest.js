@@ -1,11 +1,12 @@
 ﻿/**
- * games/veil-street/manifest.js - Veil Street (social deduction, 5-10p)
+ * games/good-vs-evil/manifest.js - Good vs Evil (social deduction, 5-10p)
+ * Hidden roles, bluff and vote — Good vs Evil.
  * See ../README.md for full guide and AGENTS.md for AI rule.
  */
 export default {
-  id: "veil-street",
-  label: "Veil Street",
-  description: "Social deduction - Good vs Evil, hidden roles",
+  id: "good-vs-evil",
+  label: "Good vs Evil",
+  description: "Hidden roles social deduction — Good vs Evil bluff and vote",
   minPlayers: 5,
   maxPlayers: 10,
   defaultMaxPlayers: 10,

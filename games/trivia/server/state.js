@@ -1,5 +1,5 @@
 /**
- * games/street-trivia/server/state.js - Pure reducer for solo FFA trivia
+ * games/trivia/server/state.js - Pure reducer for solo FFA trivia
  * Scoring: 1 pt per correct, 0 for wrong/miss. Tie = shared win.
  */
 import { PHASES, REVEAL_MS, STORAGE_VERSION } from "./config.js";
@@ -147,7 +147,7 @@ export function reducer(state, action){
       const scores = {};
       for(const p of builtPlayers) scores[p.id]=0;
       const timerLabel = timerSeconds===0 ? "No limit" : `${timerSeconds}s`;
-      let log = appendLog([], "SETUP", `Street Trivia • ${questionCount} Q • ${timerLabel} • ${questionType}`);
+      let log = appendLog([], "SETUP", `Trivia • ${questionCount} Q • ${timerLabel} • ${questionType}`);
       log = appendLog(log, "QUESTION", fmtQuestion(questions[0], 0, questionCount));
       const newState = {
         ...createInitialState(),

@@ -1,11 +1,11 @@
 /**
- * games/street-trivia/manifest.js - Street Trivia (1-12p)
+ * games/trivia/manifest.js - Trivia (1-12p)
  * Simple trivia — play for the high score.
  * See ../README.md + AGENTS.md for AI rule.
  */
 export default {
-  id: "street-trivia",
-  label: "Street Trivia",
+  id: "trivia",
+  label: "Trivia",
   description: "Simple trivia — play for the high score.",
   minPlayers: 1,
   maxPlayers: 12,

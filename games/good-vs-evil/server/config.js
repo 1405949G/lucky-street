@@ -1,5 +1,5 @@
 ﻿/**
- * games/veil-street/server/config.js - Veil Street config
+ * games/good-vs-evil/server/config.js - Good vs Evil config
  * Pure constants, no side effects.
  */
 export const PHASES = Object.freeze({

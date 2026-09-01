@@ -12,7 +12,7 @@ import { SocketContext } from "../context/SocketContext.jsx";
 
 export default function CreateRoomModal({ onClose, onCreated }) {
   const { games, socket } = useContext(SocketContext);
-  const [gameId, setGameId] = useState(() => games[0]?.id || "veil-street");
+  const [gameId, setGameId] = useState(() => games[0]?.id || "good-vs-evil");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
@@ -71,7 +71,7 @@ export default function CreateRoomModal({ onClose, onCreated }) {
           <div className="grid gap-2.5">
             {games.map(g => {
               const active = gameId === g.id;
-              const icons = { 'veil-street': '🕵️', 'lucky-roulette': '🎲', 'street-rally': '🏁', 'checkpoint-chaos': '🚩' };
+              const icons = { 'good-vs-evil': '🕵️', 'lucky-roulette': '🎲', 'street-rally': '🏁', 'checkpoint-chaos': '🚩' };
               return (
                 <button
                   type="button"

@@ -1,5 +1,5 @@
 /**
- * games/street-trivia/client/Game.jsx - Street Trivia board
+ * games/trivia/client/Game.jsx - Trivia board
  * Per-game look isolated here (no global ui/theme import). Colours: quiz amber/purple.
  */
 import React, { useContext, useEffect, useState, useRef } from "react";
@@ -137,7 +137,7 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
       <div className="rounded-2xl bg-[#0f2231]/70 border border-white/10 p-3">
         <div className="flex items-center justify-between">
           <span className="text-[11px] tracking-widest font-bold text-white/40">LIVE SCORES</span>
-          <span className="text-[11px] font-bold text-white/30">Street Trivia • {total} Q • {pub.timerSeconds===0 ? "No limit" : `${pub.timerSeconds}s`} • {pub.questionType}</span>
+          <span className="text-[11px] font-bold text-white/30">Trivia • {total} Q • {pub.timerSeconds===0 ? "No limit" : `${pub.timerSeconds}s`} • {pub.questionType}</span>
         </div>
         <div className="mt-2 flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
           {sorted.length===0 ? <span className="text-xs text-white/30">No scores yet</span> : sorted.map((p,rank)=>{

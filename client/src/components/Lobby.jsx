@@ -10,8 +10,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ProfileContext } from "../context/ProfileContext.jsx";
 import { SocketContext } from "../context/SocketContext.jsx";
 import IdentityModal from "./IdentityModal.jsx";
-import QuestGame from "../../../games/veil-street/client/Game.jsx";
-import TriviaGame from "../../../games/street-trivia/client/Game.jsx";
+import QuestGame from "../../../games/good-vs-evil/client/Game.jsx";
+import TriviaGame from "../../../games/trivia/client/Game.jsx";
 
 export default function Lobby({ spectate = false }) {
   const { roomId } = useParams();
@@ -273,8 +273,8 @@ export default function Lobby({ spectate = false }) {
   const isSpectator = !!(myId && room.spectators?.some(s => s.id === myId));
   const isPlayer = !!(myId && room.players.some(p => p.id === myId));
   const game = games.find(g => g.id === room.game) || { label: room.game, optionSchema: [] };
-  const isQuestGame = room.game === "veil-street";
-  const isTriviaGame = room.game === "street-trivia";
+  const isQuestGame = room.game === "good-vs-evil";
+  const isTriviaGame = room.game === "trivia";
   const hasGameState = !!room.hasGame;
   const hasActiveGame = !!(room.hasGame && room.gameState && room.gameState.phase && room.gameState.phase !== "LOBBY" && room.gameState.phase !== "GAME_OVER") || !!(room.hasGame && room.gamePhase && room.gamePhase !== "LOBBY" && room.gamePhase !== "GAME_OVER");
   const isGameLocked = hasGameState; // lobby locked while any game exists (including GAME_OVER until reset)
@@ -573,7 +573,7 @@ export default function Lobby({ spectate = false }) {
             <>
               {isQuestGame && (
                 <div className="rounded-2xl bg-[#0f2231]/80 border border-white/10 p-4">
-                  <h4 className="font-bold text-white text-sm">Veil Street</h4>
+                  <h4 className="font-bold text-white text-sm">Good vs Evil</h4>
                   <p className="text-xs text-white/40 mt-1">{totalPlayers} / {room.maxPlayers} - need {room.minPlayers} to start</p>
                   {isHost ? (
                     <>
@@ -589,7 +589,7 @@ export default function Lobby({ spectate = false }) {
               )}
               {isTriviaGame && (
                 <div className="rounded-2xl bg-gradient-to-br from-violet-600/20 to-amber-500/20 border border-white/10 p-4">
-                  <h4 className="font-bold text-white text-sm flex items-center gap-2">Street Trivia</h4>
+                  <h4 className="font-bold text-white text-sm flex items-center gap-2">Trivia</h4>
                   <p className="text-xs text-white/60 mt-1">{totalPlayers}/{room.maxPlayers} • {room.gameOptions.questionCount} Q • {room.gameOptions.timerSeconds===0 ? "No limit" : `${room.gameOptions.timerSeconds}s`} • {room.gameOptions.questionType}</p>
                   {isHost ? (
                     <>
@@ -608,7 +608,7 @@ export default function Lobby({ spectate = false }) {
                 <div className={`rounded-2xl border p-4 ${supportsBots ? "bg-[#0f2231]/80 border-white/10" : "bg-white/5 border-white/10 opacity-60"}`}>
                   <h4 className="font-bold text-white text-sm">Add Bots</h4>
                   {!supportsBots ? (
-                    <p className="text-xs text-amber-300 mt-2">Bots not supported for {game.label}. Switch to Veil Street to use bots, or play with humans only.</p>
+                    <p className="text-xs text-amber-300 mt-2">Bots not supported for {game.label}. Switch to Good vs Evil to use bots, or play with humans only.</p>
                   ) : totalPlayers >= room.maxPlayers ? (
                     <p className="text-xs text-amber-300 mt-2">Room full ({totalPlayers}/{room.maxPlayers}) - remove a player/bot to add more.</p>
                   ) : (

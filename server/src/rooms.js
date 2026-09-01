@@ -21,12 +21,12 @@
 
 import { generateRoomId, isValidRoomId, clamp } from "./utils.js";
 import { getGame, defaultMaxFor } from "./games.js";
-import { createInitialState as createQuestState, reducer as questReducer, getPublicState as questPublic, getPrivateState as questPrivate, getAIView as questAIView } from "../../games/veil-street/server/state.js";
-import { PHASES as QuestPhases } from "../../games/veil-street/server/config.js";
-import * as questAI from "../../games/veil-street/server/ai.js";
-import { reducer as triviaReducer, getPublicState as triviaPublic, getPrivateState as triviaPrivate } from "../../games/street-trivia/server/state.js";
-import { PHASES as TriviaPhases } from "../../games/street-trivia/server/config.js";
-import { fetchQuestionsWithFallback } from "../../games/street-trivia/server/questions.js";
+import { createInitialState as createQuestState, reducer as questReducer, getPublicState as questPublic, getPrivateState as questPrivate, getAIView as questAIView } from "../../games/good-vs-evil/server/state.js";
+import { PHASES as QuestPhases } from "../../games/good-vs-evil/server/config.js";
+import * as questAI from "../../games/good-vs-evil/server/ai.js";
+import { reducer as triviaReducer, getPublicState as triviaPublic, getPrivateState as triviaPrivate } from "../../games/trivia/server/state.js";
+import { PHASES as TriviaPhases } from "../../games/trivia/server/config.js";
+import { fetchQuestionsWithFallback } from "../../games/trivia/server/questions.js";
 
 const BOT_NAMES = [
   "Ava", "Milo", "Zoe", "Finn", "Luna", "Kai", "Nova", "Rex",
@@ -56,7 +56,7 @@ function pickRandomHost(players) {
 }
 
 function trimQuestOptionsIfNeeded(room) {
-  if (room.game !== 'veil-street') return false;
+  if (room.game !== 'good-vs-evil') return false;
   const total = room.players.length + room.bots.length;
   const max = total <= 6 ? 1 : total <= 8 ? 2 : 3;
   const enabled = ['morgana','mordred','oberon'].filter(k => !!room.gameOptions[k]);
@@ -122,7 +122,7 @@ export class RoomManager {
     let gamePublic = null;
     if (r.gameState) {
       try {
-        if (r.game === "street-trivia") gamePublic = triviaPublic(r.gameState);
+        if (r.game === "trivia") gamePublic = triviaPublic(r.gameState);
         else gamePublic = questPublic(r.gameState);
       } catch { gamePublic = null; }
     }
@@ -225,7 +225,7 @@ export class RoomManager {
     }
     const wasActiveGame = !!(room.gameState && room.gameState.phase !== QuestPhases.LOBBY && room.gameState.phase !== QuestPhases.GAME_OVER);
     if (wasActiveGame) {
-      if (room.game === "street-trivia") {
+      if (room.game === "trivia") {
         // trivia: keep game, just remove player from gameState
         try {
           const res = triviaReducer(room.gameState, { type: "REMOVE_PLAYER", payload: { playerId: socketId } });
@@ -369,7 +369,7 @@ export class RoomManager {
       // Only abort if this socket is actually a player in this room
       const isPlayerInRoom = room.players.some(p => p.id === socketId);
       if (wasActiveGame && isPlayerInRoom) {
-        if (room.game === "street-trivia") {
+        if (room.game === "trivia") {
           try {
             const res = triviaReducer(room.gameState, { type: "REMOVE_PLAYER", payload: { playerId: socketId } });
             room.gameState = res.state;
@@ -474,7 +474,7 @@ export class RoomManager {
     const next = { ...room.gameOptions };
     for (const [k, v] of Object.entries(options || {})) {
       // Enforce evil-extra limit for Quest (5-6:1, 7-8:2, 9-10:3)
-      if (room.game === 'veil-street' && ['morgana','mordred','oberon'].includes(k)) {
+      if (room.game === 'good-vs-evil' && ['morgana','mordred','oberon'].includes(k)) {
         const isEnabling = !!v && !room.gameOptions[k];
         if (isEnabling) {
           const total = room.players.length + room.bots.length;
@@ -645,12 +645,12 @@ export class RoomManager {
     return { exists: true, isPrivate: false, hostName: room.hostName, game: room.game };
   }
 
-  // --- Veil Street - game lifecycle ---
+  // --- Good vs Evil - game lifecycle ---
   canStartQuest(roomId, requesterId) {
     const room = this.get(roomId);
     if (!room) throw new Error("Room not found");
     if (room.hostId !== requesterId) throw new Error("Only host can start the quest");
-    if (room.game !== "veil-street") throw new Error("Start Quest only for Veil Street");
+    if (room.game !== "good-vs-evil") throw new Error("Start Quest only for Good vs Evil");
     const total = room.players.length + room.bots.length;
     const game = getGame(room.game);
     const min = game?.minPlayers || 5;
@@ -684,7 +684,7 @@ export class RoomManager {
   resetQuest(roomId, requesterId) {
     const room = this.get(roomId);
     if (!room) throw new Error("Room not found");
-    if (room.game !== "veil-street") throw new Error("Not a Quest game");
+    if (room.game !== "good-vs-evil") throw new Error("Not a Quest game");
     // Allow any player to reset when game is over, host only during active game
     const isGameOver = room.gameState?.phase === QuestPhases.GAME_OVER;
     if (!isGameOver && room.hostId !== requesterId) throw new Error("Only host can reset during active quest");
@@ -698,7 +698,7 @@ export class RoomManager {
   handleQuestAction({ roomId, socketId, actionType, payload }) {
     const room = this.get(roomId);
     if (!room) throw new Error("Room not found");
-    if (room.game !== "veil-street") throw new Error("Not a Quest game");
+    if (room.game !== "good-vs-evil") throw new Error("Not a Quest game");
     if (!room.gameState) throw new Error("Game not started");
     const gs = room.gameState;
     // Build action for reducer - map generic payload to expected shape
@@ -814,12 +814,12 @@ export class RoomManager {
     return questAIView(room.gameState, botId);
   }
 
-  // --- Street Trivia - game lifecycle ---
+  // --- Trivia - game lifecycle ---
   canStartTrivia(roomId, requesterId) {
     const room = this.get(roomId);
     if (!room) throw new Error("Room not found");
     if (room.hostId !== requesterId) throw new Error("Only host can start trivia");
-    if (room.game !== "street-trivia") throw new Error("Start Trivia only for Street Trivia");
+    if (room.game !== "trivia") throw new Error("Start Trivia only for Trivia");
     const total = room.players.length + room.bots.length;
     const game = getGame(room.game);
     const min = game?.minPlayers || 2;
@@ -857,7 +857,7 @@ export class RoomManager {
   resetTrivia(roomId, requesterId) {
     const room = this.get(roomId);
     if (!room) throw new Error("Room not found");
-    if (room.game !== "street-trivia") throw new Error("Not a Trivia game");
+    if (room.game !== "trivia") throw new Error("Not a Trivia game");
     const isGameOver = room.gameState?.phase === TriviaPhases.GAME_OVER;
     if (!isGameOver && room.hostId !== requesterId) throw new Error("Only host can reset during active trivia");
     room.gameState = null;
@@ -870,7 +870,7 @@ export class RoomManager {
   handleTriviaAction({ roomId, socketId, actionType, payload }) {
     const room = this.get(roomId);
     if (!room) throw new Error("Room not found");
-    if (room.game !== "street-trivia") throw new Error("Not a Trivia game");
+    if (room.game !== "trivia") throw new Error("Not a Trivia game");
     if (!room.gameState) throw new Error("Game not started");
     // spectators cannot answer
     if (room.spectators?.some(s=>s.id===socketId)) throw new Error("Spectators cannot answer");
@@ -909,7 +909,7 @@ export class RoomManager {
   dispatchTriviaInternal(roomId, action) {
     const room = this.get(roomId);
     if (!room || !room.gameState) return null;
-    if (room.game !== "street-trivia") return null;
+    if (room.game !== "trivia") return null;
     try {
       const result = triviaReducer(room.gameState, action);
       room.gameState = result.state;
@@ -922,13 +922,13 @@ export class RoomManager {
   getTriviaPublic(roomId){
     const room = this.get(roomId);
     if(!room || !room.gameState) return null;
-    if(room.game!=="street-trivia") return null;
+    if(room.game!=="trivia") return null;
     return triviaPublic(room.gameState);
   }
   getTriviaPrivate(roomId, playerId){
     const room = this.get(roomId);
     if(!room || !room.gameState) return null;
-    if(room.game!=="street-trivia") return null;
+    if(room.game!=="trivia") return null;
     try { return triviaPrivate(room.gameState, playerId); } catch { return triviaPublic(room.gameState); }
   }
 }

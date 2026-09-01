@@ -17,7 +17,7 @@
 - [ ] Join by ID box: enter 4-char code, with correct case-insensitive, join. Wrong ID -> error.
 
 ## Room Creation
-- [ ] Create Room modal: dropdown games (Veil Street, Lucky Roulette, etc.). Select "Lucky Roulette" -> Max Players autofills 8. Edit to 6 -> overwrite persists.
+- [ ] Create Room modal: dropdown games (Good vs Evil, Lucky Roulette, etc.). Select "Lucky Roulette" -> Max Players autofills 8. Edit to 6 -> overwrite persists.
 - [ ] Leave password empty -> open room (🔓). Set "secret" -> private (🔒). Creation generates 4-char ID e.g., "7F2A" shown in invite card.
 
 ## Lobby Permissions

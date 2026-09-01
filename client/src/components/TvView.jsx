@@ -113,7 +113,7 @@ export default function TvView({ roomId: propId, embedded = false }) {
         </div>
       </div>
 
-      {/* Public game info - for Trivia show question, for Veil Street show quest track */}
+      {/* Public game info - for Trivia show question, for Good vs Evil show quest track */}
       <div className="mt-6 rounded-2xl bg-[#0f2231]/60 border border-white/10 p-4 text-center">
         <p className="text-xs tracking-widest font-bold text-white/40">GAME</p>
         <p className="font-extrabold text-white">{game.label}</p>

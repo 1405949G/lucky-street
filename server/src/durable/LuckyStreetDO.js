@@ -10,9 +10,9 @@ import { RoomManager } from "../rooms.js";
 import { listGames } from "../games.js";
 import { isValidRoomId, sanitizeName } from "../utils.js";
 import { handleQuestEffects } from "../questScheduler.js";
-import { getPublicState as questPublic, getPrivateState as questPrivate } from "../../../games/veil-street/server/state.js";
-import { handleTriviaEffects } from "../../../games/street-trivia/server/scheduler.js";
-import { getPublicState as triviaPublic, getPrivateState as triviaPrivate } from "../../../games/street-trivia/server/state.js";
+import { getPublicState as questPublic, getPrivateState as questPrivate } from "../../../games/good-vs-evil/server/state.js";
+import { handleTriviaEffects } from "../../../games/trivia/server/scheduler.js";
+import { getPublicState as triviaPublic, getPrivateState as triviaPrivate } from "../../../games/trivia/server/state.js";
 
 function genSocketId() {
   try { return crypto.randomUUID(); } catch { return "s_" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); }
@@ -250,7 +250,7 @@ export class LuckyStreetDO {
   broadcastGameState(roomId){
     const room = this.roomManager.get(roomId);
     if(!room || !room.gameState) return this.broadcastQuestState(roomId);
-    if(room.game==="street-trivia") return this.broadcastTriviaState(roomId);
+    if(room.game==="trivia") return this.broadcastTriviaState(roomId);
     return this.broadcastQuestState(roomId);
   }
 
@@ -715,7 +715,7 @@ export class LuckyStreetDO {
             hostId: socketId,
             hostName: user.username,
             hostAvatar: user.avatar,
-            gameId: data.gameId || "veil-street",
+            gameId: data.gameId || "good-vs-evil",
             maxPlayers: data.maxPlayers,
             gameOptions: data.gameOptions,
           });
@@ -790,7 +790,7 @@ export class LuckyStreetDO {
                   // also push updated game state if in game
                   if(existingRoom.gameState){
                     try{
-                      if(existingRoom.game==="street-trivia") this.broadcastTriviaState(id);
+                      if(existingRoom.game==="trivia") this.broadcastTriviaState(id);
                       else this.broadcastQuestState(id);
                     }catch{}
                   }
@@ -1013,9 +1013,9 @@ export class LuckyStreetDO {
             const room = this.roomManager.get(id);
             if (room && room.gameState) {
               try {
-                const pub = room.game==="street-trivia" ? triviaPublic(room.gameState) : questPublic(room.gameState);
+                const pub = room.game==="trivia" ? triviaPublic(room.gameState) : questPublic(room.gameState);
                 this.send(ws, { event: "game:update", data: pub });
-                const priv = room.game==="street-trivia" ? triviaPrivate(room.gameState, socketId) : questPrivate(room.gameState, socketId);
+                const priv = room.game==="trivia" ? triviaPrivate(room.gameState, socketId) : questPrivate(room.gameState, socketId);
                 this.send(ws, { event: "game:private", data: priv });
               } catch {}
             }
@@ -1027,7 +1027,7 @@ export class LuckyStreetDO {
         case "game:start": {
           const id = String(data.roomId || sess.currentRoom || "").toUpperCase();
           const rm = this.roomManager.get(id);
-          if (rm && rm.game==="street-trivia") {
+          if (rm && rm.game==="trivia") {
             const { room, effects } = await this.roomManager.startTrivia(id, socketId);
             okAck({ ok: true, room });
             this.broadcastTriviaState(id);
@@ -1046,7 +1046,7 @@ export class LuckyStreetDO {
           const id = String(data.roomId || sess.currentRoom || "").toUpperCase();
           const rm = this.roomManager.get(id);
           let room;
-          if (rm && rm.game==="street-trivia") room = this.roomManager.resetTrivia(id, socketId);
+          if (rm && rm.game==="trivia") room = this.roomManager.resetTrivia(id, socketId);
           else room = this.roomManager.resetQuest(id, socketId);
           okAck({ ok: true, room });
           this.sendToRoom(id, { event: "game:update", data: null });
@@ -1059,7 +1059,7 @@ export class LuckyStreetDO {
         case "game:action": {
           const id = String(data.roomId || sess.currentRoom || "").toUpperCase();
           const rm = this.roomManager.get(id);
-          if (rm && rm.game==="street-trivia") {
+          if (rm && rm.game==="trivia") {
             const result = this.roomManager.handleTriviaAction({ roomId: id, socketId, actionType: data.type, payload: data.payload });
             okAck({ ok: true, public: triviaPublic(result.state) });
             this.broadcastTriviaState(id);
@@ -1079,7 +1079,7 @@ export class LuckyStreetDO {
           if (!room || !room.gameState) {
             okAck({ ok: true, public: null, private: null });
           } else {
-            const isTrivia = room.game==="street-trivia";
+            const isTrivia = room.game==="trivia";
             const pub = isTrivia ? triviaPublic(room.gameState) : questPublic(room.gameState);
             let priv = null;
             try { priv = isTrivia ? triviaPrivate(room.gameState, socketId) : questPrivate(room.gameState, socketId); } catch { priv = null; }

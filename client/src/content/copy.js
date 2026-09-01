@@ -136,8 +136,8 @@ export const copy = {
     switchedToSpectator: "Switched to spectator",
     spectating: "Spectating",
     joinedAsPlayer: "Joined as player",
-    // Veil Street lobby card
-    veilStreet: "Veil Street",
+    // Good vs Evil lobby card
+    goodVsEvil: "Good vs Evil",
     needToStart: "need to start",
     ready: "Ready",
     needMore: "Need more",
@@ -148,7 +148,7 @@ export const copy = {
     // Add Bots
     addBots: "Add Bots",
     botsNotSupported: "Bots not supported for",
-    switchToVeil: "Switch to Veil Street to use bots, or play with humans only.",
+    switchToVeil: "Switch to Good vs Evil to use bots, or play with humans only.",
     roomFull: "Room full",
     removeToAdd: "remove a player/bot to add more.",
     leaveEmpty: "Leave empty for random name",

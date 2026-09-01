@@ -6,15 +6,15 @@
  * See AGENTS.md and games/README.md for AI instructions in new sessions.
  */
 
-import veilStreet from "../../games/veil-street/manifest.js";
-import streetTrivia from "../../games/street-trivia/manifest.js";
+import goodVsEvil from "../../games/good-vs-evil/manifest.js";
+import trivia from "../../games/trivia/manifest.js";
 
 // When you add a game, import its manifest here and add to GAMES below:
 // import myNewGame from "../../games/my-new-game/manifest.js";
 
 export const GAMES = {
-  "veil-street": veilStreet,
-  "street-trivia": streetTrivia,
+  "good-vs-evil": goodVsEvil,
+  "trivia": trivia,
   // "my-new-game": myNewGame,
 };
 

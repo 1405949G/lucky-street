@@ -1,5 +1,5 @@
 /**
- * games/street-trivia/server/scheduler.js - Timer + reveal scheduler
+ * games/trivia/server/scheduler.js - Timer + reveal scheduler
  * Works in both Node and DO (setTimeout). Effects declarative from reducer.
  */
 export function handleTriviaEffects({ roomManager, roomId, effects, broadcast, dispatchInternal }) {
