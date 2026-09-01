@@ -105,7 +105,9 @@ export class RoomManager {
       gameOptions: r.gameOptions,
       hasGame,
       phase,
-      status
+      status,
+      playerNames: r.players.map(p => p.name),
+      spectatorNames: (r.spectators || []).map(s => s.name)
       };
     });
   }
