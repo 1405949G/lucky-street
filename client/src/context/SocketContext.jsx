@@ -382,6 +382,7 @@ export function SocketProvider({ profile, children }) {
     return () => { window.removeEventListener("popstate", update); clearInterval(iv); };
   }, []);
 
+  const clearProfileError = useCallback(() => { setProfileError(null); setProfileStatus("idle"); }, []);
   const value = useMemo(() => ({
     socket: socketRef.current || socket,
     connected,
@@ -391,9 +392,10 @@ export function SocketProvider({ profile, children }) {
     profileStatus,
     profileError,
     registerProfile,
+    clearProfileError,
     serverUrl: SERVER_URL,
     transport: useNativeRef.current ? "native-ws (Workers DO)" : "socket.io (Node)",
-  }), [socket, connected, rooms, games, socketError, profileStatus, profileError, registerProfile]);
+  }), [socket, connected, rooms, games, socketError, profileStatus, profileError, registerProfile, clearProfileError]);
 
   return <SocketContext.Provider value={value}>{children}</SocketContext.Provider>;
 }

@@ -12,7 +12,7 @@ import { PALETTE } from "../utils/avatar.js";
 
 export default function IdentityModal({ blocking = false, onDone, title = "Welcome to Lucky Street" }) {
   const { profile, setProfile } = useContext(ProfileContext);
-  const { socket, profileError } = useContext(SocketContext);
+  const { socket, profileError, clearProfileError } = useContext(SocketContext);
 
   const [username, setUsername] = useState(() => profile?.username || "");
   const [avatar, setAvatar] = useState(() => {
@@ -30,6 +30,11 @@ export default function IdentityModal({ blocking = false, onDone, title = "Welco
       setAvatar(typeof a === "string" && a.startsWith("data:image") ? PALETTE[0] : a);
     }
   }, [profile]);
+
+  // Clear stale profileError when opening edit (same name should not show taken)
+  useEffect(() => { setLocalError(null); clearProfileError?.(); }, [clearProfileError]);
+  // Clear errors when user types
+  useEffect(() => { if (localError) setLocalError(null); if (profileError) clearProfileError?.(); }, [username]);
 
   useEffect(() => {
     return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
@@ -143,11 +148,17 @@ export default function IdentityModal({ blocking = false, onDone, title = "Welco
 
           <AvatarPicker value={avatar} onChange={setAvatar} />
 
-          {(localError || profileError) && (
-            <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 px-3 py-2.5">
-              <p className="text-xs font-bold text-rose-300">{localError || profileError}</p>
-            </div>
-          )}
+          {(() => {
+            const isOwnName = username.trim().toLowerCase() === profile?.username?.toLowerCase();
+            const showProfileError = profileError && !isOwnName && !/already taken/i.test(profileError || "") || (profileError && !isOwnName);
+            // Don't show already taken for own name — that's not an error when just opening
+            const displayError = localError || (isOwnName ? null : profileError);
+            return displayError ? (
+              <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 px-3 py-2.5">
+                <p className="text-xs font-bold text-rose-300">{displayError}</p>
+              </div>
+            ) : null;
+          })()}
 
           <button
             type="submit"
