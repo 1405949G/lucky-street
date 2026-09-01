@@ -35,6 +35,11 @@ function MainPage() {
         navigate(`/room/${id}`);
       } else {
         const msg = res?.error || "";
+        if (/already in room .*leave it first/i.test(msg)) {
+          setError(msg);
+          setTimeout(() => setError(null), 4000);
+          return;
+        }
         if (/Username already in this room|Already in room/i.test(msg)) {
           // Same name already in room (e.g., same user second tab) or same socket already in room - open as spectator instead (auto-spectate)
           navigate(`/room/${id}/spectate`);

@@ -85,6 +85,11 @@ export default function Lobby({ spectate = false }) {
         });
         return;
       }
+      if (data?.error && /already in room .*leave it first/i.test(data.error)) {
+        showToast(data.error);
+        setError(data.error);
+        return;
+      }
       if (data?.error && (/already taken/i.test(data.error) || /timeout/i.test(data.error) || /Register a profile first/i.test(data.error) || /missing identity/i.test(data.error))) {
         return;
       }

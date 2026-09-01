@@ -156,6 +156,9 @@ export class RoomManager {
 
   create({ hostId, hostName, hostAvatar, gameId, maxPlayers, gameOptions }) {
     if (!hostId || !hostName) throw new Error("Host identity required");
+    // Prevent joining/creating another room while still in grace (still present in previous room)
+    const existingGrace = this.isUserInAnyRoom(hostName);
+    if (existingGrace) throw new Error(`You are already in room ${existingGrace} — leave it first`);
     const game = getGame(gameId);
     if (!game) throw new Error(`Unknown game: ${gameId}`);
 
@@ -198,6 +201,9 @@ export class RoomManager {
   join({ roomId, socketId, username, avatar }) {
     const room = this.get(roomId);
     if (!room) throw new Error("Room not found");
+    // Block joining another room while still in grace / still present in previous room
+    const other = this.isUserInAnyRoom(username, roomId);
+    if (other) throw new Error(`You are already in room ${other} — leave it first`);
     const isActiveGame = !!(room.gameState && room.gameState.phase !== QuestPhases.LOBBY && room.gameState.phase !== QuestPhases.GAME_OVER);
     if (isActiveGame) {
       // Allow rejoin as same player via code/name when game in progress (grace rejoin)
@@ -287,6 +293,31 @@ export class RoomManager {
     return this.getFull(room.id);
   }
 
+  // Helpers for grace logic
+  isUserInAnyRoom(username, excludeRoomId = null) {
+    const lower = String(username).toLowerCase();
+    for (const room of this.rooms.values()) {
+      if (excludeRoomId && room.id === excludeRoomId) continue;
+      if (room.players.some(p => p.name.toLowerCase() === lower)) return room.id;
+      if (room.spectators?.some(s => s.name.toLowerCase() === lower)) return room.id;
+      // also check gameState players (indefinite grace for game)
+      if (room.gameState?.players?.some(p => p.name.toLowerCase() === lower)) {
+        // if game active, consider still in room even though removed from room.players (indefinite grace)
+        // check if that player is not currently in room.players (disconnected)
+        const inRoom = room.players.some(p => p.name.toLowerCase() === lower);
+        if (!inRoom) return room.id;
+      }
+    }
+    return null;
+  }
+  getRoomByUser(username) {
+    const lower = String(username).toLowerCase();
+    for (const room of this.rooms.values()) {
+      if (room.players.some(p => p.name.toLowerCase() === lower)) return room;
+    }
+    return null;
+  }
+
   leave({ roomId, socketId }) {
     const room = this.get(roomId);
     if (!room) return null;
@@ -300,25 +331,11 @@ export class RoomManager {
     }
     const wasActiveGame = !!(room.gameState && room.gameState.phase !== QuestPhases.LOBBY && room.gameState.phase !== QuestPhases.GAME_OVER);
     if (wasActiveGame) {
-      if (room.game === "trivia") {
-        // trivia: keep game, just remove player from gameState
-        try {
-          const res = triviaReducer(room.gameState, { type: "REMOVE_PLAYER", payload: { playerId: socketId } });
-          room.gameState = res.state;
-          // if game ended via reducer, keep it (GAME_OVER); if empty, null
-          if (!res.state.players || res.state.players.length===0) {
-             // leave cleanup below will delete room if needed; keep GAME_OVER for podium briefly
-          }
-        } catch {
-          // fallback: null
-          room.gameState = null;
-          room.gameStartedAt = null;
-        }
-        // do not null gameStartedAt yet, keep room alive unless empty
-      } else {
-        room.gameState = null;
-        room.gameStartedAt = null;
-      }
+      // Game in progress — indefinite grace: keep player in room & gameState so they can rejoin via code/share link/join
+      // Do NOT remove from room.players or gameState; just mark as disconnected (keep slot)
+      // Caller (DO webSocketClose) will handle grace via pendingLeaves; explicit Leave button also keeps slot
+      // Return current room without mutation
+      return this.getFull(room.id);
     }
     const idx = room.players.findIndex(p => p.id === socketId);
     if (idx === -1) return this.getFull(room.id);

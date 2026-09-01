@@ -43,7 +43,8 @@ function migrateTriviaId(room, oldId, newId){
   }
 }
 
-const ROOM_GRACE_MS = 60000; // keep room slot 60s after disconnect/refresh (allows rejoin via code, esp. when game in progress)
+const ROOM_GRACE_MS = 30000; // 30s grace for lobby refresh/rejoin
+const GAME_GRACE_MS = null; // indefinite for game in progress (until End Game)
 
 export class LuckyStreetDO {
   constructor(state, env) {
@@ -390,8 +391,16 @@ export class LuckyStreetDO {
     const socketId = sess.socketId;
     console.log(`[DO disc] ${socketId} (${sess.username || "unknown"}) code=${code} grace=${ROOM_GRACE_MS}ms`);
 
-    // Username GC (5 min) - keep as before
+    // Username GC: for game indefinite grace, keep name reserved forever
+    const discRoom = sess.currentRoom ? this.roomManager.get(sess.currentRoom) : null;
+    const discIsGame = !!(discRoom?.gameState && discRoom.gameState.phase !== "LOBBY" && discRoom.gameState.phase !== "GAME_OVER");
     this.userRegistry.handleDisconnect(socketId);
+    if (discIsGame) {
+      // Cancel GC timer for game players — keep name reserved indefinitely until End Game
+      const lowerDisc = this.userRegistry.bySocket.get(socketId);
+      const entDisc = lowerDisc ? this.userRegistry.byName.get(lowerDisc) : null;
+      if (entDisc && entDisc.timer) { clearTimeout(entDisc.timer); entDisc.timer = null; entDisc.expiresAt = null; entDisc.disconnectedAt = null; }
+    }
     try { await this.state.storage.setAlarm(Date.now() + this.gcMs); } catch {}
     // Try to persist username state
     this.persist();
@@ -408,42 +417,78 @@ export class LuckyStreetDO {
         await this.persist();
       }
     }
-    // Room grace - don't remove immediately, keep slot 10s for refresh
+    // Room grace: 30s for lobby (host holds title), indefinite for game in progress
     if (roomId) {
       const room = this.roomManager.get(roomId);
       if (room) {
         const stillInRoom = room.players.some(p => p.id === socketId);
         if (stillInRoom) {
-          console.log(`[DO] grace keep ${sess.username} in ${roomId} for ${ROOM_GRACE_MS}ms`);
-          const timeout = setTimeout(async () => {
-            const curRoom = this.roomManager.get(roomId);
-            if (!curRoom) { this.pendingLeaves.delete(socketId); return; }
-            const idx = curRoom.players.findIndex(p => p.id === socketId);
-            if (idx === -1) { this.pendingLeaves.delete(socketId); return; }
-            // Still not reconnected - now actually remove
-            const wasHost = curRoom.players[idx].isHost;
-            curRoom.players.splice(idx, 1);
-            if (curRoom.players.length === 0) {
-              this.roomManager.rooms.delete(roomId);
-              this.broadcast({ event: "room:deleted", data: { roomId } });
-            } else if (wasHost) {
-              // random host already handled in RoomManager.removePlayerFromAllRooms, but we mimic here
-              const players = curRoom.players;
-              const newHost = players[Math.floor(Math.random() * players.length)];
-              curRoom.players.forEach(p => p.isHost = false);
-              newHost.isHost = true;
-              curRoom.hostId = newHost.id;
-              curRoom.hostName = newHost.name;
-              this.broadcast({ event: "lobby:update", data: this.roomManager.getFull(roomId) });
-            } else {
-              this.broadcast({ event: "lobby:update", data: this.roomManager.getFull(roomId) });
-            }
-            this.broadcast({ event: "lobby:playerLeft", data: { roomId, socketId, username: sess.username } });
-            this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic() });
-            await this.persist();
-            this.pendingLeaves.delete(socketId);
-          }, ROOM_GRACE_MS);
-          this.pendingLeaves.set(socketId, { roomId, timeout, expiresAt: Date.now() + ROOM_GRACE_MS });
+          const isGame = !!(room.gameState && room.gameState.phase !== "LOBBY" && room.gameState.phase !== "GAME_OVER");
+          if (isGame) {
+            // Game in progress — indefinite grace: keep player + host for 30s then transfer host but keep player
+            console.log(`[DO] game grace keep ${sess.username} in ${roomId} indefinitely (host 30s)`);
+            const timeout = setTimeout(async () => {
+              const curRoom = this.roomManager.get(roomId);
+              if (!curRoom) { this.pendingLeaves.delete(socketId); return; }
+              const idx = curRoom.players.findIndex(p => p.id === socketId);
+              if (idx === -1) { this.pendingLeaves.delete(socketId); return; }
+              const wasHost = curRoom.players[idx].isHost;
+              if (wasHost) {
+                // Transfer host after 30s, but keep player as non-host for indefinite rejoin
+                const players = curRoom.players;
+                // Find new host among other players
+                const others = players.filter(p => p.id !== socketId);
+                if (others.length > 0) {
+                  const newHost = others[Math.floor(Math.random() * others.length)];
+                  curRoom.players.forEach(p => p.isHost = false);
+                  newHost.isHost = true;
+                  curRoom.hostId = newHost.id;
+                  curRoom.hostName = newHost.name;
+                  // Keep disconnected host as non-host player for indefinite rejoin
+                  curRoom.players[idx].isHost = false;
+                  console.log(`[DO] host transfer ${sess.username} -> ${newHost.name} in ${roomId} after 30s game grace`);
+                  this.broadcast({ event: "lobby:update", data: this.roomManager.getFull(roomId) });
+                  this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic() });
+                  await this.persist();
+                }
+              }
+              // Keep pendingLeaves as indefinite (no delete) so isUserInAnyRoom still blocks other rooms
+              // Update to indefinite
+              const pend = this.pendingLeaves.get(socketId);
+              if (pend) { pend.expiresAt = null; pend.isGame = true; }
+            }, ROOM_GRACE_MS);
+            this.pendingLeaves.set(socketId, { roomId, timeout, expiresAt: Date.now() + ROOM_GRACE_MS, isGame: true });
+          } else {
+            console.log(`[DO] lobby grace keep ${sess.username} in ${roomId} for ${ROOM_GRACE_MS}ms`);
+            const timeout = setTimeout(async () => {
+              const curRoom = this.roomManager.get(roomId);
+              if (!curRoom) { this.pendingLeaves.delete(socketId); return; }
+              const idx = curRoom.players.findIndex(p => p.id === socketId);
+              if (idx === -1) { this.pendingLeaves.delete(socketId); return; }
+              // Still not reconnected - now actually remove
+              const wasHost = curRoom.players[idx].isHost;
+              curRoom.players.splice(idx, 1);
+              if (curRoom.players.length === 0) {
+                this.roomManager.rooms.delete(roomId);
+                this.broadcast({ event: "room:deleted", data: { roomId } });
+              } else if (wasHost) {
+                const players = curRoom.players;
+                const newHost = players[Math.floor(Math.random() * players.length)];
+                curRoom.players.forEach(p => p.isHost = false);
+                newHost.isHost = true;
+                curRoom.hostId = newHost.id;
+                curRoom.hostName = newHost.name;
+                this.broadcast({ event: "lobby:update", data: this.roomManager.getFull(roomId) });
+              } else {
+                this.broadcast({ event: "lobby:update", data: this.roomManager.getFull(roomId) });
+              }
+              this.broadcast({ event: "lobby:playerLeft", data: { roomId, socketId, username: sess.username } });
+              this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic() });
+              await this.persist();
+              this.pendingLeaves.delete(socketId);
+            }, ROOM_GRACE_MS);
+            this.pendingLeaves.set(socketId, { roomId, timeout, expiresAt: Date.now() + ROOM_GRACE_MS });
+          }
           try { await this.state.storage.setAlarm(Date.now() + ROOM_GRACE_MS + 1000); } catch {}
           // Do NOT delete from room yet - keep visible for grace
         }
@@ -576,6 +621,29 @@ export class LuckyStreetDO {
         clearTimeout(pend.timeout);
         const room = this.roomManager.get(pend.roomId);
         if (room) {
+          const isGame = !!pend.isGame || !!(room.gameState && room.gameState.phase !== "LOBBY" && room.gameState.phase !== "GAME_OVER");
+          if (isGame) {
+            // Game: keep player indefinitely, just transfer host after 30s
+            const idx = room.players.findIndex(p => p.id === sid);
+            if (idx !== -1 && room.players[idx].isHost) {
+              const others = room.players.filter(p => p.id !== sid);
+              if (others.length > 0) {
+                const newHost = others[Math.floor(Math.random() * others.length)];
+                room.players.forEach(p => p.isHost = false);
+                newHost.isHost = true;
+                room.hostId = newHost.id;
+                room.hostName = newHost.name;
+                room.players[idx].isHost = false;
+                this.broadcast({ event: "lobby:update", data: this.roomManager.getFull(pend.roomId) });
+                this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic() });
+                await this.persist();
+              }
+            }
+            // Keep as indefinite grace
+            pend.expiresAt = null;
+            pend.isGame = true;
+            continue;
+          }
           const idx = room.players.findIndex(p => p.id === sid);
           if (idx !== -1) {
             const wasHost = room.players[idx].isHost;
@@ -929,6 +997,50 @@ export class LuckyStreetDO {
         case "room:leave": {
           const id = String(data.roomId || sess.currentRoom || "").toUpperCase();
           if (!id) throw new Error("No room to leave");
+          const roomBefore = this.roomManager.get(id);
+          const isGameLeave = !!(roomBefore?.gameState && roomBefore.gameState.phase !== "LOBBY" && roomBefore.gameState.phase !== "GAME_OVER");
+          if (isGameLeave) {
+            // Game in progress — indefinite grace: keep player slot for rejoin via code/share link/join
+            // Put into pendingLeaves with 30s host grace, then indefinite player grace
+            if (this.pendingLeaves.has(socketId)) {
+              clearTimeout(this.pendingLeaves.get(socketId).timeout);
+              this.pendingLeaves.delete(socketId);
+            }
+            const timeout = setTimeout(async () => {
+              const curRoom = this.roomManager.get(id);
+              if (!curRoom) { this.pendingLeaves.delete(socketId); return; }
+              const idx = curRoom.players.findIndex(p => p.id === socketId);
+              if (idx !== -1 && curRoom.players[idx].isHost) {
+                const others = curRoom.players.filter(p => p.id !== socketId);
+                if (others.length > 0) {
+                  const newHost = others[Math.floor(Math.random() * others.length)];
+                  curRoom.players.forEach(p => p.isHost = false);
+                  newHost.isHost = true;
+                  curRoom.hostId = newHost.id;
+                  curRoom.hostName = newHost.name;
+                  curRoom.players[idx].isHost = false;
+                  this.broadcast({ event: "lobby:update", data: this.roomManager.getFull(id) });
+                  this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic() });
+                  await this.persist();
+                }
+              }
+              const pend = this.pendingLeaves.get(socketId);
+              if (pend) { pend.expiresAt = null; pend.isGame = true; }
+            }, ROOM_GRACE_MS);
+            this.pendingLeaves.set(socketId, { roomId: id, timeout, expiresAt: Date.now() + ROOM_GRACE_MS, isGame: true });
+            try { await this.state.storage.setAlarm(Date.now() + ROOM_GRACE_MS + 1000); } catch {}
+            // Keep player in room (rooms.js leave is no-op for game)
+            this.roomManager.leave({ roomId: id, socketId }); // no-op for game, keeps slot
+            sess.currentRoom = null;
+            this._syncAttachment(ws, sess);
+            okAck({ ok: true });
+            this.send(ws, { event: "room:left", data: { roomId: id } });
+            this.broadcast({ event: "lobby:update", data: this.roomManager.getFull(id) });
+            this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic() });
+            await this.persist();
+            break;
+          }
+          // Lobby (no game) — immediate leave
           // Cancel grace if exists
           if (this.pendingLeaves.has(socketId)) {
             clearTimeout(this.pendingLeaves.get(socketId).timeout);
