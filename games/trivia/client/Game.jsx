@@ -292,16 +292,19 @@ export default function TriviaGame({ roomId, isHost, isSpectator }) {
           <div className="mt-5 flex justify-center gap-2 items-end">
             {(() => {
               const top3 = sorted.slice(0,3);
-              // podium order 2nd, 1st, 3rd for visual
-              const order = [1,0,2].filter(i=> i < top3.length);
+              // podium: winner left for 2, centre for 3 — not right
+              let order;
+              if (top3.length===2) order=[0,1];
+              else if (top3.length===1) order=[0];
+              else order=[1,0,2].filter(i=> i < top3.length);
+              const heightsByRank = ["h-[138px]","h-[102px]","h-[88px]"];
               return order.map(i=>{
                 const p = top3[i];
                 const isMe = p.id===myId;
-                const heights = ["h-[102px]","h-[138px]","h-[88px]"];
-                const idxOrdered = order.indexOf(i);
+                const height = heightsByRank[i];
                 const isFirst = i===0;
                 return (
-                  <div key={p.id} className={`flex-1 max-w-[120px] rounded-2xl border-2 flex flex-col items-center justify-end p-3 shadow-lg ${isFirst?"bg-[#0a1e2e] border-amber-400 text-white ring-2 ring-amber-400/40":"bg-white/5 border-white/15 text-white"} ${heights[idxOrdered]}`}>
+                  <div key={p.id} className={`flex-1 max-w-[120px] rounded-2xl border-2 flex flex-col items-center justify-end p-3 shadow-lg ${isFirst?"bg-[#0a1e2e] border-amber-400 text-white ring-2 ring-amber-400/40":"bg-white/5 border-white/15 text-white"} ${height}`}>
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-xs border-2 ${isMe?"border-amber-300 bg-[#f3ecd8] text-[#0a1e2e]": isFirst?"bg-amber-400 text-[#0a1e2e] border-amber-300":"bg-[#1e2a3a] text-white border-white/20"}`}>{p.name.slice(0,2).toUpperCase()}</div>
                     <div className={`mt-2 text-xs font-black truncate max-w-full ${isFirst?"text-amber-300":"text-white"}`}>{p.name} {isMe?"★":""}</div>
                     <div className={`text-xl font-black ${isFirst?"text-amber-300":"text-emerald-300"}`}>{p.score} <span className="text-[11px] font-bold opacity-60">pts</span></div>
