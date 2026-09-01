@@ -43,7 +43,7 @@ function migrateTriviaId(room, oldId, newId){
   }
 }
 
-const ROOM_GRACE_MS = 10000; // keep room slot 10s after disconnect/refresh (quick close when empty)
+const ROOM_GRACE_MS = 60000; // keep room slot 60s after disconnect/refresh (allows rejoin via code, esp. when game in progress)
 
 export class LuckyStreetDO {
   constructor(state, env) {

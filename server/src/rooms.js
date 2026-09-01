@@ -198,8 +198,78 @@ export class RoomManager {
   join({ roomId, socketId, username, avatar }) {
     const room = this.get(roomId);
     if (!room) throw new Error("Room not found");
-    if (room.gameState && room.gameState.phase !== QuestPhases.LOBBY && room.gameState.phase !== QuestPhases.GAME_OVER) {
-      throw new Error("Game in progress - join as spectator");
+    const isActiveGame = !!(room.gameState && room.gameState.phase !== QuestPhases.LOBBY && room.gameState.phase !== QuestPhases.GAME_OVER);
+    if (isActiveGame) {
+      // Allow rejoin as same player via code/name when game in progress (grace rejoin)
+      const lower = username.toLowerCase();
+      const inRoomSameName = room.players.find(p => p.name.toLowerCase() === lower);
+      const inGameSameName = room.gameState?.players?.find(p => p.name.toLowerCase() === lower);
+      // If not already in room and not in game, block as spectator
+      if (!inRoomSameName && !inGameSameName) {
+        throw new Error("Game in progress - join as spectator");
+      }
+      // If same name exists in room, treat as takeover (refresh) — update id to new socket
+      if (inRoomSameName) {
+        const oldId = inRoomSameName.id;
+        if (oldId !== socketId) {
+          inRoomSameName.id = socketId;
+          inRoomSameName.avatar = avatar || inRoomSameName.avatar;
+          if (room.hostId === oldId) { room.hostId = socketId; room.hostName = username; inRoomSameName.isHost = true; }
+          // Migrate gameState ids
+          try {
+            if (room.game === "trivia") {
+              const gs = room.gameState;
+              const pl = gs.players?.find(p=>p.id===oldId);
+              if(pl) pl.id = socketId;
+              if(gs.scores && gs.scores[oldId]!==undefined){ gs.scores[socketId]=gs.scores[oldId]; delete gs.scores[oldId]; }
+              if(gs.answers && gs.answers[oldId]!==undefined){ gs.answers[socketId]=gs.answers[oldId]; delete gs.answers[oldId]; }
+              if(gs.answerAt && gs.answerAt[oldId]!==undefined){ gs.answerAt[socketId]=gs.answerAt[oldId]; delete gs.answerAt[oldId]; }
+              if(gs.revealAcks && gs.revealAcks[oldId]!==undefined){ gs.revealAcks[socketId]=gs.revealAcks[oldId]; delete gs.revealAcks[oldId]; }
+            } else {
+              // Good vs Evil: migrate votes etc handled in DO, but also do minimal here
+              const gs = room.gameState;
+              if(gs.proposal?.votes && gs.proposal.votes[oldId]!==undefined){ gs.proposal.votes[socketId]=gs.proposal.votes[oldId]; delete gs.proposal.votes[oldId]; }
+              if(gs.questVotes && gs.questVotes[oldId]!==undefined){ gs.questVotes[socketId]=gs.questVotes[oldId]; delete gs.questVotes[oldId]; }
+              const p = gs.players?.find(x=>x.id===oldId);
+              if(p) p.id = socketId;
+            }
+          } catch {}
+          room.updatedAt = Date.now();
+          this._notify();
+          return this.getFull(room.id);
+        } else {
+          throw new Error("Already in room");
+        }
+      }
+      // If not in room but in gameState (disconnected after grace), re-add as player
+      if (inGameSameName && !inRoomSameName) {
+        // Find oldId in gameState (the disconnected player's id)
+        const oldId = inGameSameName.id;
+        // Update gameState id to new socket
+        try {
+          if (room.game === "trivia") {
+            const gs = room.gameState;
+            const pl = gs.players?.find(p=>p.id===oldId);
+            if(pl) pl.id = socketId;
+            if(gs.scores && gs.scores[oldId]!==undefined){ gs.scores[socketId]=gs.scores[oldId]; delete gs.scores[oldId]; }
+            if(gs.answers && gs.answers[oldId]!==undefined){ gs.answers[socketId]=gs.answers[oldId]; delete gs.answers[oldId]; }
+            if(gs.answerAt && gs.answerAt[oldId]!==undefined){ gs.answerAt[socketId]=gs.answerAt[oldId]; delete gs.answerAt[oldId]; }
+            if(gs.revealAcks && gs.revealAcks[oldId]!==undefined){ gs.revealAcks[socketId]=gs.revealAcks[oldId]; delete gs.revealAcks[oldId]; }
+          } else {
+            const gs = room.gameState;
+            const p = gs.players?.find(x=>x.id===oldId);
+            if(p) p.id = socketId;
+            if(gs.proposal?.votes && gs.proposal.votes[oldId]!==undefined){ gs.proposal.votes[socketId]=gs.proposal.votes[oldId]; delete gs.proposal.votes[oldId]; }
+            if(gs.questVotes && gs.questVotes[oldId]!==undefined){ gs.questVotes[socketId]=gs.questVotes[oldId]; delete gs.questVotes[oldId]; }
+          }
+        } catch {}
+        const player = { id: socketId, name: username, avatar: avatar || null, isHost: false };
+        room.players.push(player);
+        // If was host, restore host? Only if room has no host? Keep existing host
+        room.updatedAt = Date.now();
+        this._notify();
+        return this.getFull(room.id);
+      }
     }
     if (room.players.some(p => p.id === socketId)) throw new Error("Already in room");
     if (room.players.some(p => p.name.toLowerCase() === username.toLowerCase())) {

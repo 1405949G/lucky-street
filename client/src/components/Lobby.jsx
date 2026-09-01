@@ -208,22 +208,15 @@ export default function Lobby({ spectate = false }) {
     };
   }, [socket, id, hasProfile, connected, profileStatus, spectate]);
 
-  // If user hits browser back / component unmounts while still in room, try to leave
-  // (prevents 30s grace keeping ghost player). Intentional Leave also calls handleLeave.
+  // Graceful refresh: DO NOT emit room:leave on refresh/unmount — rely on
+  // Workers DO grace (ROOM_GRACE_MS 10s) + UserRegistry 5m to keep slot.
+  // Intentional Leave is handled by handleLeave() which sets leavingRef.
+  // Beforeunload is left empty to avoid immediate close on host refresh.
   useEffect(() => {
-    const onBeforeUnload = () => {
-      try { socket?.emit("room:leave", { roomId: id }); } catch {}
-    };
-    window.addEventListener("beforeunload", onBeforeUnload);
-    return () => {
-      window.removeEventListener("beforeunload", onBeforeUnload);
-      if (leavingRef.current) return;
-      if (!socket || !id) return;
-      try {
-        socket.emit("room:leave", { roomId: id });
-      } catch {}
-    };
-  }, [socket, id]);
+    // No-op: keep player in room for grace period on refresh/close.
+    // Leaving is explicit via handleLeave().
+    return () => {};
+  }, []);
 
   if (showBlocking) {
     return <IdentityModal blocking title={`Enter ${id}`} onDone={() => {
