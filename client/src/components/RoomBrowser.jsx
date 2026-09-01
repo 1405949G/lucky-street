@@ -7,9 +7,10 @@ import JoinByIdBox from "./JoinByIdBox.jsx";
 import { copy } from "../content/copy.js";
 
 export default function RoomBrowser({ onJoinRoom, onSpectate, onCreateClick }) {
-  const { rooms } = useContext(SocketContext);
+  const { rooms, socket } = useContext(SocketContext);
   const { profile } = useContext(ProfileContext);
   const [search, setSearch] = useState("");
+  const [leaving, setLeaving] = useState(false);
 
   const myRoom = useMemo(() => {
     if (!profile?.username) return null;
@@ -40,8 +41,29 @@ export default function RoomBrowser({ onJoinRoom, onSpectate, onCreateClick }) {
             <p className="font-mono font-black text-lg tracking-[0.12em] text-[#f3ecd8] mt-1">{myRoom.id} • {myRoom.gameLabel}</p>
             <p className="text-xs text-white/70 mt-1">Host: <span className="font-bold text-white">{myRoom.hostName}</span> • {myRoom.slotsText} • <span className={`font-bold ${myRoom.status==='In Progress'?'text-amber-300':'text-emerald-300'}`}>{myRoom.status}</span></p>
             <p className="text-xs text-amber-200/70 mt-1">Tap Rejoin to go back — you can't join another lobby until you leave this one.</p>
+            {myRoom.status==='In Progress' && <p className="text-xs text-rose-300 mt-1">Leaving now will cancel the game for everyone.</p>}
           </div>
-          <button onClick={() => onJoinRoom(myRoom)} className="px-6 py-3 rounded-full bg-amber-400 hover:bg-amber-300 text-[#0e2533] font-extrabold shadow-md shrink-0">Rejoin {myRoom.id}</button>
+          <div className="flex gap-2 shrink-0">
+            <button onClick={() => onJoinRoom(myRoom)} className="px-6 py-3 rounded-full bg-amber-400 hover:bg-amber-300 text-[#0e2533] font-extrabold shadow-md">Rejoin {myRoom.id}</button>
+            <button
+              disabled={leaving}
+              onClick={() => {
+                if (!socket || !myRoom) return;
+                if (myRoom.status==='In Progress' && !window.confirm(`${profile.username} — leave ${myRoom.id}? Game will be cancelled and room returns to lobby.`)) return;
+                setLeaving(true);
+                socket.emit("room:leave", { roomId: myRoom.id }, (res) => {
+                  setLeaving(false);
+                  if (!res?.ok) {
+                    // fallback: try with just roomId
+                    console.warn("leave failed", res?.error);
+                  }
+                });
+                // Fallback clear after 1s
+                setTimeout(() => setLeaving(false), 1000);
+              }}
+              className="px-5 py-3 rounded-full bg-white/10 hover:bg-rose-500/20 border border-white/10 hover:border-rose-500/30 text-white text-sm font-bold disabled:opacity-50"
+            >{leaving ? "Leaving…" : "Leave"}</button>
+          </div>
         </div>
       )}
       <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">

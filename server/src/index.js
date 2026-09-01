@@ -310,7 +310,63 @@ io.on("connection", (socket) => {
     try {
       const id = String(roomId || socket.data.currentRoom || "").toUpperCase();
       if (!id) throw new Error("No room to leave");
-      const result = roomManager.leave({ roomId: id, socketId: socket.id });
+      const roomBefore = roomManager.get(id);
+      // Find target by name if in grace (old socket)
+      let targetId = socket.id;
+      let targetName = socket.data.username || userRegistry.getBySocket(socket.id)?.username;
+      if (roomBefore && !roomBefore.players.some(p => p.id === socket.id)) {
+        const lower = String(targetName || "").toLowerCase();
+        const byName = roomBefore.players.find(p => p.name.toLowerCase() === lower);
+        if (byName) { targetId = byName.id; targetName = byName.name; }
+      }
+      const isGameLeave = !!(roomBefore?.gameState && roomBefore.gameState.phase !== "LOBBY" && roomBefore.gameState.phase !== "GAME_OVER");
+      const isAbandonFromMenu = targetId !== socket.id || socket.data.currentRoom !== id;
+      if (isGameLeave && isAbandonFromMenu) {
+        // Abandon during game from main menu — cancel game and remove
+        if (roomBefore.game === "trivia") {
+          try { const res = roomManager.dispatchTriviaInternal(id, { type: "REMOVE_PLAYER", payload: { playerId: targetId } }); if (res) broadcastTriviaState(id); } catch {}
+        }
+        const curAfter = roomManager.get(id);
+        if (curAfter?.gameState && curAfter.gameState.phase !== "LOBBY" && curAfter.gameState.phase !== "GAME_OVER") {
+          curAfter.gameState = null;
+          curAfter.gameStartedAt = null;
+          curAfter.inactiveSince = Date.now();
+        }
+        const idx = curAfter ? curAfter.players.findIndex(p => p.id === targetId) : -1;
+        if (idx !== -1) {
+          const wasHost = curAfter.players[idx].isHost;
+          curAfter.players.splice(idx, 1);
+          if (wasHost && curAfter.players.length > 0) {
+            const newHost = curAfter.players[Math.floor(Math.random() * curAfter.players.length)];
+            curAfter.players.forEach(p => p.isHost = false);
+            newHost.isHost = true;
+            curAfter.hostId = newHost.id;
+            curAfter.hostName = newHost.name;
+          } else if (curAfter.players.length === 0) {
+            roomManager.rooms.delete(id);
+            io.emit("room:deleted", { roomId: id });
+            broadcastRooms();
+            if (socket.data.currentRoom === id) socket.data.currentRoom = null;
+            if (typeof ack === "function") ack({ ok: true });
+            socket.emit("room:left", { roomId: id });
+            return;
+          }
+        }
+        const fullAfter = roomManager.getFull(id);
+        if (typeof ack === "function") ack({ ok: true });
+        socket.emit("room:left", { roomId: id });
+        if (socket.data.currentRoom === id) socket.data.currentRoom = null;
+        socket.leave(id);
+        if (fullAfter) {
+          io.to(id).emit("lobby:update", fullAfter);
+          io.to(id).emit("game:update", null);
+          io.to(id).emit("game:private", null);
+          io.to(id).emit("room:error", { error: `${targetName} left — game cancelled, back to lobby` });
+        }
+        broadcastRooms();
+        return;
+      }
+      const result = roomManager.leave({ roomId: id, socketId: targetId });
       socket.leave(id);
       socket.data.currentRoom = null;
       if (typeof ack === "function") ack({ ok: true });

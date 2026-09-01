@@ -90,6 +90,10 @@ export default function Lobby({ spectate = false }) {
         setError(data.error);
         return;
       }
+      if (data?.error && /left — game cancelled/i.test(data.error)) {
+        showToast(data.error);
+        return;
+      }
       if (data?.error && (/already taken/i.test(data.error) || /timeout/i.test(data.error) || /Register a profile first/i.test(data.error) || /missing identity/i.test(data.error))) {
         return;
       }

@@ -998,7 +998,109 @@ export class LuckyStreetDO {
           const id = String(data.roomId || sess.currentRoom || "").toUpperCase();
           if (!id) throw new Error("No room to leave");
           const roomBefore = this.roomManager.get(id);
+          // Find target player: by socketId, or by name if in grace (old socket)
+          let targetId = socketId;
+          let targetName = sess.username;
+          if (roomBefore && !roomBefore.players.some(p => p.id === socketId)) {
+            const lower = String(sess.username || "").toLowerCase();
+            const byName = roomBefore.players.find(p => p.name.toLowerCase() === lower);
+            if (byName) { targetId = byName.id; targetName = byName.name; }
+            // Also check pendingLeaves by name (indefinite game grace)
+            if (!byName) {
+              for (const [sid, pend] of this.pendingLeaves.entries()) {
+                if (pend.roomId === id) {
+                  const r = this.roomManager.get(id);
+                  const pp = r?.players.find(p => p.id === sid && p.name.toLowerCase() === lower);
+                  if (pp) { targetId = sid; targetName = pp.name; break; }
+                }
+              }
+            }
+          }
           const isGameLeave = !!(roomBefore?.gameState && roomBefore.gameState.phase !== "LOBBY" && roomBefore.gameState.phase !== "GAME_OVER");
+          // Abandon via main-menu banner while in grace/game: explicit leave should cancel game and remove
+          const isAbandonFromMenu = targetId !== socketId || sess.currentRoom !== id;
+          if (isGameLeave && isAbandonFromMenu) {
+            // Explicit abandon from main menu during game — cancel game and remove player
+            if (this.pendingLeaves.has(targetId)) {
+              clearTimeout(this.pendingLeaves.get(targetId).timeout);
+              this.pendingLeaves.delete(targetId);
+            }
+            // Remove from gameState if needed
+            if (roomBefore.game === "trivia") {
+              try {
+                const res = this.roomManager.dispatchTriviaInternal(id, { type: "REMOVE_PLAYER", payload: { playerId: targetId } });
+                if (res) this.broadcastTriviaState(id);
+              } catch {}
+            }
+            // If after removal game still active, force cancel to lobby
+            const curAfter = this.roomManager.get(id);
+            if (curAfter?.gameState && curAfter.gameState.phase !== "LOBBY" && curAfter.gameState.phase !== "GAME_OVER") {
+              curAfter.gameState = null;
+              curAfter.gameStartedAt = null;
+              curAfter.inactiveSince = Date.now();
+            }
+            // Remove player from room
+            const idx = curAfter ? curAfter.players.findIndex(p => p.id === targetId) : -1;
+            let wasHost = false;
+            if (idx !== -1) {
+              wasHost = curAfter.players[idx].isHost;
+              curAfter.players.splice(idx, 1);
+              if (wasHost && curAfter.players.length > 0) {
+                const newHost = curAfter.players[Math.floor(Math.random() * curAfter.players.length)];
+                curAfter.players.forEach(p => p.isHost = false);
+                newHost.isHost = true;
+                curAfter.hostId = newHost.id;
+                curAfter.hostName = newHost.name;
+              } else if (curAfter.players.length === 0) {
+                this.roomManager.rooms.delete(id);
+                this.broadcast({ event: "room:deleted", data: { roomId: id } });
+                this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic() });
+                if (sess.currentRoom === id) { sess.currentRoom = null; this._syncAttachment(ws, sess); }
+                okAck({ ok: true });
+                this.send(ws, { event: "room:left", data: { roomId: id } });
+                await this.persist();
+                break;
+              }
+            }
+            // Clear pending for target
+            if (this.pendingLeaves.has(targetId)) {
+              clearTimeout(this.pendingLeaves.get(targetId).timeout);
+              this.pendingLeaves.delete(targetId);
+            }
+            // Restart GC for this name (was indefinite)
+            const lowerAb = String(targetName || "").toLowerCase();
+            const entAb = this.userRegistry.byName.get(lowerAb);
+            if (entAb && entAb.socketId === targetId && !entAb.timer) {
+              entAb.connected = false;
+              entAb.disconnectedAt = Date.now();
+              entAb.expiresAt = Date.now() + this.gcMs;
+              entAb.timer = setTimeout(() => {
+                const cur = this.userRegistry.byName.get(lowerAb);
+                if (cur && cur.socketId === targetId && !cur.connected) {
+                  this.userRegistry.byName.delete(lowerAb);
+                  this.userRegistry.bySocket.delete(targetId);
+                  this.persist();
+                }
+              }, this.gcMs);
+              try { await this.state.storage.setAlarm(entAb.expiresAt); } catch {}
+            }
+            const fullAfter = this.roomManager.getFull(id);
+            okAck({ ok: true });
+            this.send(ws, { event: "room:left", data: { roomId: id } });
+            if (fullAfter) {
+              this.broadcast({ event: "lobby:update", data: fullAfter });
+              this.sendToRoom(id, { event: "game:update", data: null });
+              this.sendToRoom(id, { event: "game:private", data: null });
+              this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic() });
+              // Toast for remaining players
+              this.sendToRoom(id, { event: "room:error", data: { error: `${targetName} left — game cancelled, back to lobby` } });
+            } else {
+              this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic() });
+            }
+            if (sess.currentRoom === id) { sess.currentRoom = null; this._syncAttachment(ws, sess); }
+            await this.persist();
+            break;
+          }
           if (isGameLeave) {
             // Game in progress — indefinite grace: keep player slot for rejoin via code/share link/join
             // Put into pendingLeaves with 30s host grace, then indefinite player grace
@@ -1040,20 +1142,36 @@ export class LuckyStreetDO {
             await this.persist();
             break;
           }
-          // Lobby (no game) — immediate leave
-          // Cancel grace if exists
-          if (this.pendingLeaves.has(socketId)) {
+          // Lobby (no game) — immediate leave (also handles abandon via main-menu banner where targetId is old socket)
+          const leaveId = targetId;
+          if (this.pendingLeaves.has(leaveId)) {
+            clearTimeout(this.pendingLeaves.get(leaveId).timeout);
+            this.pendingLeaves.delete(leaveId);
+          }
+          if (this.pendingLeaves.has(socketId) && socketId !== leaveId) {
             clearTimeout(this.pendingLeaves.get(socketId).timeout);
             this.pendingLeaves.delete(socketId);
           }
-          const result = this.roomManager.leave({ roomId: id, socketId });
-          sess.currentRoom = null;
-          this._syncAttachment(ws, sess);
+          const result = this.roomManager.leave({ roomId: id, socketId: leaveId });
+          // If leave by name found old socket but current socket also had pending, clean both
+          if (leaveId !== socketId) {
+            // Also ensure current socket's pending cleared
+            if (this.pendingLeaves.has(socketId)) {
+              clearTimeout(this.pendingLeaves.get(socketId).timeout);
+              this.pendingLeaves.delete(socketId);
+            }
+          }
+          if (sess.currentRoom === id) { sess.currentRoom = null; this._syncAttachment(ws, sess); }
+          else { sess.currentRoom = null; this._syncAttachment(ws, sess); }
           okAck({ ok: true });
           this.send(ws, { event: "room:left", data: { roomId: id } });
           if (result) this.broadcast({ event: "lobby:update", data: result });
+          else {
+            const cur = this.roomManager.get(id);
+            if (cur) this.broadcast({ event: "lobby:update", data: this.roomManager.getFull(id) });
+          }
           this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic() });
-          this.broadcast({ event: "lobby:playerLeft", data: { roomId: id, socketId, username: sess.username } });
+          this.broadcast({ event: "lobby:playerLeft", data: { roomId: id, socketId: leaveId, username: targetName } });
           await this.persist();
           break;
         }
