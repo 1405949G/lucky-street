@@ -71,8 +71,23 @@ class UserRegistry {
         this.bySocket.set(socketId, lower);
         return existing;
       }
-      // Active duplicate - reject
-      throw new Error(`Username "${trimmed}" is already taken. Choose another.`);
+      // Active duplicate - allow takeover (latest wins) for party lobby UX
+      // Old holder will be displaced and need to pick new name
+      console.log(`[users] takeover "${trimmed}" old=${existing.socketId} new=${socketId}`);
+      if (existing.timer) clearTimeout(existing.timer);
+      const oldSocketTake = existing.socketId;
+      if (oldSocketTake !== socketId) {
+        this.bySocket.delete(oldSocketTake);
+      }
+      existing.socketId = socketId;
+      existing.username = trimmed;
+      if (avatar !== undefined) existing.avatar = avatar;
+      existing.timer = null;
+      existing.expiresAt = null;
+      existing.disconnectedAt = null;
+      existing.connected = true;
+      this.bySocket.set(socketId, lower);
+      return existing;
     }
 
     // If this socket previously held a different name, free it (rename flow)
