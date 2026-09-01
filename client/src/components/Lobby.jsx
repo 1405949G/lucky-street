@@ -650,10 +650,14 @@ export default function Lobby({ spectate = false }) {
                     const disabled = isGameLocked || wouldExceed;
                     return (
                     <div key={opt.key} className="flex items-center gap-3">
-                      <label className="text-xs font-bold text-white/60 w-24 flex items-center gap-1">{opt.label} {wouldExceed && <span className="text-[10px] text-amber-300">MAX</span>}</label>
+                      <label className="text-xs font-bold text-white/60 w-32 flex items-center gap-2">
+                        <span>{opt.label}</span>
+                        {opt.side && <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black tracking-wide border ${opt.side==="GOOD" ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : "bg-rose-500/20 text-rose-300 border-rose-500/30"}`}>{opt.side}</span>}
+                        {wouldExceed && <span className="text-[10px] text-amber-300">MAX</span>}
+                      </label>
                       {opt.type === "toggle" ? (
                         isHost ? (
-                          <button disabled={disabled} onClick={() => handleOptionChange(opt.key, !room.gameOptions[opt.key])} title={wouldExceed ? `Max ${maxEvil} evil extras for ${totalPlayers} players` : ''} className={`relative w-12 h-6 rounded-full transition-colors ${disabled ? "opacity-40 cursor-not-allowed" : ""} ${room.gameOptions[opt.key] ? "bg-emerald-500" : "bg-white/15"}`}>
+                          <button disabled={disabled} onClick={() => handleOptionChange(opt.key, !room.gameOptions[opt.key])} title={wouldExceed ? `Max ${maxEvil} evil extras for ${totalPlayers} players` : opt.side ? `${opt.side} team` : ""} className={`relative w-12 h-6 rounded-full transition-colors ${disabled ? "opacity-40 cursor-not-allowed" : ""} ${room.gameOptions[opt.key] ? (opt.side==="GOOD" ? "bg-emerald-500" : opt.side==="EVIL" ? "bg-rose-500" : "bg-emerald-500") : "bg-white/15"}`}>
                             <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${room.gameOptions[opt.key] ? "translate-x-6" : ""}`} />
                           </button>
                         ) : (
