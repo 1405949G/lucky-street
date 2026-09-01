@@ -635,16 +635,17 @@ export default function Lobby({ spectate = false }) {
                   )}
                 </div>
                 <p className="text-xs text-white/40 mt-1">{games.find(g=>g.id===room.game)?.description || ""} {isGameLocked && <span className="text-amber-300">• Lobby locked during game</span>}</p>
-                {isQuestGame && (
+                {isQuestGame && (()=>{ const displayPlayers = Math.max(totalPlayers, 5); const displayMax = displayPlayers<=6?1:displayPlayers<=8?2:3; return (
                   <div className="mb-1 flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-white/40">{['morgana','mordred','oberon'].filter(k=> !!room.gameOptions[k]).length}/{totalPlayers<=6?1:totalPlayers<=8?2:3} evil extras for {totalPlayers}p</span>
-                    <span className="text-[11px] text-amber-200/70">Merlin+Assassin always</span>
+                    <span className="text-[11px] font-bold text-white/40">{['morgana','mordred','oberon'].filter(k=> !!room.gameOptions[k]).length}/{displayMax} evil extras for {displayPlayers}p</span>
+                    <span className="text-[11px] text-amber-200/70" title="Merlin (Good, sees Evil) and Assassin (Evil, hunts Merlin) are always included">Merlin+Assassin always</span>
                   </div>
-                )}
+                );})()}
                 <div className="mt-3 grid gap-3">
                   {(game.optionSchema || []).map(opt => {
+                    const displayPlayersOpt = Math.max(totalPlayers, 5);
                     const isEvilExtra = isQuestGame && ['morgana','mordred','oberon'].includes(opt.key);
-                    const maxEvil = totalPlayers<=6?1:totalPlayers<=8?2:3;
+                    const maxEvil = displayPlayersOpt<=6?1:displayPlayersOpt<=8?2:3;
                     const enabledEvil = ['morgana','mordred','oberon'].filter(k=> !!room.gameOptions[k]).length;
                     const wouldExceed = isEvilExtra && !room.gameOptions[opt.key] && enabledEvil >= maxEvil;
                     const disabled = isGameLocked || wouldExceed;
@@ -657,7 +658,7 @@ export default function Lobby({ spectate = false }) {
                       </label>
                       {opt.type === "toggle" ? (
                         isHost ? (
-                          <button disabled={disabled} onClick={() => handleOptionChange(opt.key, !room.gameOptions[opt.key])} title={wouldExceed ? `Max ${maxEvil} evil extras for ${totalPlayers} players` : opt.side ? `${opt.side} team` : ""} className={`relative w-12 h-6 rounded-full transition-colors ${disabled ? "opacity-40 cursor-not-allowed" : ""} ${room.gameOptions[opt.key] ? (opt.side==="GOOD" ? "bg-emerald-500" : opt.side==="EVIL" ? "bg-rose-500" : "bg-emerald-500") : "bg-white/15"}`}>
+                          <button disabled={disabled} onClick={() => handleOptionChange(opt.key, !room.gameOptions[opt.key])} title={wouldExceed ? `Max ${maxEvil} evil extras for ${Math.max(totalPlayers,5)} players` : opt.side ? `${opt.side} team` : ""} className={`relative w-12 h-6 rounded-full transition-colors ${disabled ? "opacity-40 cursor-not-allowed" : ""} ${room.gameOptions[opt.key] ? (opt.side==="GOOD" ? "bg-emerald-500" : opt.side==="EVIL" ? "bg-rose-500" : "bg-emerald-500") : "bg-white/15"}`}>
                             <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${room.gameOptions[opt.key] ? "translate-x-6" : ""}`} />
                           </button>
                         ) : (
@@ -768,11 +769,15 @@ export default function Lobby({ spectate = false }) {
                     <p className="text-xs mt-1.5 text-white/70 leading-snug">• Minion - with Evil<br/>• Assassin - hunts Merlin<br/>• Morgana - pretends to be Merlin<br/>• Mordred - hidden from Merlin<br/>• Oberon - works alone</p>
                   </div>
                 </div>
+                <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-3">
+                  <p className="text-xs font-bold tracking-widest text-amber-300">ALWAYS IN</p>
+                  <p className="text-xs mt-1.5 text-white/70 leading-snug">Merlin (Good) and Assassin (Evil) are always included — you can't turn them off. Merlin sees Evil (except Mordred hides). If Good reaches 3 quests, Assassin gets one guess to find Merlin and steal the win for Evil.</p>
+                </div>
                 <div className="rounded-xl bg-white/5 border border-white/10 p-3">
                   <p className="text-xs font-bold text-white">How a round works</p>
                   <p className="text-xs text-white/60 mt-1.5 leading-snug">1. Leader picks a team → 2. Everyone votes → 3. If most say yes, that team secretly picks Success or Fail. Good must pick Success. One Fail usually fails the quest - the 4th quest needs 2 fails when you have 7+ players.</p>
                 </div>
-                <p className="text-xs text-white/40">Now: {totalPlayers} players • {['morgana','mordred','oberon'].filter(k=> !!room.gameOptions[k]).length}/{totalPlayers<=6?1:totalPlayers<=8?2:3} extra Evil • Merlin + Assassin always in</p>
+                <p className="text-xs text-white/40">Now: {Math.max(totalPlayers,5)} players • {['morgana','mordred','oberon'].filter(k=> !!room.gameOptions[k]).length}/{Math.max(totalPlayers,5)<=6?1:Math.max(totalPlayers,5)<=8?2:3} extra Evil • Merlin + Assassin always in</p>
               </div>
             ) : isTriviaGame ? (
               <div className="mt-4 space-y-4 text-sm leading-relaxed">

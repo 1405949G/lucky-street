@@ -1,12 +1,12 @@
 ﻿/**
  * games/good-vs-evil/manifest.js - Good vs Evil (social deduction, 5-10p)
- * Hidden roles, social deduction — Good vs. Evil must bluff and vote.
+ * Hidden roles, social deduction — Bluff and vote.
  * See ../README.md for full guide and AGENTS.md for AI rule.
  */
 export default {
   id: "good-vs-evil",
   label: "Good vs Evil",
-  description: "Hidden roles, social deduction — Good vs. Evil must bluff and vote.",
+  description: "Hidden roles, social deduction — Bluff and vote.",
   minPlayers: 5,
   maxPlayers: 10,
   defaultMaxPlayers: 10,
