@@ -46,22 +46,30 @@ export default function IdentityModal({ blocking = false, onDone, title = "Welco
 
     const isEdit = !!profile?.username && !blocking;
     if (isEdit) {
-      const prev = profile;
-      const nextOptimistic = { username: trimmed, avatar, avatarType: "color" };
-      setProfile(nextOptimistic);
-      onDone?.(nextOptimistic);
+      setSubmitting(true);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => {
+        setSubmitting(false);
+        setLocalError("Connection is slow - please try again");
+      }, 6000);
+      const next = { username: trimmed, avatar, avatarType: "color" };
       if (socket) {
         socket.emit("profile:register", { username: trimmed, avatar }, (res) => {
-          if (!res?.ok) {
-            // Revert on name taken, show toast via localError if modal still mounted, else via alert
-            setProfile(prev);
-            const msg = res?.error || "That name is taken - try another";
-            // Try to show in modal if still open, otherwise toast
-            setLocalError(msg);
-            // Also show as alert if modal closed
-            setTimeout(() => alert(msg), 100);
+          if (timeoutRef.current) clearTimeout(timeoutRef.current);
+          setSubmitting(false);
+          if (res?.ok) {
+            setProfile(next);
+            setLocalError(null);
+            onDone?.(next);
+          } else {
+            setLocalError(res?.error || profileError || "That name is taken - try another");
           }
         });
+      } else {
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        setProfile(next);
+        setSubmitting(false);
+        onDone?.(next);
       }
       return;
     }
