@@ -919,10 +919,52 @@ export class LuckyStreetDO {
         case "room:join": {
           let user = this.userRegistry.getBySocket(socketId);
           // Reopen race: profile not yet registered via async registerProfile, but we have username in sess or data
+          // Also handle rejoin to same room where ghost exists — allow even without global registration
+          const attemptedName = sanitizeName(data.username || sess.username || "");
+          const idEarly = String(data.roomId || "").toUpperCase().trim();
+          if (!user && attemptedName && idEarly) {
+            const maybeRoom = this.roomManager.get(idEarly);
+            const ghostEarly = maybeRoom?.players.find(p => p.name.toLowerCase() === attemptedName.toLowerCase());
+            if (ghostEarly) {
+              // Ghost rejoin — bypass global register, create ephemeral user for this socket
+              try {
+                user = this.userRegistry.register(socketId, attemptedName, data.avatar || sess.avatar || null);
+                sess.username = user.username; sess.avatar = user.avatar; this._syncAttachment(ws, sess);
+              } catch (e) {
+                // Already taken but ghost exists — force reclaim if old socket not active or pending
+                const existing = this.userRegistry.byName.get(attemptedName.toLowerCase());
+                if (existing && existing.socketId !== socketId) {
+                  const oldWs = this.socketIdToWs.get(existing.socketId);
+                  let isOldActive = false;
+                  try { isOldActive = !!(oldWs && this.state.getWebSockets().includes(oldWs)); } catch { isOldActive = !!(oldWs && this.sessions.has(oldWs)); }
+                  const isPending = this.pendingLeaves.has(existing.socketId);
+                  if (!isOldActive || isPending || ghostEarly) {
+                    if (existing.timer) clearTimeout(existing.timer);
+                    this.userRegistry.byName.delete(attemptedName.toLowerCase());
+                    this.userRegistry.bySocket.delete(existing.socketId);
+                    try { user = this.userRegistry.register(socketId, attemptedName, data.avatar || sess.avatar || null); sess.username = user.username; sess.avatar = user.avatar; this._syncAttachment(ws, sess); } catch {}
+                  }
+                }
+              }
+            }
+          }
           if (!user) {
             const fallbackName = sanitizeName(data.username || sess.username || "");
             if (fallbackName) {
-              try { user = this.userRegistry.register(socketId, fallbackName, data.avatar || sess.avatar || null); sess.username = user.username; sess.avatar = user.avatar; this._syncAttachment(ws, sess); } catch {}
+              try { user = this.userRegistry.register(socketId, fallbackName, data.avatar || sess.avatar || null); sess.username = user.username; sess.avatar = user.avatar; this._syncAttachment(ws, sess); } catch (e) {
+                // Fallback: if still taken but ghost in target room, force
+                if (/already taken/i.test(e.message) && idEarly) {
+                  const existing = this.userRegistry.byName.get(fallbackName.toLowerCase());
+                  const maybeRoom2 = this.roomManager.get(idEarly);
+                  const ghost2 = maybeRoom2?.players.find(p => p.name.toLowerCase() === fallbackName.toLowerCase());
+                  if (ghost2 && existing && existing.socketId !== socketId) {
+                    if (existing.timer) clearTimeout(existing.timer);
+                    this.userRegistry.byName.delete(fallbackName.toLowerCase());
+                    this.userRegistry.bySocket.delete(existing.socketId);
+                    try { user = this.userRegistry.register(socketId, fallbackName, data.avatar || sess.avatar || null); sess.username = user.username; sess.avatar = user.avatar; this._syncAttachment(ws, sess); } catch {}
+                  }
+                }
+              }
             }
           }
           if (!user) throw new Error("Register a profile first - missing identity");

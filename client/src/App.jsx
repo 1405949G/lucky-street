@@ -12,7 +12,7 @@ import { copy } from "./content/copy.js";
 
 function MainPage() {
   const { profile, hasProfile, showOnboarding, setShowOnboarding } = useContext(ProfileContext);
-  const { socket, connected, rooms } = useContext(SocketContext);
+  const { socket, connected, rooms, registerProfile } = useContext(SocketContext);
   const navigate = useNavigate();
 
   const [showCreate, setShowCreate] = useState(false);
@@ -47,7 +47,13 @@ function MainPage() {
           navigate(`/room/${id}/spectate`);
           return;
         }
-        const transient = /Register a profile first|already taken|timeout|missing identity/i.test(msg);
+        if (/Register a profile first|missing identity/i.test(msg) && profile?.username && retry < 4) {
+          // Reopen race: socket not yet registered, force register then retry
+          try { registerProfile(profile); } catch {}
+          setTimeout(() => handleJoinRoom(room, retry + 1), 600);
+          return;
+        }
+        const transient = /already taken|timeout/i.test(msg);
         if (transient && retry < 4) {
           setTimeout(() => handleJoinRoom(room, retry + 1), 400 * Math.pow(1.5, retry));
           return;

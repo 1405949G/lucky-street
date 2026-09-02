@@ -53,13 +53,22 @@ export default function RoomBrowser({ onJoinRoom, onSpectate, onCreateClick }) {
                 setLeaving(true);
                 const payload = { roomId: myRoom.id };
                 if (profile?.username) { payload.username = profile.username; payload.avatar = profile.avatar; }
-                socket.emit("room:leave", payload, (res) => {
-                  setLeaving(false);
-                  if (!res?.ok) {
-                    console.warn("leave failed", res?.error);
-                  }
-                });
-                setTimeout(() => setLeaving(false), 1000);
+                const doLeave = (retry=0) => {
+                  socket.emit("room:leave", payload, (res) => {
+                    if (res?.ok) { setLeaving(false); return; }
+                    const msg = res?.error || "";
+                    if (/Register a profile first|missing identity/i.test(msg) && retry < 3) {
+                      // Reopen race: ensure profile registered
+                      try { socket.emit("profile:register", { username: profile.username, avatar: profile.avatar }, () => {}); } catch {}
+                      setTimeout(() => doLeave(retry+1), 600);
+                      return;
+                    }
+                    setLeaving(false);
+                    console.warn("leave failed", msg);
+                  });
+                };
+                doLeave();
+                setTimeout(() => setLeaving(false), 2000);
               }}
               className="px-5 py-3 rounded-full bg-white/10 hover:bg-rose-500/20 border border-white/10 hover:border-rose-500/30 text-white text-sm font-bold disabled:opacity-50"
             >{leaving ? "Leaving…" : "Leave"}</button>
