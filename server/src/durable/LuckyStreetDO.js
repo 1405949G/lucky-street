@@ -512,6 +512,7 @@ export class LuckyStreetDO {
     const now = Date.now();
     // --- 10-min inactivity: close lobby rooms open without starting any game ---
     const INACTIVITY_MS = 10 * 60 * 1000;
+    const GAME_IDLE_MS = 30 * 60 * 1000; // 30m cutoff for game rooms with no active players
     const inactivityDeleted = [];
     for (const [roomId, room] of [...this.roomManager.rooms.entries()]) {
       if (room.gameState) continue;
@@ -668,6 +669,42 @@ export class LuckyStreetDO {
         this.pendingLeaves.delete(sid);
       }
     }
+    // 30m cutoff for game rooms with no active players
+    for (const [roomId, room] of [...this.roomManager.rooms.entries()]) {
+      if (!room.gameState) continue;
+      let hasActive = false;
+      for (const p of room.players) {
+        const ws = this.socketIdToWs.get(p.id);
+        let isActive = false;
+        try { isActive = !!(ws && this.state.getWebSockets().includes(ws)); } catch { isActive = !!(ws && this.sessions.has(ws)); }
+        if (isActive) { hasActive = true; break; }
+        const last = this.lastSeen.get(p.id);
+        if (last && now - last < 30000) { hasActive = true; break; }
+      }
+      if (hasActive) continue;
+      // Also check spectators
+      if (room.spectators?.length) {
+        for (const s of room.spectators) {
+          const ws = this.socketIdToWs.get(s.id);
+          let isActive = false;
+          try { isActive = !!(ws && this.state.getWebSockets().includes(ws)); } catch { isActive = !!(ws && this.sessions.has(ws)); }
+          if (isActive) { hasActive = true; break; }
+        }
+        if (hasActive) continue;
+      }
+      const lastRoomActive = Math.max(room.updatedAt || 0, ...room.players.map(p => this.lastSeen.get(p.id) || 0));
+      if (now - lastRoomActive >= GAME_IDLE_MS) {
+        console.log(`[DO] game idle 30m close ${roomId}`);
+        this.roomManager.rooms.delete(roomId);
+        this.broadcast({ event: "room:deleted", data: { roomId, reason: "idle" } });
+        for (const [sid, pend] of [...this.pendingLeaves.entries()]) if (pend.roomId === roomId) { clearTimeout(pend.timeout); this.pendingLeaves.delete(sid); }
+        inactivityDeleted.push(roomId);
+      }
+    }
+    if (inactivityDeleted.length) {
+      this.broadcast({ event: "rooms:update", data: this.roomManager.listPublic() });
+      await this.persist();
+    }
     await this.persist();
     let soonest = null;
     for (const e of this.userRegistry.byName.values()) {
@@ -684,6 +721,21 @@ export class LuckyStreetDO {
       const since = room.inactiveSince || room.createdAt;
       if (!since) continue;
       const deadline = since + INACTIVITY_MS;
+      if (deadline > now && (soonest === null || deadline < soonest)) soonest = deadline;
+    }
+    // Include game idle deadline
+    for (const room of this.roomManager.rooms.values()) {
+      if (!room.gameState) continue;
+      let hasActive = false;
+      for (const p of room.players) {
+        const ws = this.socketIdToWs.get(p.id);
+        let isActive = false;
+        try { isActive = !!(ws && this.state.getWebSockets().includes(ws)); } catch { isActive = !!(ws && this.sessions.has(ws)); }
+        if (isActive) { hasActive = true; break; }
+      }
+      if (hasActive) continue;
+      const lastRoomActive = Math.max(room.updatedAt || 0, ...room.players.map(p => this.lastSeen.get(p.id) || 0));
+      const deadline = lastRoomActive + GAME_IDLE_MS;
       if (deadline > now && (soonest === null || deadline < soonest)) soonest = deadline;
     }
     if (soonest) {
@@ -865,7 +917,14 @@ export class LuckyStreetDO {
           break;
         }
         case "room:join": {
-          const user = this.userRegistry.getBySocket(socketId);
+          let user = this.userRegistry.getBySocket(socketId);
+          // Reopen race: profile not yet registered via async registerProfile, but we have username in sess or data
+          if (!user) {
+            const fallbackName = sanitizeName(data.username || sess.username || "");
+            if (fallbackName) {
+              try { user = this.userRegistry.register(socketId, fallbackName, data.avatar || sess.avatar || null); sess.username = user.username; sess.avatar = user.avatar; this._syncAttachment(ws, sess); } catch {}
+            }
+          }
           if (!user) throw new Error("Register a profile first - missing identity");
           const id = String(data.roomId || "").toUpperCase().trim();
           if (!isValidRoomId(id)) throw new Error("Invalid Room ID - must be 4 alphanumeric characters");
@@ -998,11 +1057,12 @@ export class LuckyStreetDO {
           const id = String(data.roomId || sess.currentRoom || "").toUpperCase();
           if (!id) throw new Error("No room to leave");
           const roomBefore = this.roomManager.get(id);
-          // Find target player: by socketId, or by name if in grace (old socket)
+          // Find target player: by socketId, or by name if in grace (old socket) — also fallback to data.username for reopen race
           let targetId = socketId;
-          let targetName = sess.username;
+          let targetName = sess.username || data.username;
+          const lookupName = String(sess.username || data.username || "").toLowerCase();
           if (roomBefore && !roomBefore.players.some(p => p.id === socketId)) {
-            const lower = String(sess.username || "").toLowerCase();
+            const lower = lookupName;
             const byName = roomBefore.players.find(p => p.name.toLowerCase() === lower);
             if (byName) { targetId = byName.id; targetName = byName.name; }
             // Also check pendingLeaves by name (indefinite game grace)

@@ -30,7 +30,9 @@ function MainPage() {
       if (retry < 3) { setTimeout(() => handleJoinRoom(room, retry + 1), 500); return; }
       setError("Not connected - try again"); setTimeout(() => setError(null), 3000); return;
     }
-    socket.emit("room:join", { roomId: id }, (res) => {
+    const payload = { roomId: id };
+    if (profile?.username) { payload.username = profile.username; payload.avatar = profile.avatar; }
+    socket.emit("room:join", payload, (res) => {
       if (res?.ok) {
         navigate(`/room/${id}`);
       } else {

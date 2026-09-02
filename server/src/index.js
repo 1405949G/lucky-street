@@ -283,9 +283,15 @@ io.on("connection", (socket) => {
   });
 
   // --- Room: join ---
-  socket.on("room:join", ({ roomId } = {}, ack) => {
+  socket.on("room:join", ({ roomId, username: payloadUsername, avatar: payloadAvatar } = {}, ack) => {
     try {
-      const user = userRegistry.getBySocket(socket.id);
+      let user = userRegistry.getBySocket(socket.id);
+      if (!user) {
+        const fallback = String(payloadUsername || socket.data.username || "").trim();
+        if (fallback) {
+          try { user = userRegistry.register(socket.id, fallback, payloadAvatar || null); socket.data.username = user.username; socket.data.avatar = user.avatar; } catch {}
+        }
+      }
       if (!user) throw new Error("Register a profile first - missing identity");
       const id = String(roomId || "").toUpperCase().trim();
       if (!isValidRoomId(id)) throw new Error("Invalid Room ID - must be 4 alphanumeric characters");
@@ -306,16 +312,16 @@ io.on("connection", (socket) => {
   });
 
   // --- Room: leave ---
-  socket.on("room:leave", ({ roomId } = {}, ack) => {
+  socket.on("room:leave", ({ roomId, username: payloadUsername } = {}, ack) => {
     try {
       const id = String(roomId || socket.data.currentRoom || "").toUpperCase();
       if (!id) throw new Error("No room to leave");
       const roomBefore = roomManager.get(id);
-      // Find target by name if in grace (old socket)
+      // Find target by name if in grace (old socket) — fallback to payloadUsername for reopen race
       let targetId = socket.id;
-      let targetName = socket.data.username || userRegistry.getBySocket(socket.id)?.username;
+      let targetName = socket.data.username || userRegistry.getBySocket(socket.id)?.username || payloadUsername;
       if (roomBefore && !roomBefore.players.some(p => p.id === socket.id)) {
-        const lower = String(targetName || "").toLowerCase();
+        const lower = String(targetName || payloadUsername || "").toLowerCase();
         const byName = roomBefore.players.find(p => p.name.toLowerCase() === lower);
         if (byName) { targetId = byName.id; targetName = byName.name; }
       }

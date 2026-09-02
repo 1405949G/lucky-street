@@ -51,14 +51,14 @@ export default function RoomBrowser({ onJoinRoom, onSpectate, onCreateClick }) {
                 if (!socket || !myRoom) return;
                 if (myRoom.status==='In Progress' && !window.confirm(`${profile.username} — leave ${myRoom.id}? Game will be cancelled and room returns to lobby.`)) return;
                 setLeaving(true);
-                socket.emit("room:leave", { roomId: myRoom.id }, (res) => {
+                const payload = { roomId: myRoom.id };
+                if (profile?.username) { payload.username = profile.username; payload.avatar = profile.avatar; }
+                socket.emit("room:leave", payload, (res) => {
                   setLeaving(false);
                   if (!res?.ok) {
-                    // fallback: try with just roomId
                     console.warn("leave failed", res?.error);
                   }
                 });
-                // Fallback clear after 1s
                 setTimeout(() => setLeaving(false), 1000);
               }}
               className="px-5 py-3 rounded-full bg-white/10 hover:bg-rose-500/20 border border-white/10 hover:border-rose-500/30 text-white text-sm font-bold disabled:opacity-50"
